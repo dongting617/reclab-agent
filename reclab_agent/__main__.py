@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from .benchmark import load_tasks, run_reference_suite
+from .runtime import AgentRuntime, OpenAIResponsesBackend
 from .tools import RecLabToolbox
 
 
@@ -14,11 +15,23 @@ def main() -> None:
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="RecLab Agent repository root")
     parser.add_argument("--tasks", type=Path, help="Task manifest; defaults to tasks/dev.json")
     parser.add_argument("--list-tools", action="store_true", help="Print tool schemas instead of running tasks")
+    parser.add_argument("--ask", help="Run a natural-language task through the Agent runtime")
+    parser.add_argument("--model", default=os.environ.get("RECLAB_MODEL"),
+                        help="OpenAI model ID; may also be set with RECLAB_MODEL")
+    parser.add_argument("--trace", type=Path, default=Path("traces/latest.jsonl"),
+                        help="JSONL trace path for --ask")
+    parser.add_argument("--max-steps", type=int, default=8, help="Maximum model turns for --ask")
     args = parser.parse_args()
 
     root = Path(os.path.abspath(os.fspath(args.root)))
     toolbox = RecLabToolbox(root)
-    if args.list_tools:
+    if args.ask:
+        if not args.model:
+            parser.error("--ask requires --model or the RECLAB_MODEL environment variable")
+        runtime = AgentRuntime(toolbox, OpenAIResponsesBackend(args.model),
+                               max_steps=args.max_steps, trace_path=args.trace)
+        payload = runtime.run(args.ask)
+    elif args.list_tools:
         payload = [{"name": spec.name, "description": spec.description,
                     "input_schema": spec.input_schema} for spec in toolbox.specs]
     else:

@@ -10,6 +10,8 @@ RecLab Agent 是一个面向推荐算法实验的可评测诊断智能体项目�
 - Beam Search 漏召与目标频次差距诊断；
 - 15 个带可执行断言的开发集任务；
 - 三份来自 Semantic ID 推荐实验的脱敏证据样本。
+- 有步数上限、重试和 JSONL 审计轨迹的状态化 Agent runtime；
+- OpenAI Responses API 函数调用适配器，以及无需 API Key 的可复现测试后端。
 
 ## 快速开始
 
@@ -23,10 +25,20 @@ python -m reclab_agent --list-tools
 
 基准命令会执行 `tasks/dev.json` 中的 15 个参考调用，并输出逐任务结果与通过率。
 
+安装可选的 OpenAI SDK 后，可以执行自然语言任务：
+
+```bash
+pip install -e ".[openai]"
+set OPENAI_API_KEY=your_key
+python -m reclab_agent --model YOUR_MODEL_ID --ask "判断 Beam Search 是否为 G2 漏召的主要瓶颈，并引用证据"
+```
+
+每次运行会把模型回合、工具参数、结构化结果、证据路径、耗时和错误写入 `traces/latest.jsonl`。工具调用采用严格 JSON Schema；Agent 最多运行八个模型回合，瞬时模型错误默认重试两次。
+
 ## 项目结构
 
 ```text
-reclab_agent/   只读工具、任务加载与基准执行
+reclab_agent/   只读工具、Agent 运行时、轨迹评测与基准执行
 evidence/       可复现的脱敏实验事实
 tasks/          Agent 任务与确定性断言
 tests/          工具边界和基准测试
@@ -38,4 +50,4 @@ tests/          工具边界和基准测试
 
 ## 下一步
 
-第二个里程碑将加入 Agent runtime：根据自然语言问题选择工具、记录完整轨迹，并分别评估工具选择、结论正确性、引用完整性和成本。
+下一步将补充两个端到端诊断案例、任务级工具约束和离线 replay，然后扩展实验计划注册与权限门。
