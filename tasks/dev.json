@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "split": "dev",
+  "tasks": [
+    {
+      "id": "inventory_has_diagnostics",
+      "prompt": "列出随仓库提交的诊断证据，确认三份核心 JSON 产物均可用。",
+      "reference_call": {"name": "list_evidence", "arguments": {"limit": 100}},
+      "assertion": {"pointer": "/result/count", "op": "eq", "value": 3}
+    },
+    {
+      "id": "gap_report_is_json",
+      "prompt": "核验完整验证差距报告是可解析的 JSON。",
+      "reference_call": {"name": "inspect_artifact", "arguments": {"path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json"}},
+      "assertion": {"pointer": "/result/json_type", "op": "eq", "value": "dict"}
+    },
+    {
+      "id": "gap_report_split",
+      "prompt": "确认差距诊断使用的数据划分。",
+      "reference_call": {"name": "read_json_values", "arguments": {"path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "pointers": ["/split"]}},
+      "assertion": {"pointer": "/result/values/~1split", "op": "eq", "value": "valid"}
+    },
+    {
+      "id": "gap_report_population",
+      "prompt": "确认完整验证诊断包含 22312 名用户。",
+      "reference_call": {"name": "read_json_values", "arguments": {"path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "pointers": ["/users"]}},
+      "assertion": {"pointer": "/result/values/~1users", "op": "eq", "value": 22312}
+    },
+    {
+      "id": "gap_report_beam_width",
+      "prompt": "读取诊断时使用的 Beam 宽度。",
+      "reference_call": {"name": "read_json_values", "arguments": {"path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "pointers": ["/beam_width"]}},
+      "assertion": {"pointer": "/result/values/~1beam_width", "op": "eq", "value": 64}
+    },
+    {
+      "id": "b1_recall_exceeds_g2",
+      "prompt": "比较完整验证 B1 与 G2 的 Recall@20，确认 B1 更高。",
+      "reference_call": {"name": "compare_numeric_values", "arguments": {"left_path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "left_pointer": "/overall/g2_recall@20", "right_path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "right_pointer": "/overall/b1_recall@20"}},
+      "assertion": {"pointer": "/result/right_minus_left", "op": "gt", "value": 0}
+    },
+    {
+      "id": "b1_ndcg_exceeds_g2",
+      "prompt": "比较完整验证 B1 与 G2 的 NDCG@20，确认 B1 更高。",
+      "reference_call": {"name": "compare_numeric_values", "arguments": {"left_path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "left_pointer": "/overall/g2_ndcg@20", "right_path": "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json", "right_pointer": "/overall/b1_ndcg@20"}},
+      "assertion": {"pointer": "/result/right_minus_left", "op": "gt", "value": 0}
+    },
+    {
+      "id": "beam_not_main_bottleneck",
+      "prompt": "判断 Beam Search 是否为 G2 漏召的主要瓶颈。",
+      "reference_call": {"name": "diagnose_beam_gap", "arguments": {}},
+      "assertion": {"pointer": "/result/conclusion_code", "op": "eq", "value": "SCORING_NOT_SEARCH"}
+    },
+    {
+      "id": "beam_suboptimal_cases_are_rare",
+      "prompt": "确认搜索次优的漏召占比低于千分之一。",
+      "reference_call": {"name": "diagnose_beam_gap", "arguments": {}},
+      "assertion": {"pointer": "/result/search_suboptimal_fraction", "op": "lt", "value": 0.001}
+    },
+    {
+      "id": "low_frequency_gap",
+      "prompt": "判断低频目标是否存在稳定的 B1 对 G2 差距。",
+      "reference_call": {"name": "diagnose_frequency_gap", "arguments": {}},
+      "assertion": {"pointer": "/result/conclusion_code", "op": "eq", "value": "LOW_FREQUENCY_GAP_CONFIRMED"}
+    },
+    {
+      "id": "largest_frequency_gap_bucket",
+      "prompt": "找出 B1 相对 G2 的最大 NDCG 优势频次桶。",
+      "reference_call": {"name": "diagnose_frequency_gap", "arguments": {}},
+      "assertion": {"pointer": "/result/largest_b1_advantage_bucket", "op": "eq", "value": "5-19"}
+    },
+    {
+      "id": "frequency_screen_should_stop",
+      "prompt": "确认频次加权 CE 未通过完整确认门槛。",
+      "reference_call": {"name": "read_json_values", "arguments": {"path": "evidence/frequency-ce-completion-audit-20261008.json", "pointers": ["/full_confirmation_worth_running"]}},
+      "assertion": {"pointer": "/result/values/~1full_confirmation_worth_running", "op": "eq", "value": false}
+    },
+    {
+      "id": "fixed_ensemble_beats_b1",
+      "prompt": "确认冻结固定融合在确认集上的 NDCG@20 高于 B1。",
+      "reference_call": {"name": "compare_numeric_values", "arguments": {"left_path": "evidence/msp-ensemble-confirmation-parsed-20261009.json", "left_pointer": "/confirmation_models/b1/ndcg@20", "right_path": "evidence/msp-ensemble-confirmation-parsed-20261009.json", "right_pointer": "/confirmation_models/fixed/ndcg@20"}},
+      "assertion": {"pointer": "/result/right_minus_left", "op": "gt", "value": 0}
+    },
+    {
+      "id": "adaptive_does_not_beat_fixed",
+      "prompt": "确认自适应门控没有超过固定融合。",
+      "reference_call": {"name": "read_json_values", "arguments": {"path": "evidence/msp-ensemble-confirmation-parsed-20261009.json", "pointers": ["/conclusion/adaptive_ndcg_gain_over_fixed_confirmed"]}},
+      "assertion": {"pointer": "/result/values/~1conclusion~1adaptive_ndcg_gain_over_fixed_confirmed", "op": "eq", "value": false}
+    },
+    {
+      "id": "path_traversal_is_blocked",
+      "prompt": "拒绝读取项目根目录之外的文件。",
+      "reference_call": {"name": "inspect_artifact", "arguments": {"path": "../resume.pdf"}},
+      "assertion": {"pointer": "/error/code", "op": "eq", "value": "PATH_OUTSIDE_ROOT"}
+    }
+  ]
+}
+
