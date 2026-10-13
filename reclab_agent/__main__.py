@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from .benchmark import load_tasks, run_reference_suite
+from .evaluation import replay_trace
 from .runtime import AgentRuntime, OpenAIResponsesBackend
 from .tools import RecLabToolbox
 
@@ -16,6 +17,11 @@ def main() -> None:
     parser.add_argument("--tasks", type=Path, help="Task manifest; defaults to tasks/dev.json")
     parser.add_argument("--list-tools", action="store_true", help="Print tool schemas instead of running tasks")
     parser.add_argument("--ask", help="Run a natural-language task through the Agent runtime")
+    parser.add_argument("--allowed-tools", nargs="+",
+                        help="Restrict --ask to these task-level tools")
+    parser.add_argument("--replay", type=Path, help="Replay and evaluate a saved JSONL trace")
+    parser.add_argument("--expected-tools", nargs="+", default=[],
+                        help="Expected tool names for --replay evaluation")
     parser.add_argument("--model", default=os.environ.get("RECLAB_MODEL"),
                         help="OpenAI model ID; may also be set with RECLAB_MODEL")
     parser.add_argument("--trace", type=Path, default=Path("traces/latest.jsonl"),
@@ -25,12 +31,17 @@ def main() -> None:
 
     root = Path(os.path.abspath(os.fspath(args.root)))
     toolbox = RecLabToolbox(root)
+    if args.ask and args.replay:
+        parser.error("--ask and --replay are mutually exclusive")
     if args.ask:
         if not args.model:
             parser.error("--ask requires --model or the RECLAB_MODEL environment variable")
         runtime = AgentRuntime(toolbox, OpenAIResponsesBackend(args.model),
                                max_steps=args.max_steps, trace_path=args.trace)
-        payload = runtime.run(args.ask)
+        payload = runtime.run(args.ask, allowed_tools=set(args.allowed_tools)
+                              if args.allowed_tools else None)
+    elif args.replay:
+        payload = replay_trace(args.replay, args.expected_tools)
     elif args.list_tools:
         payload = [{"name": spec.name, "description": spec.description,
                     "input_schema": spec.input_schema} for spec in toolbox.specs]

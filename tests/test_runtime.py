@@ -4,7 +4,7 @@ import shutil
 import unittest
 
 from reclab_agent import AgentRuntime, ModelTurn, RecLabToolbox
-from reclab_agent.evaluation import evaluate_run, evaluate_tool_selection
+from reclab_agent.evaluation import evaluate_run, evaluate_tool_selection, replay_trace
 from reclab_agent.runtime import function_tools
 
 
@@ -104,6 +104,39 @@ class AgentRuntimeTests(unittest.TestCase):
             ["diagnose_beam_gap", "list_evidence"], ["diagnose_beam_gap"])
         self.assertEqual(metric["precision"], 0.5)
         self.assertEqual(metric["recall"], 1.0)
+
+    def test_task_policy_only_exposes_allowed_tools(self):
+        backend = ScriptedBackend([
+            tool_turn("diagnose_frequency_gap", {}, "policy-call"),
+            ModelTurn(output=[{"type": "message"}], output_text="已拒绝越权工具。"),
+        ])
+        trace = TEMP / "policy-trace.jsonl"
+        result = AgentRuntime(self.toolbox, backend, trace_path=trace).run(
+            "诊断 Beam Search", allowed_tools={"diagnose_beam_gap"})
+        exposed = backend.calls
+        self.assertEqual(exposed, 2)
+        events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
+        tool_event = next(event for event in events if event["event"] == "tool_call")
+        self.assertEqual(tool_event["result"]["error"]["code"], "TOOL_NOT_ALLOWED")
+        metrics = evaluate_run(result, events, ["diagnose_beam_gap"])
+        self.assertEqual(metrics["policy_violations"], 1)
+
+    def test_saved_trace_can_be_replayed_offline(self):
+        trace = TEMP / "replay-trace.jsonl"
+        evidence_path = self.toolbox.GAP_REPORT
+        backend = ScriptedBackend([
+            tool_turn("diagnose_beam_gap", {}, "beam-call"),
+            ModelTurn(output=[{"type": "message"}],
+                      output_text=f"结论来自 {evidence_path}。"),
+        ])
+        AgentRuntime(self.toolbox, backend, trace_path=trace).run(
+            "Beam Search 是主要瓶颈吗？", task_id="replay-case",
+            allowed_tools={"diagnose_beam_gap"})
+        report = replay_trace(trace, ["diagnose_beam_gap"])
+        self.assertTrue(report["trace_valid"])
+        self.assertEqual(report["metrics"]["tool_selection"]["f1"], 1.0)
+        self.assertEqual(report["metrics"]["answer_evidence_citation_rate"], 1.0)
+        self.assertEqual(report["metrics"]["policy_violations"], 0)
 
 
 if __name__ == "__main__":

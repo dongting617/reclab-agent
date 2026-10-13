@@ -35,10 +35,13 @@ class ModelBackend(Protocol):
         """Return either function calls, final text, or both."""
 
 
-def function_tools(toolbox: RecLabToolbox) -> list[dict[str, Any]]:
+def function_tools(toolbox: RecLabToolbox,
+                   allowed_tools: set[str] | frozenset[str] | None = None) -> list[dict[str, Any]]:
     """Translate internal tool specs into Responses API function definitions."""
     definitions = []
     for spec in toolbox.specs:
+        if allowed_tools is not None and spec.name not in allowed_tools:
+            continue
         schema = copy.deepcopy(spec.input_schema)
         properties = schema.get("properties", {})
         originally_required = set(schema.get("required", []))
@@ -141,18 +144,28 @@ class AgentRuntime:
         self.model_retries = model_retries
         self.trace = TraceWriter(trace_path)
 
-    def run(self, prompt: str, *, task_id: str | None = None) -> dict[str, Any]:
+    def run(self, prompt: str, *, task_id: str | None = None,
+            allowed_tools: set[str] | frozenset[str] | None = None) -> dict[str, Any]:
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("prompt must be a non-empty string")
         run_id = uuid.uuid4().hex
         task_id = task_id or run_id
         started = time.perf_counter()
         input_items: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
-        tools = function_tools(self.toolbox)
+        known_tools = {spec.name for spec in self.toolbox.specs}
+        if allowed_tools is not None:
+            allowed_tools = frozenset(allowed_tools)
+            unknown = sorted(allowed_tools - known_tools)
+            if unknown:
+                raise ValueError(f"allowed_tools contains unknown tools: {unknown}")
+            if not allowed_tools:
+                raise ValueError("allowed_tools cannot be empty")
+        tools = function_tools(self.toolbox, allowed_tools)
         tool_calls = 0
         evidence: set[str] = set()
         self.trace.write({"event": "run_started", "run_id": run_id,
-                          "task_id": task_id, "prompt": prompt, "max_steps": self.max_steps})
+                          "task_id": task_id, "prompt": prompt, "max_steps": self.max_steps,
+                          "allowed_tools": sorted(allowed_tools) if allowed_tools is not None else None})
 
         for step in range(1, self.max_steps + 1):
             turn = self._respond_with_retry(input_items, tools, run_id, task_id, step)
@@ -183,7 +196,17 @@ class AgentRuntime:
                     if not isinstance(arguments, dict):
                         raise ValueError("function arguments must decode to an object")
                     arguments = {key: value for key, value in arguments.items() if value is not None}
-                    envelope = self.toolbox.invoke(name, arguments)
+                    if allowed_tools is not None and name not in allowed_tools:
+                        envelope = {
+                            "ok": False,
+                            "tool": name,
+                            "error": {
+                                "code": "TOOL_NOT_ALLOWED",
+                                "message": f"Tool is not allowed for this task: {name}",
+                            },
+                        }
+                    else:
+                        envelope = self.toolbox.invoke(name, arguments)
                 except (json.JSONDecodeError, ValueError) as error:
                     arguments = None
                     envelope = {"ok": False, "tool": name,
