@@ -1,11 +1,6 @@
-"""Read-only, structured tools over the bundled recommendation evidence.
-
-The language model should plan and select tools. Numeric results and artifact
-identity always come from deterministic code in this module.
-"""
+"""Read-only tools over registered recommendation evidence."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
 import math
@@ -13,20 +8,7 @@ import os
 from pathlib import Path
 from typing import Any, Callable
 
-
-class ToolError(ValueError):
-    """A stable, serializable tool failure."""
-
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
-
-
-@dataclass(frozen=True)
-class ToolSpec:
-    name: str
-    description: str
-    input_schema: dict[str, Any]
+from .contracts import ToolError, ToolSpec
 
 
 def _sha256(path: Path) -> str:

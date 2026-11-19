@@ -2,6 +2,16 @@
 
 这份文档服务于两个目标：完成一个可演示、可评测的推荐实验 Agent；覆盖 AI Builder（模型方向）岗位要求中的 Agent、模型评估、生产落地和跨团队表达能力。
 
+## 已确认的完整方案（2026-10-19）
+
+文档按“一个总计划、每周一份边学边做”维护：[八周总计划](eight-week-plan.md)、[全部周文档与飞书链接](README.md)。日常学习、实验和复盘进入对应周文档，本文件保留原阶段学习说明与历史记录。
+
+每周必须有可直接学习的正文：问题、原理讲解、例子、代码/实验对应、练习和参考答案；知识点清单与外链仅作辅助。学习完成与代码完成分别记录，不代替本人确认已掌握。正文写作规则见 [每周学习内容标准](weeks/learning/README.md)。
+
+完整架构、数据/模型接入、代码实验、评分、验收与八周路线见 [项目设计与实施计划](project-plan.md)。当前主线为推荐实验研究助手，支持在独立工作区修改训练代码，在 Linux 云端隔离运行，再由独立评分器验证结果。周期 6–8 周、每周 25–35 小时，目标预算 1500 元、硬上限 2000 元。
+
+说明：下文原有 15 个开发任务验证的是工具合同，不是端到端 Agent 成功率；路径引用率不能证明结论真实。新阶段将分别建设结论级验证与真实编码评测。完整方案中的功能与指标目标尚待逐阶段验收，不代表已经实现。
+
 ## 当前阶段：受控运行与离线评测
 
 ### 本阶段已经实现
@@ -11,6 +21,10 @@
 - 每次运行记录 JSONL 轨迹，包括模型轮次、工具参数、工具结果、证据路径、错误与耗时。
 - 保存的轨迹可以离线 replay，无需再次调用模型即可复算评测结果。
 - 评测指标包含任务完成、工具选择 Precision/Recall/F1、工具错误率、证据引用率、越权次数和工具延迟。
+- `core/` 提供统一 Agent、模型后端和运行会话；`agents/` 实现 Simple、ReAct、计划执行与 Reflection，`tools/` 组织可组合的工具接口和实现。
+- 优化 Agent 会注入任务、研究计划和宿主登记的目标模型上下文，按允许文件、候选、种子及预算开展开发；真实训练和独立评分仍需可信 runner。
+
+代码入口已统一到 `reclab_agent.core`、`reclab_agent.agents`、`reclab_agent.tools` 和 `reclab_agent.research`。旧 `AgentRuntime` 名称及 `reclab_agent.runtime` 导入不再保留；学习原工具循环时使用 `ReActAgent`。已有模型实验的数据、训练/预测与评分协议保持不变。
 
 ### 必须学会的四个概念
 
@@ -25,7 +39,7 @@
 - 为什么需要最大轮次、重试和结构化错误；
 - 模型负责规划，工具负责事实，这两部分如何分工。
 
-对应代码：`reclab_agent/runtime.py`。
+对应代码：`reclab_agent/agents/react_agent.py` 与 `reclab_agent/core/session.py`；模型适配位于 `reclab_agent/core/llm.py`。
 
 #### 2. 最小权限与双层防护
 
@@ -36,7 +50,7 @@
 
 必须能够解释为什么仅隐藏工具 Schema 不够：模型输出、上游数据或运行时都可能异常，执行层必须独立校验。
 
-对应代码：`function_tools(..., allowed_tools)` 与 `AgentRuntime.run(..., allowed_tools)`。
+对应代码：`core.session.function_tools(..., allowed_tools)`、`RunSession.execute()` 与 `ReActAgent.run(..., allowed_tools)`；其他策略复用同一会话权限检查。
 
 #### 3. 可观测轨迹与离线 Replay
 
@@ -49,7 +63,7 @@ Replay 的价值：
 - 定位线上失败并形成回归样本；
 - 为后续 AB 实验和监控告警提供数据。
 
-对应代码：`TraceWriter`、`load_trace`、`replay_trace`。
+对应代码：`core.trace.TraceWriter` 与 `evaluation.load_trace`、`evaluation.replay_trace`。
 
 #### 4. Agent 评测不是只看答案
 

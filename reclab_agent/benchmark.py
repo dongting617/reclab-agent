@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .tools import RecLabToolbox, ToolError, json_pointer
+from .tools.contracts import ToolError
+from .tools.evidence import RecLabToolbox, json_pointer
 
 
 def load_tasks(path: str | Path) -> list[dict[str, Any]]:

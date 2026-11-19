@@ -6,7 +6,7 @@ from reclab_agent import RecLabToolbox, load_tasks, run_reference_suite
 from reclab_agent.tools import json_pointer
 
 
-ROOT = Path.cwd()
+ROOT = Path(__file__).absolute().parents[1]
 
 
 class RecLabToolTests(unittest.TestCase):

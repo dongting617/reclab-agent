@@ -10,3 +10,8 @@ build/
 *.egg-info/
 .DS_Store
 Thumbs.db
+.reclab/
+.env
+.env.*
+!.env.example
+draft_*_folder/

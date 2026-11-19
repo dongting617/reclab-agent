@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-19",
+  "week": 1,
+  "status": "partial",
+  "base_commit": "d99c38acf225be970136307f1659c927a4cc7a13",
+  "implementation_state": "uncommitted_working_tree_with_source_hashes",
+  "source_sha256": {
+    "reclab_agent/contracts.py": "fc32054b04a6144d530c62279b63a1fc916bc6a5c0d91e6da6eed348ed4abad1",
+    "reclab_agent/storage.py": "5ec4fcbae52b1bc9614bf988bca1680b83c9fcebed8b3a2e21dd248f406388c0",
+    "reclab_agent/datasets.py": "00be4ef98ade124ad48d8c5d0d1d52b36f52ca6a169f2a7f5b79b4479954a72a",
+    "reclab_agent/adapters.py": "76b2c222cc8cc10af54465b32629f52bc74ed8a8dd397d574df01fc7da6209ed",
+    "reclab_agent/grading.py": "be3eef8bde30b59a3d78fddbb4bd52c34d5d85c225cc38f3140787cf49ae21da",
+    "tests/test_datasets.py": "c313dc19978070b4a21b24fc2cb4a63c949b68504104b1d8822830ef708cb65c",
+    "tests/test_foundation.py": "db81b32d3a038db3eb700bc4bed309f0fb8d746d639add1037eff2edbd54d060",
+    "tests/test_grading.py": "57034ef19dfb041a771e8026daf0337dcd89ed4949b564f3a226707bf9e6b6b6"
+  },
+  "unit_test_observation": {
+    "source": "full unittest invocation verified in this session",
+    "command": "python -m unittest discover -s tests -v",
+    "discovered": 61,
+    "passed": 60,
+    "skipped": 1,
+    "failed": 0,
+    "skip_reason": "Windows denied creation of a real symlink; simulated reparse/symlink guards passed"
+  },
+  "reference_tool_suite": {
+    "command": "python -m reclab_agent",
+    "passed": 15,
+    "total": 15,
+    "scope": "deterministic tool contracts, not end-to-end agent quality"
+  },
+  "synthetic_baseline": {
+    "scope": "fixture_only_not_recommendation_quality",
+    "dataset": {
+      "dataset_id": "synthetic-smoke-v1",
+      "data_hash": "df54039fff32268d48aa2c3af521b334714f22f9a1ca8cfde63c2d6d29ed2f22",
+      "profile": "synthetic-smoke",
+      "task": "next_item",
+      "catalog_items": 40,
+      "train_users": 12,
+      "valid_users": 12,
+      "test_labels_exposed": false,
+      "quality_evidence": "fixture_only"
+    },
+    "metrics": {
+      "users": 12,
+      "recall@10": 0.0,
+      "ndcg@10": 0.0,
+      "recall@20": 0.0,
+      "ndcg@20": 0.0
+    },
+    "protocol_hash": "f97d172b99f5ee2866148d001b397405c6e3b50ec21782e0976c3d282f796569",
+    "evaluation_hash": "3f09d6eb1e935cc7bc7a023d08c03aa2628b6a88d3bd41a7798d4e83df1137e6",
+    "same_report_comparison": {
+      "ndcg@10": {
+        "baseline": 0.0,
+        "candidate": 0.0,
+        "mean_delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "ndcg@20": {
+        "baseline": 0.0,
+        "candidate": 0.0,
+        "mean_delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "recall@10": {
+        "baseline": 0.0,
+        "candidate": 0.0,
+        "mean_delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "recall@20": {
+        "baseline": 0.0,
+        "candidate": 0.0,
+        "mean_delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "hand_calculation_exercise": {
+    "metrics": {
+      "users": 2,
+      "recall@1": 0.5,
+      "ndcg@1": 0.5,
+      "recall@3": 1.0,
+      "ndcg@3": 0.8154648767857288
+    },
+    "expected_ranks": {
+      "u1": 1,
+      "u2": 2
+    }
+  },
+  "cloud_check": {
+    "ssh_config_found": true,
+    "connection": "timed_out",
+    "docker_verified": false,
+    "gpu_verified": false,
+    "training_started": false
+  },
+  "remaining": [
+    "Restore/register real Beauty data and B1 checkpoint",
+    "Reproduce real Popularity/B1 under the new fixed protocol",
+    "Verify cloud Docker/GPU and runtime test-label isolation",
+    "User completes hand calculation and self-check questions"
+  ]
+}

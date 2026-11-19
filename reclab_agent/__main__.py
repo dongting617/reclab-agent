@@ -7,16 +7,22 @@ from pathlib import Path
 
 from .benchmark import load_tasks, run_reference_suite
 from .evaluation import replay_trace
-from .runtime import AgentRuntime, OpenAIResponsesBackend
-from .tools import RecLabToolbox
+from .agents import create_agent
+from .agents.factory import AGENT_TYPES
+from .core.llm import OpenAIResponsesBackend
+from .tools.evidence import RecLabToolbox
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the RecLab deterministic tool benchmark")
+    parser = argparse.ArgumentParser(description="Run RecLab evidence tasks or an Agent strategy")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="RecLab Agent repository root")
     parser.add_argument("--tasks", type=Path, help="Task manifest; defaults to tasks/dev.json")
     parser.add_argument("--list-tools", action="store_true", help="Print tool schemas instead of running tasks")
-    parser.add_argument("--ask", help="Run a natural-language task through the Agent runtime")
+    parser.add_argument("--ask", help="Run a natural-language evidence task with an Agent")
+    parser.add_argument("--agent", choices=tuple(AGENT_TYPES), default="react",
+                        help="Execution strategy for --ask; default is ReAct")
+    parser.add_argument("--max-plan-steps", type=int, default=5, help="Maximum steps in a generated plan")
+    parser.add_argument("--max-reflections", type=int, default=1, help="Maximum critique/revision cycles")
     parser.add_argument("--allowed-tools", nargs="+",
                         help="Restrict --ask to these task-level tools")
     parser.add_argument("--replay", type=Path, help="Replay and evaluate a saved JSONL trace")
@@ -36,10 +42,15 @@ def main() -> None:
     if args.ask:
         if not args.model:
             parser.error("--ask requires --model or the RECLAB_MODEL environment variable")
-        runtime = AgentRuntime(toolbox, OpenAIResponsesBackend(args.model),
-                               max_steps=args.max_steps, trace_path=args.trace)
-        payload = runtime.run(args.ask, allowed_tools=set(args.allowed_tools)
-                              if args.allowed_tools else None)
+        options = {}
+        if args.agent == "plan_execute":
+            options["max_plan_steps"] = args.max_plan_steps
+        elif args.agent in {"reflection", "reviewer"}:
+            options["max_reflections"] = args.max_reflections
+        agent = create_agent(args.agent, toolbox, OpenAIResponsesBackend(args.model),
+                             max_steps=args.max_steps, trace_path=args.trace, **options)
+        payload = agent.run(args.ask, allowed_tools=set(args.allowed_tools)
+                            if args.allowed_tools else None)
     elif args.replay:
         payload = replay_trace(args.replay, args.expected_tools)
     elif args.list_tools:

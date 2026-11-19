@@ -1,0 +1,21 @@
+{
+  "archive_sha256": "43fb35a714909657de870eab82cd669d367802a440a72eb6bcd695038b76c5aa",
+  "base_commit": "d99c38acf225be970136307f1659c927a4cc7a13",
+  "files_sha256": {
+    "reclab_agent/__init__.py": "b47bcc67711bdc92066fe106cfd023957b38e9c843763fa18d4215cfe3952047",
+    "reclab_agent/beauty.py": "a89dd820d222823aa2bea77729e8eb54c0e5038d8ba85c64e0c0dcfa02e301a8",
+    "reclab_agent/benchmark.py": "de1a02ae379ea5e78ff9902c9a70678b1d5843948b32c135007123c8de3f2ecf",
+    "reclab_agent/contracts.py": "fc32054b04a6144d530c62279b63a1fc916bc6a5c0d91e6da6eed348ed4abad1",
+    "reclab_agent/datasets.py": "00be4ef98ade124ad48d8c5d0d1d52b36f52ca6a169f2a7f5b79b4479954a72a",
+    "reclab_agent/evaluation.py": "3030a5b3f0d13fefe66d4233742ee37a60417246fa517dcb4b1bb19e0f9a1c4b",
+    "reclab_agent/grading.py": "be3eef8bde30b59a3d78fddbb4bd52c34d5d85c225cc38f3140787cf49ae21da",
+    "reclab_agent/runtime.py": "79fefc4e26456ebde34c01890e0c9b111919aa6e2c69cdb3b1e35776007baa92",
+    "reclab_agent/storage.py": "5ec4fcbae52b1bc9614bf988bca1680b83c9fcebed8b3a2e21dd248f406388c0",
+    "reclab_agent/tools.py": "787d35b8e21ea702ecf30eb75bad966db9bfd9af753ce37368e3489c34a765c9",
+    "scripts/probe_dataset_permissions.py": "1d46d1e202d99feefd2a1594c389b0269e71d49c770f25cce7d9c329688c787d",
+    "scripts/reproduce_frozen_b1.py": "fdc598a9bebf49ac19fa2227832043372da406acf09591f5f27491ae21b9e40a"
+  },
+  "implementation_state": "uncommitted_working_tree_with_source_hashes",
+  "schema_version": 1,
+  "verified_on": "2026-10-20"
+}

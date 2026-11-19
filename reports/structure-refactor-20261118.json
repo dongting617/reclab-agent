@@ -1,0 +1,110 @@
+{
+    "schema_version":  1,
+    "verified_on":  "2026-11-18",
+    "scope":  "Structure refactor, research contracts and workflow/tool specification; not live research coordinator acceptance",
+    "environment":  {
+                        "platform":  "WSL Ubuntu",
+                        "windows_venv":  "original base interpreter missing; not recreated",
+                        "python":  "3.14.4"
+                    },
+    "baseline_tests":  {
+                           "discovered":  188,
+                           "skipped":  8,
+                           "failed":  0,
+                           "passed":  180
+                       },
+    "final_tests":  {
+                        "passed":  196,
+                        "seconds":  4.088,
+                        "failed":  0,
+                        "skips":  "1 real Docker smoke and 7 real Docker acceptance cases; explicit opt-in not enabled",
+                        "command":  "python3 -B -m unittest discover -s tests -q",
+                        "discovered":  204,
+                        "skipped":  8
+                    },
+    "distribution":  {
+                         "python":  "3.14.4",
+                         "offline_build":  true,
+                         "wheel":  ".reclab/structure-check/dist/reclab_agent-0.2.0-py3-none-any.whl",
+                         "wheel_sha256":  "daf4d23ca497d77b66fcda653041cd6814d47c6e57fdd140222c25a5e624a09b",
+                         "all_new_modules_packaged":  true,
+                         "only_package_and_dist_info_packaged":  true,
+                         "isolated_install_imports":  true,
+                         "module_help_entrypoints":  [
+                                                         "reclab_agent",
+                                                         "reclab_agent.worker",
+                                                         "reclab_agent.watchdog",
+                                                         "reclab_agent.research_cli"
+                                                     ],
+                         "console_help_entrypoints":  [
+                                                          "reclab",
+                                                          "reclab-research"
+                                                      ],
+                         "runtime_and_tools_tests_from_unrelated_directory":  "----------------------------------------------------------------------\nRan 13 tests in 0.194s\n\nOK"
+                     },
+    "compatibility":  [
+                          "Legacy imports reference the same extracted objects",
+                          "Legacy JobSpec JSON, input hashes, policy hash and job key match fixed vectors",
+                          "Frozen pre-refactor SQLite jobs, receipt and stop intent remain readable without relaunch",
+                          "Worker state machine and persistence formats preserved",
+                          "Current six evidence tool behaviors preserved"
+                      ],
+    "research_interfaces":  [
+                                "Versioned ResearchPlan and content-bound trusted PlanReview",
+                                "Task budget and candidate/file/seed/confirmation scope validation",
+                                "JSON roundtrip and ArtifactStore reuse",
+                                "ExperimentRecord distinguishes execution failure from scored outcomes",
+                                "Evidence-linked observations and separate inferences/hypotheses",
+                                "Eight-stage design allowlists; not connected to runtime"
+                            ],
+    "tool_inventory":  {
+                           "planned_handlers_registered":  false,
+                           "planned":  9,
+                           "available":  6
+                       },
+    "live_model_requests":  false,
+    "gpu_training":  false,
+    "real_docker_acceptance_rerun":  false,
+    "remaining_integration":  [
+                                  "Durable research coordinator and trusted user-review channel",
+                                  "Nine planned tool adapters",
+                                  "Atomic usage/budget accounting and state recovery integration",
+                                  "Real model and GPU end-to-end acceptance"
+                              ],
+    "source_sha256":  {
+                          "README.md":  "3c6ffae273ecee6bb5768cb946d006e6d00ae81df577d03ab64e1174bf49047d",
+                          "docs/README.md":  "6368243df8caeb23a9f9afd1b0a0fbb871708d3cbf30c85f3bd563150a12e1a2",
+                          "docs/agent-workflow.md":  "83177ff09e62ea264a88d3290f271a915b7f3c27ea8f1ef4cd130e415b1eff2a",
+                          "pyproject.toml":  "ec1721ffc8780f2f27a8b22c418b0c8602a4a547553997b80d086b1a28951dde",
+                          "reclab_agent/files.py":  "ed511ad4b47e3076e83d25bbab022bd84b62bbab8b06d1657434a88fdb69a324",
+                          "reclab_agent/execution.py":  "d68e401b818a001dc738c30efffd6cd6db7ead0f809aff71edfc13df10c5e7d3",
+                          "reclab_agent/storage.py":  "f140eb9d90ce01852fd88d5d9903451bdab7549d84d25fd9864a1e353b236363",
+                          "reclab_agent/workspace.py":  "36c4ca4a30e3dc7c9168efdb993abaa1f1f40f17ca59f29426e0c2bb31c0eed9",
+                          "reclab_agent/worker.py":  "3d3a36c96b6c93552f4c4dbae0022748479ff8a2a3bc0da86ab295fa70e1ff7f",
+                          "reclab_agent/watchdog.py":  "ab5894aa7911a7d0c59f3b94b98bd6d67ce37a90b2469ef3ce670c3909453f14",
+                          "reclab_agent/_execution/__init__.py":  "72535673663372221990d7313e8c781cdb7a76cc26e11e4180698c5cb169f2bc",
+                          "reclab_agent/_execution/models.py":  "b92e0361568547296d168e19b063e06281625b70965ff2ebec1ba73881b243ea",
+                          "reclab_agent/_execution/docker.py":  "30bbbc5235a0be4278923143cf8f5e7ccc7d4b706233cf5245e099369ce75f1e",
+                          "reclab_agent/_execution/locking.py":  "6bf67e9e31e8cc1484519343f7ce0ab8a26baa583517b630c3fc3e432ea24f7e",
+                          "reclab_agent/_execution/config.py":  "0dfb96f8d36874297e2b58ffb6343330bef8f1e331633281ab1b00ece8822316",
+                          "reclab_agent/tools.py":  "cfae9d109aaffb02acbe4ffb1f31e421bb25007fc63bc7353a705b165643717c",
+                          "reclab_agent/_tools/__init__.py":  "1c6ac47845c3dc6fc72fb2b79f677d78bcf7b0863a1a5238c50ff53af4e27640",
+                          "reclab_agent/_tools/contracts.py":  "4c41b8573bba66adf5e7386e991d1ad468f612de551ddc4351bb0796e574fc40",
+                          "reclab_agent/_tools/evidence.py":  "28c2a72cdc69823054940d803cce3958b2172c7c21fac68c780497c0de996b80",
+                          "reclab_agent/_tools/catalog.py":  "325b11af0adb1a8e1947cc3bf5b89b339a6ba14a3c43a72bd7da7136e0e57c29",
+                          "reclab_agent/research/__init__.py":  "df9577993c789e093f6aecd442c426ebc720cd807eb9951ea29187ff4b33167c",
+                          "reclab_agent/research/contracts.py":  "fde18d85c2fdf083f63d2e914f3d275515d2b62f125f4bad0d44d8f6636efaa3",
+                          "reclab_agent/research/workflow.py":  "d50e855c9a84fa1096d6372f4cbcb48074076610599497d82bd03caf16f50182",
+                          "tests/test_execution.py":  "b1ecc9fcd54ec2e8b8cfe533d1fb5f81159b5ae9479068656dbe6ea55799c8a6",
+                          "tests/test_watchdog.py":  "bf6706a6f08d07478cfbf60fa2bc191526dfc756f267bbb545de35004cfbe285",
+                          "tests/test_research_cli.py":  "a27c1d12bad5b980d2fcd7795d98c72233f0d9f81871095c736849cd7a175bc6",
+                          "tests/test_runtime.py":  "0184e1443eec7a745480eda383848c3bd2dab1ba61b83e58780a9c4d2b4f5f67",
+                          "tests/test_tools.py":  "cdeb2d603200b49933c96461a9af19cf94a2e627aaabd294d099bd8821a0a241",
+                          "tests/test_execution_compatibility.py":  "2edb8fc9136d64599de5515f33c1b2577904299a5452716df2f45fd517949a2d",
+                          "tests/test_research_contracts.py":  "e80da95e0d6b2bb5042eaf082b17dd1c3093b87ac94d13b52d5f32f8d43c0ae3",
+                          "tests/test_tool_catalog.py":  "0a619d44a116d77a65f6cbd6df76ab3c9f04729a648e0b60ae5ab637d4362ad5",
+                          "tests/support/__init__.py":  "344a79a244b39597c82e15c379a42f76867cf6b0a300c606e2c5793576d38a70",
+                          "tests/support/docker.py":  "ed6910369504e94237f78dd67ade98df225b5663b689689ac90b9734b4bf0553",
+                          "tests/fixtures/worker-v1.sql":  "d98f3d8e307fd1f1f3c5d49bea25df86bd635afa6689bd0d93e842b70d9fbafe"
+                      }
+}

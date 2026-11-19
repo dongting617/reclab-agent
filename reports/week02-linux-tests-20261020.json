@@ -1,0 +1,154 @@
+{
+  "artifacts": {
+    "local_log": ".reclab/verification/week-02-linux/test-output.log",
+    "local_manifest": ".reclab/verification/week-02-linux/bundle-manifest.json",
+    "local_result": ".reclab/verification/week-02-linux/result.json"
+  },
+  "date": "2026-10-20",
+  "docker_transport_probe": {
+    "candidate_executed": false,
+    "detail": "a dedicated Linux host with a local Docker daemon is required; host execution is disabled",
+    "docker_cli_found": false,
+    "host_fallback": false,
+    "image_registered": false,
+    "outcome": "CapabilityError",
+    "policy_bypassed": false,
+    "requested_operation": "fixed local Docker info query only"
+  },
+  "limitations": [
+    "No Docker daemon or container isolation was validated",
+    "No candidate training/inference code or model checkpoint was executed",
+    "No image was registered or pulled; missing Docker does not permit a host fallback",
+    "Week 1 real baseline and isolation acceptance remains separate"
+  ],
+  "provenance": {
+    "archive_bytes": 59024,
+    "archive_sha256": "85f7eb2ba4b7bc5f169918d16ad48ac1c6311271a601369a8ee74f7f68b7fb8b",
+    "downloaded_log_hash_verified": true,
+    "files": {
+      "reclab_agent/__init__.py": {
+        "bytes": 464,
+        "sha256": "b47bcc67711bdc92066fe106cfd023957b38e9c843763fa18d4215cfe3952047"
+      },
+      "reclab_agent/__main__.py": {
+        "bytes": 2790,
+        "sha256": "b1ed30d981f916d290f33dcd2b536730772803db753a8bb5c64c3d3805e5febb"
+      },
+      "reclab_agent/adapters.py": {
+        "bytes": 2061,
+        "sha256": "a8ca9507d52a085497b49e3a72862c80718e72026cb90c8211e1aaebde21f6d7"
+      },
+      "reclab_agent/beauty.py": {
+        "bytes": 11721,
+        "sha256": "a89dd820d222823aa2bea77729e8eb54c0e5038d8ba85c64e0c0dcfa02e301a8"
+      },
+      "reclab_agent/benchmark.py": {
+        "bytes": 2935,
+        "sha256": "de1a02ae379ea5e78ff9902c9a70678b1d5843948b32c135007123c8de3f2ecf"
+      },
+      "reclab_agent/contracts.py": {
+        "bytes": 2869,
+        "sha256": "fc32054b04a6144d530c62279b63a1fc916bc6a5c0d91e6da6eed348ed4abad1"
+      },
+      "reclab_agent/datasets.py": {
+        "bytes": 6015,
+        "sha256": "70a461830ceaffe8f57c2d8e77f67c39a64bf9d5d457801c9550d84bfb90d668"
+      },
+      "reclab_agent/evaluation.py": {
+        "bytes": 4506,
+        "sha256": "3030a5b3f0d13fefe66d4233742ee37a60417246fa517dcb4b1bb19e0f9a1c4b"
+      },
+      "reclab_agent/execution.py": {
+        "bytes": 39644,
+        "sha256": "036471a66ca99ed23f76bec70b87e1a5d48a454d319641d84a096a8b21bddc72"
+      },
+      "reclab_agent/grading.py": {
+        "bytes": 10632,
+        "sha256": "be3eef8bde30b59a3d78fddbb4bd52c34d5d85c225cc38f3140787cf49ae21da"
+      },
+      "reclab_agent/retrieval.py": {
+        "bytes": 16230,
+        "sha256": "a9d486676cc700da546f5d33176026b280451944421a81b21393dfa793dc3315"
+      },
+      "reclab_agent/runtime.py": {
+        "bytes": 11280,
+        "sha256": "79fefc4e26456ebde34c01890e0c9b111919aa6e2c69cdb3b1e35776007baa92"
+      },
+      "reclab_agent/service.py": {
+        "bytes": 7569,
+        "sha256": "f63a3cf8473b7500b78c5fb53612c073d42e9cda26922208501e284f48521f5a"
+      },
+      "reclab_agent/storage.py": {
+        "bytes": 7003,
+        "sha256": "5ec4fcbae52b1bc9614bf988bca1680b83c9fcebed8b3a2e21dd248f406388c0"
+      },
+      "reclab_agent/tools.py": {
+        "bytes": 13805,
+        "sha256": "787d35b8e21ea702ecf30eb75bad966db9bfd9af753ce37368e3489c34a765c9"
+      },
+      "reclab_agent/worker.py": {
+        "bytes": 3168,
+        "sha256": "48ac0d50c19d5d0b5e49c8da949babe87b2d90265c9ae5a23a75c0ed2c615136"
+      },
+      "reclab_agent/workspace.py": {
+        "bytes": 4382,
+        "sha256": "6fd1886316806f620f0e1c33f02b087b622705fb260e2192a61852168b4359fb"
+      },
+      "run_linux_tests.py": {
+        "bytes": 4438,
+        "sha256": "6f44171877642786cca46d4ad07f4c6b7750d1e65f0b5ca3679323ac7a2f6607"
+      },
+      "tests/test_execution.py": {
+        "bytes": 33111,
+        "sha256": "2ec9d9dc93a10c500477dbc6368d58fe6c83e1d9c0a004c4392dba4849c78367"
+      }
+    },
+    "remote_archive_and_file_hashes_verified": true,
+    "source_manifest_sha256": "6046085f1114afe9f79d62d2d045aa2dd017a8a891051df9be10c9b2d385722e"
+  },
+  "recorded_utc": "2026-10-20T04:12:46.266078+00:00",
+  "schema_version": 1,
+  "tests": {
+    "command": [
+      "python",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_execution.py",
+      "-v"
+    ],
+    "duration_seconds": 1.112019,
+    "environment_forwarded_keys": [
+      "HOME",
+      "LANG",
+      "LC_ALL",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE",
+      "PYTHONIOENCODING",
+      "PYTHONPATH",
+      "TMPDIR"
+    ],
+    "errors": 0,
+    "exit_code": 0,
+    "failures": 0,
+    "finished_utc": "2026-10-20T04:12:41.968229+00:00",
+    "lock_branch": "fcntl.flock",
+    "log_bytes": 6438,
+    "log_sha256": "09fd01b695a7abbbc5a11e6828ffcbf1666bc5306aef78473445997fc3638c37",
+    "passed": 40,
+    "platform": "Linux",
+    "python": "3.12.3",
+    "real_docker_test_env_present": false,
+    "scope": "FakeDocker control logic and real Linux file-lock/process branches; not container isolation evidence",
+    "skipped": 1,
+    "started_utc": "2026-10-20T04:12:40.856223+00:00",
+    "successful": true,
+    "timed_out": false,
+    "total": 41
+  },
+  "verification_kind": "real Linux Python/fcntl/multiprocessing with FakeDocker; not a real-container test"
+}

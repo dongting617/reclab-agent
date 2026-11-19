@@ -1,15 +1,16 @@
 import json
 from pathlib import Path
-import shutil
+import tempfile
 import unittest
 
-from reclab_agent import AgentRuntime, ModelTurn, RecLabToolbox
+from reclab_agent.agents import ReActAgent
+from reclab_agent.core import ModelTurn
+from reclab_agent.tools import RecLabToolbox
 from reclab_agent.evaluation import evaluate_run, evaluate_tool_selection, replay_trace
-from reclab_agent.runtime import function_tools
+from reclab_agent.core.session import function_tools
 
 
-ROOT = Path.cwd()
-TEMP = ROOT / ".test-tmp"
+ROOT = Path(__file__).absolute().parents[1]
 
 
 class ScriptedBackend:
@@ -33,15 +34,12 @@ def tool_turn(name, arguments, call_id="call-1"):
     }], output_text="", response_id=f"response-{call_id}")
 
 
-class AgentRuntimeTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        TEMP.mkdir(exist_ok=True)
-        cls.toolbox = RecLabToolbox(ROOT)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(TEMP, ignore_errors=True)
+class ReActAgentTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="reclab-react-")
+        self.addCleanup(temporary.cleanup)
+        self.temporary_root = Path(temporary.name)
+        self.toolbox = RecLabToolbox(ROOT)
 
     def test_strict_function_schemas_are_closed_and_required(self):
         for definition in function_tools(self.toolbox):
@@ -51,13 +49,13 @@ class AgentRuntimeTests(unittest.TestCase):
             self.assertEqual(set(schema["required"]), set(schema["properties"]))
 
     def test_agent_runs_tool_loop_and_writes_evidence_trace(self):
-        trace = TEMP / "beam-trace.jsonl"
+        trace = self.temporary_root / "beam-trace.jsonl"
         backend = ScriptedBackend([
             tool_turn("diagnose_beam_gap", {}, "beam-call"),
             ModelTurn(output=[{"type": "message"}],
                       output_text="Beam 不是主要瓶颈，证据见差距报告。", response_id="final"),
         ])
-        result = AgentRuntime(self.toolbox, backend, trace_path=trace).run(
+        result = ReActAgent(self.toolbox, backend, trace_path=trace).run(
             "Beam Search 是主要瓶颈吗？", task_id="beam-case")
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["tool_calls"], 1)
@@ -73,7 +71,7 @@ class AgentRuntimeTests(unittest.TestCase):
         backend = ScriptedBackend([
             ModelTurn(output=[{"type": "message"}], output_text="done")
         ], failures=1)
-        result = AgentRuntime(self.toolbox, backend, model_retries=1).run("检查证据")
+        result = ReActAgent(self.toolbox, backend, model_retries=1).run("检查证据")
         self.assertEqual(result["status"], "completed")
         self.assertEqual(backend.calls, 2)
 
@@ -86,7 +84,7 @@ class AgentRuntimeTests(unittest.TestCase):
             malformed,
             ModelTurn(output=[{"type": "message"}], output_text="参数错误，已安全停止。"),
         ])
-        result = AgentRuntime(self.toolbox, backend).run("执行诊断")
+        result = ReActAgent(self.toolbox, backend).run("执行诊断")
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["tool_calls"], 1)
 
@@ -95,7 +93,7 @@ class AgentRuntimeTests(unittest.TestCase):
             tool_turn("diagnose_beam_gap", {}, "one"),
             tool_turn("diagnose_beam_gap", {}, "two"),
         ])
-        result = AgentRuntime(self.toolbox, backend, max_steps=2).run("不要停止")
+        result = ReActAgent(self.toolbox, backend, max_steps=2).run("不要停止")
         self.assertEqual(result["status"], "step_limit_exceeded")
         self.assertEqual(result["tool_calls"], 2)
 
@@ -110,8 +108,8 @@ class AgentRuntimeTests(unittest.TestCase):
             tool_turn("diagnose_frequency_gap", {}, "policy-call"),
             ModelTurn(output=[{"type": "message"}], output_text="已拒绝越权工具。"),
         ])
-        trace = TEMP / "policy-trace.jsonl"
-        result = AgentRuntime(self.toolbox, backend, trace_path=trace).run(
+        trace = self.temporary_root / "policy-trace.jsonl"
+        result = ReActAgent(self.toolbox, backend, trace_path=trace).run(
             "诊断 Beam Search", allowed_tools={"diagnose_beam_gap"})
         exposed = backend.calls
         self.assertEqual(exposed, 2)
@@ -122,14 +120,14 @@ class AgentRuntimeTests(unittest.TestCase):
         self.assertEqual(metrics["policy_violations"], 1)
 
     def test_saved_trace_can_be_replayed_offline(self):
-        trace = TEMP / "replay-trace.jsonl"
+        trace = self.temporary_root / "replay-trace.jsonl"
         evidence_path = self.toolbox.GAP_REPORT
         backend = ScriptedBackend([
             tool_turn("diagnose_beam_gap", {}, "beam-call"),
             ModelTurn(output=[{"type": "message"}],
                       output_text=f"结论来自 {evidence_path}。"),
         ])
-        AgentRuntime(self.toolbox, backend, trace_path=trace).run(
+        ReActAgent(self.toolbox, backend, trace_path=trace).run(
             "Beam Search 是主要瓶颈吗？", task_id="replay-case",
             allowed_tools={"diagnose_beam_gap"})
         report = replay_trace(trace, ["diagnose_beam_gap"])

@@ -2,11 +2,15 @@
 
 from .benchmark import load_tasks, run_reference_suite
 from .evaluation import load_trace, replay_trace
-from .runtime import AgentRuntime, ModelTurn, OpenAIResponsesBackend
-from .tools import RecLabToolbox
+from .core import Agent, AgentConfig, ModelBackend, ModelTurn, OpenAIResponsesBackend
+from .agents import ReActAgent, SimpleAgent, PlanExecuteAgent, ReflectionAgent, create_agent
+from .tools import RecLabToolbox, Tool, ToolRegistry, ToolSpec, Toolbox
 
 __all__ = [
-    "AgentRuntime", "ModelTurn", "OpenAIResponsesBackend", "RecLabToolbox",
+    "ModelTurn", "OpenAIResponsesBackend", "RecLabToolbox",
     "load_tasks", "run_reference_suite", "load_trace", "replay_trace",
+    "Agent", "AgentConfig", "ModelBackend", "ReActAgent", "SimpleAgent",
+    "PlanExecuteAgent", "ReflectionAgent", "create_agent",
+    "Tool", "ToolRegistry", "ToolSpec", "Toolbox",
 ]
 

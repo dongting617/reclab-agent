@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-20",
+  "week": 1,
+  "status": "engineering_complete",
+  "user_learning_self_check": "pending",
+  "base_commit": "d99c38acf225be970136307f1659c927a4cc7a13",
+  "implementation_state": "uncommitted_working_tree_with_source_hashes",
+  "acceptance_scope": "Real data contract, frozen checkpoint inference, independent scoring and fixed unprivileged file-access boundary. No generated candidate code was executed.",
+  "unit_tests": {
+    "discovered": 140,
+    "passed": 138,
+    "skipped": 2,
+    "failed": 0,
+    "skip_reasons": [
+      "Windows real-symlink creation privilege",
+      "real Docker smoke unavailable"
+    ],
+    "log_sha256": "c2ba51d17849488d463cc967efb6bc987c7f4a6f0a92e8bda4a68620ad700d87"
+  },
+  "real_evidence": {
+    "verified_on": "2026-10-20",
+    "bundle": {
+      "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+      "data_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917",
+      "profile": "amazon-beauty-full-train-catalog",
+      "task": "next_item",
+      "catalog_items": 12068,
+      "train_users": 22363,
+      "valid_users": 22312,
+      "test_labels_exposed": false,
+      "quality_evidence": "real_data_import_only"
+    },
+    "frozen_b1": {
+      "batch_size": 256,
+      "candidate_executor": false,
+      "checkpoint_epoch": 20,
+      "checkpoint_seed": 2026,
+      "checkpoint_selected_before_this_run": true,
+      "checkpoint_sha256": "828420f4664d4a78717a534165a2f2cd6902ff0543127f4b187b907b3a50813b",
+      "cuda_matmul_allow_tf32": false,
+      "cuda_version": "12.8",
+      "cudnn_allow_tf32": true,
+      "cudnn_version": 91002,
+      "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+      "deterministic_algorithms_enabled": false,
+      "device": "cuda",
+      "evaluation_hash": "77055d00f56bad4ad4c1bc067e10dc6b17104db58cb9cbab09c74acb6651cd13",
+      "evaluation_sampled": false,
+      "exporter_source_sha256": "fdc598a9bebf49ac19fa2227832043372da406acf09591f5f27491ae21b9e40a",
+      "float32_matmul_precision": "highest",
+      "gpu": "NVIDIA GeForce RTX 4090 D",
+      "grade_sha256": "1a2718d98bf695777feb03d02e84811843007ac2acd6d4a22f667b3d73a5c742",
+      "inference_seconds": 1.0131675079464912,
+      "metrics": {
+        "ndcg@10": 0.06910149693186539,
+        "ndcg@20": 0.07965987624038143,
+        "recall@10": 0.1132126210111151,
+        "recall@20": 0.15511832197920403,
+        "users": 22312
+      },
+      "model_config": {
+        "dropout": 0.4,
+        "hidden_size": 64,
+        "max_length": 50,
+        "num_heads": 1,
+        "num_items": 12068,
+        "num_layers": 1
+      },
+      "model_source_sha256": "37dfa3296117a22e19f6dadd2b2b31be5ee9f30c43febf108cd8911dc15ec1cb",
+      "model_visible_history": "last_50_left_padded",
+      "observed_minus_reference_ndcg@20": 0.0,
+      "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.35",
+      "predictions_sha256": "a91a936b3a1ccddd2e740238b26df3d02c36951c9317692ec68404f965020209",
+      "prepared_data_sha256": "7a2dae80bf7053c91d4eda79f33ff997df45c07c1fd968f36d77b591ed828efb",
+      "protocol_hash": "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+      "public_data_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917",
+      "purpose": "trusted_frozen_checkpoint_validation_reproduction",
+      "python_version": "3.12.3",
+      "reference_reproduced_at_1e-10": true,
+      "reference_valid_ndcg@20": 0.07965987624038143,
+      "schema_version": 1,
+      "seen_mask_history": "complete_training_history",
+      "split": "valid",
+      "test_evaluated": false,
+      "test_used_for_selection": false,
+      "tie_break": "torch.topk_original_B1_rule_no_additional_item_sort",
+      "topk": 20,
+      "torch_version": "2.8.0+cu128",
+      "total_seconds": 6.217622771859169,
+      "trained": false
+    },
+    "local_independent_regrade_matches_remote": true,
+    "popularity": {
+      "metrics": {
+        "users": 22312,
+        "recall@10": 0.016358910003585515,
+        "ndcg@10": 0.007959382760885609,
+        "recall@20": 0.027070634636070276,
+        "ndcg@20": 0.010583535363507337
+      },
+      "protocol_hash": "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+      "evaluation_hash": "77055d00f56bad4ad4c1bc067e10dc6b17104db58cb9cbab09c74acb6651cd13",
+      "historical_reference_matches": true
+    },
+    "comparison": {
+      "protocol_hash": "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+      "evaluation_hash": "77055d00f56bad4ad4c1bc067e10dc6b17104db58cb9cbab09c74acb6651cd13",
+      "users": 22312,
+      "bootstrap_samples": 1000,
+      "seed": 2026,
+      "interval": "paired_percentile_95",
+      "metrics": {
+        "ndcg@10": {
+          "baseline": 0.007959382760885609,
+          "candidate": 0.06910149693186539,
+          "mean_delta": 0.06114211417097978,
+          "ci95": [
+            0.058288959250515616,
+            0.06421503797127355
+          ]
+        },
+        "ndcg@20": {
+          "baseline": 0.010583535363507337,
+          "candidate": 0.07965987624038143,
+          "mean_delta": 0.06907634087687409,
+          "ci95": [
+            0.06607262033830132,
+            0.07224927821752415
+          ]
+        },
+        "recall@10": {
+          "baseline": 0.016358910003585515,
+          "candidate": 0.1132126210111151,
+          "mean_delta": 0.09685371100752958,
+          "ci95": [
+            0.09237181785586232,
+            0.10106781104338472
+          ]
+        },
+        "recall@20": {
+          "baseline": 0.027070634636070276,
+          "candidate": 0.15511832197920403,
+          "mean_delta": 0.12804768734313374,
+          "ci95": [
+            0.12306942452491933,
+            0.1328892524202223
+          ]
+        }
+      }
+    },
+    "analysis_seconds": 30.620097500039265,
+    "comparison_interpretation": "Frozen B1 versus train-count Popularity on the same validation users; not an Agent optimization result or a new-model training result.",
+    "permission_probe": {
+      "docker_verified": false,
+      "kind": "fixed_trusted_file_permission_probe",
+      "limits": [
+        "Only fixed trusted probe code is executed; no generated/candidate code is permitted.",
+        "Evidence covers this UID's access to the named files at probe time, not a full sandbox.",
+        "No namespace/chroot, network, process, CPU, memory, disk or GPU isolation is established.",
+        "No Worker timeout/cancellation/recovery guarantees are established.",
+        "Docker/container acceptance for week two remains incomplete."
+      ],
+      "original_source": {
+        "bytes": 11502706,
+        "guard": {
+          "mode": "0700",
+          "path": "/root",
+          "uid": 0
+        },
+        "path": "/root/autodl-tmp/semantic-id-rec-current/data/processed/beauty-sasrec.json",
+        "sha256": "7a2dae80bf7053c91d4eda79f33ff997df45c07c1fd968f36d77b591ed828efb",
+        "verified_exists_by_root": true
+      },
+      "private_test": {
+        "bytes": 1892833,
+        "guard": {
+          "mode": "0700",
+          "path": "/root",
+          "uid": 0
+        },
+        "path": "/root/autodl-tmp/reclab-agent-week01-20261020/dataset/private/test.json",
+        "sha256": "887c3e0d420f63ca5cd6cb4859e92bbc8dcd3dcf231986f7c6c9dedd3740dc23",
+        "verified_exists_by_root": true
+      },
+      "probe": {
+        "identity": {
+          "CapAmb": "0000000000000000",
+          "CapBnd": "0000000000000000",
+          "CapEff": "0000000000000000",
+          "CapInh": "0000000000000000",
+          "CapPrm": "0000000000000000",
+          "Gid": "65534\t65534\t65534\t65534",
+          "Groups": "",
+          "NoNewPrivs": "1",
+          "Uid": "65534\t65534\t65534\t65534",
+          "environment_entries": 0,
+          "nonstandard_fds": []
+        },
+        "private_access": {
+          "original_source": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          },
+          "parent_traversal": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          },
+          "private_test": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          },
+          "probe_symlink": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          }
+        },
+        "public_read": {
+          "manifest.json": {
+            "allowed": true,
+            "errno": null
+          },
+          "train.json": {
+            "allowed": true,
+            "errno": null
+          },
+          "valid.json": {
+            "allowed": true,
+            "errno": null
+          }
+        },
+        "public_write_open": {
+          "manifest.json": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          },
+          "train.json": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          },
+          "valid.json": {
+            "allowed": false,
+            "errno": 13,
+            "errno_name": "EACCES"
+          }
+        },
+        "status": "passed"
+      },
+      "probe_source_sha256": "1d46d1e202d99feefd2a1594c389b0269e71d49c770f25cce7d9c329688c787d",
+      "public_directory_mode": "0555",
+      "public_file_mode": "0444",
+      "public_sha256": {
+        "manifest.json": "5e11c398b43415bee1159565585f29935444dabc0684e31d16c216d6817f152b",
+        "train.json": "61c65786bf81ccee45fcabb5aee01e9fabca2496516a3966fd8c5c3810d6ea17",
+        "valid.json": "0eb247a8e8fd2774fc8031a830533c238c46936cb78017d658419f975deb0733"
+      },
+      "public_source": "/root/autodl-tmp/reclab-agent-week01-20261020/dataset/public",
+      "public_unchanged": true,
+      "sandbox_established": false,
+      "schema_version": 1,
+      "stage": "/tmp/reclab-permission-probe-r_fb1jfw",
+      "stage_retained": true,
+      "status": "passed"
+    },
+    "raw_artifacts_directory": ".reclab/verification/week-01-real/",
+    "remote_verification_directory": "/root/autodl-tmp/reclab-agent-week01-20261020/"
+  },
+  "source_sha256": {
+    "reclab_agent/__init__.py": "b47bcc67711bdc92066fe106cfd023957b38e9c843763fa18d4215cfe3952047",
+    "reclab_agent/__main__.py": "b1ed30d981f916d290f33dcd2b536730772803db753a8bb5c64c3d3805e5febb",
+    "reclab_agent/adapters.py": "a8ca9507d52a085497b49e3a72862c80718e72026cb90c8211e1aaebde21f6d7",
+    "reclab_agent/beauty.py": "a89dd820d222823aa2bea77729e8eb54c0e5038d8ba85c64e0c0dcfa02e301a8",
+    "reclab_agent/benchmark.py": "de1a02ae379ea5e78ff9902c9a70678b1d5843948b32c135007123c8de3f2ecf",
+    "reclab_agent/contracts.py": "fc32054b04a6144d530c62279b63a1fc916bc6a5c0d91e6da6eed348ed4abad1",
+    "reclab_agent/datasets.py": "70a461830ceaffe8f57c2d8e77f67c39a64bf9d5d457801c9550d84bfb90d668",
+    "reclab_agent/evaluation.py": "3030a5b3f0d13fefe66d4233742ee37a60417246fa517dcb4b1bb19e0f9a1c4b",
+    "reclab_agent/execution.py": "036471a66ca99ed23f76bec70b87e1a5d48a454d319641d84a096a8b21bddc72",
+    "reclab_agent/grading.py": "be3eef8bde30b59a3d78fddbb4bd52c34d5d85c225cc38f3140787cf49ae21da",
+    "reclab_agent/retrieval.py": "a9d486676cc700da546f5d33176026b280451944421a81b21393dfa793dc3315",
+    "reclab_agent/runtime.py": "79fefc4e26456ebde34c01890e0c9b111919aa6e2c69cdb3b1e35776007baa92",
+    "reclab_agent/service.py": "f63a3cf8473b7500b78c5fb53612c073d42e9cda26922208501e284f48521f5a",
+    "reclab_agent/storage.py": "5ec4fcbae52b1bc9614bf988bca1680b83c9fcebed8b3a2e21dd248f406388c0",
+    "reclab_agent/tools.py": "787d35b8e21ea702ecf30eb75bad966db9bfd9af753ce37368e3489c34a765c9",
+    "reclab_agent/worker.py": "48ac0d50c19d5d0b5e49c8da949babe87b2d90265c9ae5a23a75c0ed2c615136",
+    "reclab_agent/workspace.py": "6fd1886316806f620f0e1c33f02b087b622705fb260e2192a61852168b4359fb",
+    "scripts/probe_dataset_permissions.py": "1d46d1e202d99feefd2a1594c389b0269e71d49c770f25cce7d9c329688c787d",
+    "scripts/reproduce_frozen_b1.py": "fdc598a9bebf49ac19fa2227832043372da406acf09591f5f27491ae21b9e40a",
+    "tests/test_beauty.py": "9ee63b3499eaeab815d64f60cd2ab87e6b66833ace814ec7f6c50de671715649",
+    "tests/test_datasets.py": "60d0f2079d3c5a5ff361b5c1b18c24e994d2eb57a62edbe290041e8d1e23c45b",
+    "tests/test_execution.py": "2ec9d9dc93a10c500477dbc6368d58fe6c83e1d9c0a004c4392dba4849c78367",
+    "tests/test_foundation.py": "db81b32d3a038db3eb700bc4bed309f0fb8d746d639add1037eff2edbd54d060",
+    "tests/test_frozen_baseline.py": "1f64002207ea43c498c63de3f18b98fd9ea2aa9019885e276336a2de188af694",
+    "tests/test_grading.py": "57034ef19dfb041a771e8026daf0337dcd89ed4949b564f3a226707bf9e6b6b6",
+    "tests/test_permission_probe.py": "b6534bc4ca3dc1323e4b85d63097f19dfeba7c18647c3bf155eecdc374b9f72d",
+    "tests/test_retrieval.py": "6e8878e88bd788abfb3c22c4dc54b13d9970959f93708018eaa8ff7be5e90c9f",
+    "tests/test_runtime.py": "bb6c4e5e98b989d8ba82ee30d3564a3f5ce2040acd1ce967c9b371a09ab117fe",
+    "tests/test_tools.py": "e6ccd2f7add9b344acf0d5b7c8d66283ae950573b1f5060dc8872c4b39b0e496"
+  },
+  "next_week_gates": [
+    "Actual Docker/container lifecycle and isolation acceptance",
+    "Resource limits, OOM, cancellation and timeout verification",
+    "GPU container, output quota and independent watchdog deployment"
+  ],
+  "cost_notes": "No model API calls or model training started. Existing cloud rental charges were not queried."
+}

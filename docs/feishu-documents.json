@@ -1,0 +1,110 @@
+{
+  "updated": "2026-10-20",
+  "learning_history_url": "https://my.feishu.cn/docx/BGDldvHnWoUlu5xYotRcWm6AnKb",
+  "documents": [
+    {
+      "key": "plan",
+      "local_path": "docs/eight-week-plan.md",
+      "document_id": "DZ1Hdi6pToY617xyCEWceXmvnKa",
+      "url": "https://my.feishu.cn/docx/DZ1Hdi6pToY617xyCEWceXmvnKa",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "engineering_progress_revision": 5,
+      "engineering_progress_anchor": "doxcnd4Vh3tNg0ZgVmrOGCUlEyg",
+      "cpu_acceptance_revision": 7,
+      "cpu_first_decision_revision": 8
+    },
+    {
+      "key": "week01",
+      "local_path": "docs/weeks/week-01.md",
+      "document_id": "XDMndeh2eopB6rxl7yAcuog7nNc",
+      "url": "https://my.feishu.cn/docx/XDMndeh2eopB6rxl7yAcuog7nNc",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 10,
+      "cloud_verification_revision": 12,
+      "cloud_verification_anchor": "doxcnDyApk6KPAYC0d422HFyd0b",
+      "learning_source": "docs\\weeks\\learning\\week-01.md",
+      "engineering_progress_revision": 15,
+      "engineering_progress_anchor": "doxcnJ7cAkDNPE292p7N30xtPGR"
+    },
+    {
+      "key": "week02",
+      "local_path": "docs/weeks/week-02.md",
+      "document_id": "B4uLdyE5LoBA67x8vKNcZG3NnLf",
+      "url": "https://my.feishu.cn/docx/B4uLdyE5LoBA67x8vKNcZG3NnLf",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "cloud_verification_revision": 6,
+      "cloud_verification_anchor": "doxcnecJBDQG6JOGRrBCmw7fH3f",
+      "learning_source": "docs\\weeks\\learning\\week-02.md",
+      "engineering_progress_revision": 8,
+      "engineering_progress_anchor": "doxcnYzHCpqEMFfH7my21h5xoVb",
+      "cpu_acceptance_revision": 12,
+      "cpu_acceptance_anchor": "doxcngYuLaRFuqKZpJr6IYK8yBb",
+      "runtime_learning_anchor": "doxcnOwr9tI4PUkHQN7BTE8ZcdW",
+      "cpu_first_decision_revision": 13
+    },
+    {
+      "key": "week03",
+      "local_path": "docs/weeks/week-03.md",
+      "document_id": "F7K9dHKL3oxQvHxwqggcTwj2nVd",
+      "url": "https://my.feishu.cn/docx/F7K9dHKL3oxQvHxwqggcTwj2nVd",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-03.md"
+    },
+    {
+      "key": "week04",
+      "local_path": "docs/weeks/week-04.md",
+      "document_id": "YoJodFuD7oHvQ2x9imOc7AJonsc",
+      "url": "https://my.feishu.cn/docx/YoJodFuD7oHvQ2x9imOc7AJonsc",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-04.md"
+    },
+    {
+      "key": "week05",
+      "local_path": "docs/weeks/week-05.md",
+      "document_id": "CVnvdNVuIoIDzIxG5N2cdwhwnLf",
+      "url": "https://my.feishu.cn/docx/CVnvdNVuIoIDzIxG5N2cdwhwnLf",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-05.md"
+    },
+    {
+      "key": "week06",
+      "local_path": "docs/weeks/week-06.md",
+      "document_id": "DDz1d2wBsoe05gxaFLRcpPXgnOh",
+      "url": "https://my.feishu.cn/docx/DDz1d2wBsoe05gxaFLRcpPXgnOh",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-06.md"
+    },
+    {
+      "key": "week07",
+      "local_path": "docs/weeks/week-07.md",
+      "document_id": "OfksdqjSUoY52wxfg8BcjWLan6g",
+      "url": "https://my.feishu.cn/docx/OfksdqjSUoY52wxfg8BcjWLan6g",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-07.md"
+    },
+    {
+      "key": "week08",
+      "local_path": "docs/weeks/week-08.md",
+      "document_id": "RdaVdad4ioBPDDxg211ca4Mvnrq",
+      "url": "https://my.feishu.cn/docx/RdaVdad4ioBPDDxg211ca4Mvnrq",
+      "created_revision": 3,
+      "navigation_revision": 4,
+      "learning_revision": 5,
+      "learning_source": "docs\\weeks\\learning\\week-08.md"
+    }
+  ]
+}

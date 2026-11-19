@@ -1,0 +1,295 @@
+{
+  "cli_demo": {
+    "data_hash": "df54039fff32268d48aa2c3af521b334714f22f9a1ca8cfde63c2d6d29ed2f22",
+    "image": "public.ecr.aws/docker/library/python@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1",
+    "interpretation": "Fixture contract demonstration only; no real model optimization or LLM agent success claim.",
+    "jobs": [
+      {
+        "exit_code": 0,
+        "job_id": "job-8ec79d4ece55fac6a1ee0b350b322a028d7ed5dd",
+        "reason": null,
+        "receipt": {
+          "bytes": 309,
+          "files": {
+            "counts.json": {
+              "bytes": 261,
+              "sha256": "82d6c6117588a2703f583c2d14488345228fed5a818b623c29d6d47abaf1259a"
+            },
+            "training.json": {
+              "bytes": 48,
+              "sha256": "50d52d82826a96179fdf22c28abcff2c6c732b3e957cf23e6b39856a4135dcda"
+            }
+          },
+          "sha256": "9b5eb38b593fbda3574527395135ad77691f5bc5847185575efabe47468bc35a"
+        },
+        "status": "completed"
+      },
+      {
+        "exit_code": 0,
+        "job_id": "job-789b057ea0fcefa88250ed03d06853ed17276c19",
+        "reason": null,
+        "receipt": {
+          "bytes": 985,
+          "files": {
+            "predictions.json": {
+              "bytes": 985,
+              "sha256": "83c5804ab8d362387b29e07c1b7f794fa95cd64ec535a75272da4ffbc7d77aa8"
+            }
+          },
+          "sha256": "dcb4f8b9b549364d95e0ef56355c5fdd4bc72e961fe16a530691595e18424221"
+        },
+        "status": "completed"
+      }
+    ],
+    "llm_connected": false,
+    "max_jobs": 2,
+    "metrics": {
+      "ndcg@10": 0.0,
+      "ndcg@20": 0.0,
+      "recall@10": 0.0,
+      "recall@20": 0.0,
+      "users": 12
+    },
+    "predictions_sha256": "79dcca4f9f2c44fbd87dc58d66b41f23f889451a3a00be6c48b1695ecc48963f",
+    "public_tree_sha256": "7e637edacb7acd8934ce4b7ed09df0331679c12fd011ea76e4d4e248d36a524b",
+    "quality_evidence": "fixture_only",
+    "report_sha256": "8b1dc735c88356be956b8c3973ce5c8253726adbbbb20e7f8f3e54f182e39fd6",
+    "schema_version": 1,
+    "seed": 42,
+    "source_hash": "cfda2c1b7e038d4e75f20e3ea32c40f383460c09b2a8719d3e592f901f7f5ab1",
+    "source_tree_sha256": "3732d438397b2561eaec05e616a4f1303d2fdbcf5a56d3589ff848d90d9f4040",
+    "status": "completed",
+    "test_labels_mounted": false
+  },
+  "collected_at": "2026-10-20T05:11:31.037849+00:00",
+  "copied_files": {
+    "acceptance": 96,
+    "demo": 21,
+    "first_failure": 80
+  },
+  "daemon": {
+    "Architecture": "x86_64",
+    "CgroupVersion": "2",
+    "CpuCfsPeriod": true,
+    "CpuCfsQuota": true,
+    "KernelVersion": "6.18.33.2-microsoft-standard-WSL2",
+    "MemoryLimit": true,
+    "OSType": "linux",
+    "PidsLimit": true,
+    "SecurityOptions": [
+      "name=seccomp,profile=builtin",
+      "name=cgroupns"
+    ],
+    "ServerVersion": "29.1.3",
+    "SwapLimit": true
+  },
+  "date": "2026-10-20",
+  "demo_live_exit_observations": [
+    {
+      "container_id": "ecdf0f372acdf33ea6f6c35856058971366762590ae5a315fd6e01af65f863b0",
+      "exit_code": 0,
+      "job_id": "job-8ec79d4ece55fac6a1ee0b350b322a028d7ed5dd",
+      "observed_at_unix": 1792473090.435581,
+      "running": false
+    },
+    {
+      "container_id": "35d6bb8c8258821f81a763a856e9c5545fbecd45cb2a2d4a589bc4f2899ff65c",
+      "exit_code": 0,
+      "job_id": "job-789b057ea0fcefa88250ed03d06853ed17276c19",
+      "observed_at_unix": 1792473090.4943376,
+      "running": false
+    }
+  ],
+  "earlier_failures": [
+    {
+      "detail": "local driver compression with max-file=1 rejected before start",
+      "fix": "per-container compress=false; saved failure evidence and removed only seven verified stopped owned IDs",
+      "kind": "daemon_logging_initialization"
+    },
+    {
+      "detail": "Python 3.12 exists() raised PermissionError for inaccessible /root path",
+      "fix": "assert content cannot be read (ENOENT/EACCES); retain fail on successful read; clean exact known stopped ID",
+      "kind": "legacy_smoke_permission_assertion"
+    }
+  ],
+  "execution_route_decision": {
+    "confirmed_by_user": "2026-10-20",
+    "later": "Cloud Docker/GPU and real Beauty training migration; pending, not waived",
+    "next": "Connect the Agent on the accepted local WSL2 CPU Docker worker first"
+  },
+  "git_head": "d99c38acf225be970136307f1659c927a4cc7a13",
+  "image": {
+    "image_id": "sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1",
+    "image_registry": "public.ecr.aws",
+    "image_repository": "public.ecr.aws/docker/library/python",
+    "official_distribution_reference": "https://www.docker.com/blog/news-from-aws-reinvent-docker-official-images-on-amazon-ecr-public/",
+    "requested_image": "public.ecr.aws/docker/library/python@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1"
+  },
+  "learning_mastery": "pending_user_self_test",
+  "not_claimed": [
+    "Cloud GPU acceptance",
+    "New B1 training or quality gain",
+    "Autonomous agent benchmark success",
+    "Production multitenant sandbox"
+  ],
+  "operator_lifecycle": {
+    "docker_startup": "on_demand; docker.service, docker.socket, containerd.service disabled at boot",
+    "resume_instructions": "docs/week02-demo.md",
+    "temporary_watchdog": "stopped after both demo containers were freshly confirmed exited",
+    "temporary_wsl_keepalive": "stopped; a later check observed the on-demand daemon inactive"
+  },
+  "raw_evidence": ".reclab/verification/week-02-real-final",
+  "real_acceptance_cases": [
+    {
+      "jobs": [
+        {
+          "exit_code": 137,
+          "job_id": "job-d4b258473085640525aeaceccaa007f110e9bb96",
+          "reason": "oom_killed",
+          "status": "failed"
+        }
+      ],
+      "name": "test_real_bounded_memory_allocation_is_oom_killed"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 137,
+          "job_id": "job-711dea6d8c1b42de3d0e061bf3cd5df59d92b885",
+          "reason": "nonzero_exit",
+          "status": "cancelled"
+        }
+      ],
+      "name": "test_real_cancel_confirms_exit"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 0,
+          "job_id": "job-cdc01ee2296fdf87599ea20e2a42879a45ac9db8",
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "name": "test_real_cpu_pid_and_cgroup_limits"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 137,
+          "job_id": "job-2dc981f8c7528a425039b657f3093254d2e4769d",
+          "reason": "nonzero_exit",
+          "status": "timed_out"
+        }
+      ],
+      "name": "test_real_deadline_is_enforced_by_running_supervisor"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 137,
+          "job_id": "job-aa1084e4874be84921ea8fe60be22924d7b21368",
+          "reason": "nonzero_exit",
+          "status": "cancelled"
+        }
+      ],
+      "name": "test_real_duplicate_submit_and_worker_reconstruction_share_one_container"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 0,
+          "job_id": "job-269efbdbe1a0e5e02ca83f310ca9402d3f650942",
+          "reason": null,
+          "status": "completed"
+        },
+        {
+          "exit_code": 0,
+          "job_id": "job-47d7a9471f6e3e037ac4366f023196f5eb1da2d4",
+          "reason": null,
+          "status": "completed"
+        }
+      ],
+      "name": "test_real_fit_predict_boundaries_and_independent_grader"
+    },
+    {
+      "jobs": [
+        {
+          "exit_code": 137,
+          "job_id": "job-9e38ddd5d6dc0fcadc9393e00d8def1f8c3a6617",
+          "reason": "nonzero_exit",
+          "status": "timed_out"
+        }
+      ],
+      "name": "test_real_independent_watchdog_stops_while_worker_job_lock_is_held"
+    }
+  ],
+  "real_acceptance_run": "run-1377e715ee0e439dad227fdaaaa5ab18",
+  "remaining": [
+    "Actual cloud Docker job and independent grade",
+    "GPU/PyTorch image and real Beauty train/predict adapter",
+    "LLM generated patch loop in week3",
+    "Write-time output disk quota",
+    "Operational watchdog supervision and availability"
+  ],
+  "schema_version": 1,
+  "scope": "Local WSL2 Ubuntu Linux CPU; reviewed stdlib synthetic programs; no LLM coding or model quality improvement",
+  "source_files_sha256": {
+    "pyproject.toml": "4727ccc7c57bf9f5e6cae74358ac82143123574b9a76516cfd2162d4adaba5e0",
+    "reclab_agent/__init__.py": "b47bcc67711bdc92066fe106cfd023957b38e9c843763fa18d4215cfe3952047",
+    "reclab_agent/__main__.py": "b1ed30d981f916d290f33dcd2b536730772803db753a8bb5c64c3d3805e5febb",
+    "reclab_agent/adapters.py": "a8ca9507d52a085497b49e3a72862c80718e72026cb90c8211e1aaebde21f6d7",
+    "reclab_agent/beauty.py": "a89dd820d222823aa2bea77729e8eb54c0e5038d8ba85c64e0c0dcfa02e301a8",
+    "reclab_agent/benchmark.py": "de1a02ae379ea5e78ff9902c9a70678b1d5843948b32c135007123c8de3f2ecf",
+    "reclab_agent/contracts.py": "fc32054b04a6144d530c62279b63a1fc916bc6a5c0d91e6da6eed348ed4abad1",
+    "reclab_agent/datasets.py": "70a461830ceaffe8f57c2d8e77f67c39a64bf9d5d457801c9550d84bfb90d668",
+    "reclab_agent/demo.py": "c9673f051b2a468c47a3c3022a30609b75c96685dd6beab089f31fbc5e777538",
+    "reclab_agent/evaluation.py": "3030a5b3f0d13fefe66d4233742ee37a60417246fa517dcb4b1bb19e0f9a1c4b",
+    "reclab_agent/execution.py": "a9c4512f91b48b617844289afc0d59b3682a3c278369f0afb5fd8d3690223e1a",
+    "reclab_agent/grading.py": "be3eef8bde30b59a3d78fddbb4bd52c34d5d85c225cc38f3140787cf49ae21da",
+    "reclab_agent/research_cli.py": "7c90bbb34819af074e9577344fb4cf577a60a4ceffe85070a3e659ed35fe19e7",
+    "reclab_agent/retrieval.py": "a9d486676cc700da546f5d33176026b280451944421a81b21393dfa793dc3315",
+    "reclab_agent/runtime.py": "79fefc4e26456ebde34c01890e0c9b111919aa6e2c69cdb3b1e35776007baa92",
+    "reclab_agent/service.py": "f63a3cf8473b7500b78c5fb53612c073d42e9cda26922208501e284f48521f5a",
+    "reclab_agent/storage.py": "5ec4fcbae52b1bc9614bf988bca1680b83c9fcebed8b3a2e21dd248f406388c0",
+    "reclab_agent/tools.py": "787d35b8e21ea702ecf30eb75bad966db9bfd9af753ce37368e3489c34a765c9",
+    "reclab_agent/watchdog.py": "c1f19c1d4edd3212e707da052eec1daac537b7e0ca713e398e95ffb1207473fd",
+    "reclab_agent/worker.py": "48ac0d50c19d5d0b5e49c8da949babe87b2d90265c9ae5a23a75c0ed2c615136",
+    "reclab_agent/workspace.py": "6fd1886316806f620f0e1c33f02b087b622705fb260e2192a61852168b4359fb",
+    "scripts/prepare_worker_acceptance.py": "0e20a16a40374ebf9646aa3c2e3cf820b685ad365f87a88986129ca91d00286e",
+    "scripts/probe_dataset_permissions.py": "1d46d1e202d99feefd2a1594c389b0269e71d49c770f25cce7d9c329688c787d",
+    "scripts/reproduce_frozen_b1.py": "fdc598a9bebf49ac19fa2227832043372da406acf09591f5f27491ae21b9e40a",
+    "tests/test_beauty.py": "9ee63b3499eaeab815d64f60cd2ab87e6b66833ace814ec7f6c50de671715649",
+    "tests/test_datasets.py": "60d0f2079d3c5a5ff361b5c1b18c24e994d2eb57a62edbe290041e8d1e23c45b",
+    "tests/test_execution.py": "27a4da6f625461d8428d11b35753c1cd1db6adde3f94a66fbd45e3750922cea4",
+    "tests/test_foundation.py": "db81b32d3a038db3eb700bc4bed309f0fb8d746d639add1037eff2edbd54d060",
+    "tests/test_frozen_baseline.py": "1f64002207ea43c498c63de3f18b98fd9ea2aa9019885e276336a2de188af694",
+    "tests/test_grading.py": "57034ef19dfb041a771e8026daf0337dcd89ed4949b564f3a226707bf9e6b6b6",
+    "tests/test_permission_probe.py": "b6534bc4ca3dc1323e4b85d63097f19dfeba7c18647c3bf155eecdc374b9f72d",
+    "tests/test_real_execution.py": "9ac47b23bf8052315c36516d9b62d8ba9253a18fd5e0158d924039d6e55b452a",
+    "tests/test_research_cli.py": "9ae084a16a838c746de2906845039e188421aa3ecfce57a6fa53d057b03d2287",
+    "tests/test_retrieval.py": "6e8878e88bd788abfb3c22c4dc54b13d9970959f93708018eaa8ff7be5e90c9f",
+    "tests/test_runtime.py": "bb6c4e5e98b989d8ba82ee30d3564a3f5ce2040acd1ce967c9b371a09ab117fe",
+    "tests/test_tools.py": "e6ccd2f7add9b344acf0d5b7c8d66283ae950573b1f5060dc8872c4b39b0e496",
+    "tests/test_watchdog.py": "113434d0ecf3289da602bb2b708f18fc4f73ba39b99756ccec47db0333ffc2b2"
+  },
+  "status": "cpu_execution_acceptance_passed_cloud_gpu_pending",
+  "tests": {
+    "linux": {
+      "log_sha256": "966e50c92630911aae4ea71124b9cf348b1572e276353aa9ed274110c2fa5e7e",
+      "passed": 188,
+      "seconds": 24.875,
+      "skipped": 0,
+      "total": 188
+    },
+    "windows": {
+      "log_sha256": "b9890bf6b48d09f32e20399c2d3b45b08618bddd413e1b956259aaf680d581a5",
+      "passed": 178,
+      "seconds": 123.837,
+      "skipped": 10,
+      "total": 188
+    }
+  },
+  "uncommitted_source": true,
+  "week2_all_exit_criteria_met": false
+}

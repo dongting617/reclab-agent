@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-20",
+  "purpose": "RecLab remote environment readiness; not a training or sandbox acceptance result",
+  "connection": {
+    "transport": "ssh",
+    "batch_mode_public_key_authentication": "passed",
+    "strict_host_key_checking": true,
+    "connection_details": "kept in the existing local SSH configuration"
+  },
+  "operating_system": {
+    "kernel": "Linux 5.15.0-94-generic",
+    "architecture": "x86_64",
+    "docker_container_marker_present": true
+  },
+  "allocated_resources": {
+    "cpu_max": "1500000 100000",
+    "cpu_quota_equivalent": 15,
+    "memory_max_bytes": 85899345920,
+    "memory_max_gib": 80,
+    "note": "Use cgroup limits; nproc and free expose larger host resources."
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "total_memory_mib": 24564,
+    "driver_version": "580.76.05"
+  },
+  "storage": {
+    "data_directory": "/root/autodl-tmp",
+    "data_disk_size_gib_rounded": 50,
+    "data_disk_available_gib_rounded": 49,
+    "root_available_gib_rounded": 28,
+    "note": "Observed rounded df -h output, not a storage guarantee."
+  },
+  "python": {
+    "executable": "/root/miniconda3/bin/python",
+    "version": "3.12.3",
+    "python3_in_noninteractive_path": false,
+    "torch": "2.8.0+cu128",
+    "torch_cuda": "12.8",
+    "cuda_available": true,
+    "cuda_probe": {
+      "operation": "sum(square(tensor([1.0, 2.0, 3.0], device='cuda')))",
+      "expected": 14.0,
+      "observed": 14.0,
+      "status": "passed"
+    },
+    "other_observed_packages": {
+      "numpy": "2.3.2",
+      "scipy": "1.18.1",
+      "scikit-learn": "1.9.1",
+      "transformers": "5.17.0",
+      "pandas": "not installed"
+    }
+  },
+  "existing_assets": [
+    {
+      "path": "/root/autodl-tmp/semantic-id-rec/data/processed/beauty.json",
+      "bytes": 1827327
+    },
+    {
+      "path": "/root/autodl-tmp/semantic-id-rec/outputs/beauty-sasrec-compact-s2026/best.pt",
+      "bytes": 1961343
+    },
+    {
+      "path": "/root/autodl-tmp/semantic-id-rec-current/data/processed/beauty-sasrec.json",
+      "bytes": 11502706
+    },
+    {
+      "path": "/root/autodl-tmp/semantic-id-rec-current/outputs/b1-s2026/best.pt",
+      "bytes": 10078143
+    }
+  ],
+  "asset_validation": "Existence and file sizes only; data protocol, content hashes, source/checkpoint compatibility and baseline scores not yet verified.",
+  "candidate_execution": {
+    "ready": false,
+    "docker_cli_available": false,
+    "docker_socket_present": false,
+    "gpu_container_execution_verified": false,
+    "runtime_test_label_isolation_verified": false,
+    "policy": "Fail closed; do not run Agent-generated training or inference code directly in this instance."
+  },
+  "actions": {
+    "environment_probes": "passed",
+    "training_started": false,
+    "packages_installed": false,
+    "remote_project_files_modified": false,
+    "paid_llm_requests": false,
+    "cost_note": "Cloud instance rental charges were not queried."
+  },
+  "next_steps": [
+    "Validate the real Beauty/B1 data protocol and checkpoint/source identity before trusted baseline reproduction.",
+    "Implement and verify a Docker-capable isolated Worker before autonomous candidate experiments."
+  ]
+}

@@ -1,0 +1,60 @@
+name: Reviewed CPU Docker Worker acceptance
+
+# Manual only: this file does not start jobs merely because it is committed.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout this reviewed revision without persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Prepare evidence directory
+        shell: bash
+        run: mkdir -p .reclab/worker-acceptance
+      - name: Preload official Python image and freeze its actual digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Operator preparation only. DockerWorker itself always uses --pull never.
+          docker --host unix:///var/run/docker.sock pull docker.io/library/python:3.12-slim
+          docker --host unix:///var/run/docker.sock image inspect docker.io/library/python:3.12-slim > .reclab/worker-acceptance/pulled-image.json
+          python3 - <<'PY'
+          import json, os, pathlib, re
+          image = json.loads(pathlib.Path('.reclab/worker-acceptance/pulled-image.json').read_text())[0]
+          candidates = [value for value in image['RepoDigests'] if re.fullmatch(r'(?:docker\.io/library/|library/)?python@sha256:[a-f0-9]{64}', value)]
+          if not candidates:
+              raise SystemExit('official Python RepoDigest missing')
+          digest = sorted(candidates)[0]
+          pathlib.Path('.reclab/worker-acceptance/approved-image.txt').write_text(digest + '\n')
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write('RECLAB_DOCKER_TEST_IMAGE=' + digest + '\n')
+          PY
+      - name: Check exact preloaded digest and save provenance
+        shell: bash
+        run: python3 scripts/prepare_worker_acceptance.py --image "$RECLAB_DOCKER_TEST_IMAGE" --evidence .reclab/worker-acceptance/preflight
+      - name: Execute real Worker isolation and lifecycle acceptance
+        shell: bash
+        env:
+          RECLAB_REAL_DOCKER: "1"
+          RECLAB_ACCEPTANCE_EVIDENCE: .reclab/worker-acceptance
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_real_execution.py -v 2>&1 | tee .reclab/worker-acceptance/unittest.log
+      - name: Save evidence even after an acceptance failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: worker-cpu-docker-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .reclab/worker-acceptance/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
