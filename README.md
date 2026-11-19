@@ -2,6 +2,24 @@
 
 RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐模型改进。项目将 Agent 策略与模型实验分开：Agent 选择动作，工具执行确定性操作，执行层运行候选程序，独立评分器判断模型效果。当前提供证据诊断、多种 Agent 策略，以及按任务配置绑定的优化适配层。AutoDL 使用 SSH+tmux，Docker 暂缓。
 
+## 启动优化实验
+
+在项目目录执行：
+
+```powershell
+.\start.cmd
+```
+
+启动器自动加载本地 API 配置、选择 Python/WSL 环境、准备 SDK 并连接 GPU，随后完成基线训练、Agent 优化、候选实验与独立评分。结束时直接显示报告位置。启动此命令即运行当前配置的范围；当前任务最多两次训练，基线与候选共用预算。
+
+只查看任务和预算：
+
+```powershell
+.\start.cmd -Plan
+```
+
+默认任务和 API 配置文件的位置集中在 [reclab.json](reclab.json)。模型、数据、可修改文件和预算在它指向的任务配置中设置；实际 API Key 放在被 Git 忽略的 `.reclab/agent.env`，实际 SSH 连接放在 `configs/autodl-ssh.json`。更换任务时修改 `reclab.json` 的 `task` 即可。Linux/macOS 使用 `python -m reclab_agent.start`。
+
 当前里程碑提供：
 
 - 限定在仓库根目录内的只读文件沙箱；
@@ -18,7 +36,7 @@ RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐�
 - 可组合的工具注册表，原有证据工具与新增业务工具共用权限和审计机制；
 - 按研究计划约束的源码补丁、语法检查、冻结快照与实验回调，保留原实验协议。
 
-## 快速开始
+## 开发与证据诊断
 
 项目仅依赖 Python 3.10+ 标准库：
 
@@ -76,15 +94,7 @@ python -B -m reclab_agent.research_cli check --config configs/beauty-sasrec-task
 
 `inputs_valid` 表示文件与接入合同通过检查；`ready_to_run` 表示真实执行条件是否就绪。检查入口不启动训练。通用 `run_experiment` 工具提供训练→预测→独立评分的固定流程，通过 `create_task_agent()` 按任务配置绑定，模型无需实现自己的 runner。将 [autodl-ssh.example.json](configs/autodl-ssh.example.json) 复制为被 Git 忽略的 `configs/autodl-ssh.json` 并填写实际连接信息；七个远程工具和 tmux 恢复约定见[执行层说明](docs/execution.md)。独立 Agent 的大模型 Key 和模型名配置在本地控制端环境变量中。
 
-真实优化 Agent 的入口为 `research_cli run`。将 `OPENAI_API_KEY`、`RECLAB_MODEL` 和可选的 `OPENAI_BASE_URL` 填入本地 `.reclab/agent.env` 后，在装有 `.[openai]` 可选依赖的 Python 环境中运行：
-
-```bash
-python -B -m reclab_agent.research_cli plan --config configs/beauty-sasrec-task.json
-python -B -m reclab_agent.research_cli api-check --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env
-python -B -m reclab_agent.research_cli run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan
-```
-
-`plan` 只显示范围；`api-check` 发送一次 Responses API 工具调用探测，不启动训练。`run` 先检查接口，再训练和独立评分原配置基线，然后让 Agent 在同一预算内提出并验证候选。`--approve-plan` 明确批准已查看的配置范围。当前配置最多两次训练（基线和候选各一次），启动探测计入模型轮次。每次输出到配置目录下独立的 `sessions/<时间>-<ID>/`，包含 `report.json`、`plan.json`、审阅记录、`agent.jsonl` 和实验产物。缺少实测候选时报告为 `incomplete`。WSL 控制端若复用 Windows 私钥与 OpenSSH，在 `run` 命令添加 `--windows-ssh`。
+默认使用上方的 `start.cmd`。底层 `research_cli` 的计划查看、API 预检及显式参数用于开发集成，见[执行层说明](docs/execution.md)。每次实验使用独立的 `sessions/<时间>-<ID>/`，包含报告、计划、Agent 轨迹和实验产物；缺少实测候选时标记为 `incomplete`。
 
 ## 项目结构
 

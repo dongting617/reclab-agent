@@ -1,0 +1,4 @@
+{
+  "task": "configs/beauty-sasrec-task.json",
+  "env_file": ".reclab/agent.env"
+}

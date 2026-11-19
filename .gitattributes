@@ -1,2 +1,4 @@
 # Preserve the byte identity of the reviewed frozen B1 model source.
 backends/sasrec/src/sasrec.py -text
+start.cmd text eol=crlf
+scripts/start-agent.ps1 text eol=crlf

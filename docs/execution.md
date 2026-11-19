@@ -2,6 +2,8 @@
 
 当前 AutoDL 采用用户选择的 `ssh_tmux` 原生执行模式；Docker 部署暂缓。两个执行配置分别声明运行环境，不在 Docker 不可用时自动切换。
 
+日常启动只需在项目目录运行 `.\start.cmd`，查看范围使用 `.\start.cmd -Plan`。启动器从 `reclab.json` 读取任务和本地 API 配置路径，自动选择原生 Python 或 WSL，并复用或准备 SDK 环境；用户无需填写运行时路径、WSL 或 SSH 桥接参数。此入口复用下述真实实验流程，启动即授权执行当前配置范围。`-Plan` 不加载密钥、不安装依赖、不调用 API 或训练。下面的 `research_cli` 参数和 Python 接口用于开发集成。
+
 2026-11-19 已在实际 RTX 4090 上验收七个工具及两次三轮短训：独立验证集 NDCG@20 从 0.061478 到 0.065730，Recall@20 从 0.123118 到 0.131992。完整运行身份、评分哈希、日志和 checkpoint 位置见[实测报告](../reports/autodl-ssh-tmux-20261119.json)。本次由 Codex 会话控制，没有调用独立 Agent 的大模型 API；短训结果不代表充分训练后的最终提升。
 
 ## AutoDL：SSH 工具与持久化训练

@@ -167,7 +167,7 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
         atomic_write(confined_path(output, name), canonical_json(value).encode("utf-8"))
 
     review = PlanReview(plan.plan_hash, "approved", "cli-user",
-        datetime.now(timezone.utc).isoformat(), "Explicit --approve-plan invocation for this configured scope.")
+        datetime.now(timezone.utc).isoformat(), "Explicit start/run authorization for this configured scope.")
     write("plan.json", plan.to_dict())
     write("review.json", review.to_dict())
     write("report.json", report)
