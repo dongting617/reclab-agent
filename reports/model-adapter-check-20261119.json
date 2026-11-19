@@ -1,0 +1,60 @@
+{
+  "checked_at_utc": "2026-11-19T04:00:52Z",
+  "contract_tests": {
+    "command": "python -B -m unittest tests.test_sasrec_backend -v",
+    "failed": 0,
+    "passed": 14,
+    "run": 14
+  },
+  "default_config": {
+    "batch_size": 256,
+    "device": "cuda",
+    "epochs": 30,
+    "eval_batch_size": 256,
+    "grad_clip": 5.0,
+    "learning_rate": 0.001,
+    "max_length": 50,
+    "model": {
+      "class": "SASRec",
+      "file": "src/sasrec.py",
+      "kwargs": {
+        "dropout": 0.4,
+        "hidden_size": 64,
+        "num_heads": 1,
+        "num_layers": 1
+      }
+    },
+    "patience": 5,
+    "weight_decay": 0.0001
+  },
+  "docker_status": "deferred by user",
+  "model_imported": false,
+  "numerical_checkpoint_roundtrip_verified": false,
+  "pending": [
+    "isolated training and prediction numerical acceptance",
+    "trusted experiment runner integration",
+    "Agent language-model backend configuration",
+    "baseline/candidate comparison report"
+  ],
+  "public_data": {
+    "catalog_items": 12068,
+    "data_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917",
+    "prefix_training_examples": 131413,
+    "same_identity_as_existing_adapter": true,
+    "train_interactions": 153776,
+    "train_users": 22363,
+    "valid_users": 22312
+  },
+  "scope": "configuration, source syntax and public-data contracts only",
+  "source_files": {
+    "configs/default.json": "f04e3de38df1bddeae582a0ad104c977b79bf74b87961dbed9e037594197140c",
+    "src/data.py": "c747fe94e34fdd960d3d974e73baa118b96c1e7544f3d5065c7af2d1a81b52bc",
+    "src/predict.py": "db9c2d5f34bbb9c705c83a9e606071e84bb43c2b97c0bcca8d6dcfbe71723202",
+    "src/runtime.py": "2952b745e57dc54e6446d535208387b335df1fb213f2b7d77deb060254b6bc72",
+    "src/sasrec.py": "37dfa3296117a22e19f6dadd2b2b31be5ee9f30c43febf108cd8911dc15ec1cb",
+    "src/train.py": "a5f3d286e7a153b308ebbfe208b1f32569f299acf175cc2ea1283a1fc6cd835e"
+  },
+  "source_tree_sha256": "5495a72430f8aef75a8216ba0610f201150507e18984ed91c281298821fc1f90",
+  "test_labels_read": false,
+  "training_executed": false
+}

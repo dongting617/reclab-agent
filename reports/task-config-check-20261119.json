@@ -1,0 +1,157 @@
+{
+  "checked_at_utc": "2026-11-19T05:02:53Z",
+  "ok": true,
+  "result": {
+    "agent_backend": {
+      "api_key_env": "OPENAI_API_KEY",
+      "api_requested": false,
+      "credentials_configured": false,
+      "model_configured": false,
+      "model_env": "RECLAB_MODEL",
+      "sdk_installed": false
+    },
+    "checks": [
+      {
+        "name": "paths",
+        "ok": true
+      },
+      {
+        "name": "source",
+        "ok": true
+      },
+      {
+        "name": "dataset",
+        "ok": true
+      },
+      {
+        "name": "evaluation",
+        "ok": true
+      }
+    ],
+    "configuration_path": "/mnt/e/DongTing/简历/reclab-agent/configs/beauty-sasrec-task.json",
+    "dataset": {
+      "adapter": "next_item_v1",
+      "catalog_items": 12068,
+      "data_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917",
+      "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+      "directory": "/mnt/e/DongTing/简历/reclab-agent/.reclab/datasets/beauty-d1",
+      "identity_pinned": true,
+      "profile": "amazon-beauty-full-train-catalog",
+      "public_directory": "/mnt/e/DongTing/简历/reclab-agent/.reclab/datasets/beauty-d1/public",
+      "public_tree_sha256": "fc01f7ebd0095ce8d8f488e0ee7a0cabffba511f8d6ac35fa0253edc157b3a73",
+      "quality_evidence": "real_data_import_only",
+      "task": "next_item",
+      "test_labels_exposed": false,
+      "train_users": 22363,
+      "valid_users": 22312
+    },
+    "errors": [],
+    "evaluation": {
+      "details": {
+        "catalog_items": 12068,
+        "ks": [
+          10,
+          20
+        ],
+        "mask_seen": true,
+        "ranking": "full_catalog_single_target",
+        "split": "valid"
+      },
+      "guardrail_metrics": [
+        "recall@20"
+      ],
+      "id": "next_item_ranking_v1",
+      "metrics": [
+        "recall@10",
+        "ndcg@10",
+        "recall@20",
+        "ndcg@20"
+      ],
+      "primary_metric": "ndcg@20",
+      "protocol_hash": "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+      "scoring_configured": true
+    },
+    "execution": {
+      "backend": "docker",
+      "capabilities_probed": false,
+      "policy_path": null,
+      "policy_present": false,
+      "worker_started": false
+    },
+    "experiment_tool": {
+      "available": true,
+      "bound": false,
+      "implementation": "train_predict_score_v1"
+    },
+    "inputs_valid": true,
+    "model_imported": false,
+    "paths": {
+      "output_created": false,
+      "output_directory": "/mnt/e/DongTing/简历/reclab-agent/.reclab/runs/beauty-sasrec-first-run"
+    },
+    "pending": [
+      "experiment_runner_not_connected",
+      "isolated_numerical_acceptance_required",
+      "research_plan_review_required",
+      "agent_sdk_not_installed",
+      "agent_model_not_configured",
+      "agent_credentials_not_configured",
+      "execution_policy_not_configured"
+    ],
+    "ready_to_run": false,
+    "source": {
+      "candidate_runtime_verified": false,
+      "config": "default",
+      "directory": "/mnt/e/DongTing/简历/reclab-agent/backends/sasrec",
+      "editable_files": [
+        "src/sasrec.py",
+        "configs/default.json"
+      ],
+      "files": [
+        "configs/default.json",
+        "src/data.py",
+        "src/predict.py",
+        "src/runtime.py",
+        "src/sasrec.py",
+        "src/train.py"
+      ],
+      "model": {
+        "class": "SASRec",
+        "file": "src/sasrec.py",
+        "kwargs": {
+          "dropout": 0.4,
+          "hidden_size": 64,
+          "num_heads": 1,
+          "num_layers": 1
+        }
+      },
+      "model_constructor_verified": false,
+      "readonly_files": [
+        "src/data.py",
+        "src/predict.py",
+        "src/runtime.py",
+        "src/train.py"
+      ],
+      "source_config_validation": "static_model_spec_and_present_common_fields",
+      "tree_sha256": "5495a72430f8aef75a8216ba0610f201150507e18984ed91c281298821fc1f90"
+    },
+    "task": {
+      "baseline_id": "sasrec-b1-retrain",
+      "budget": {
+        "max_cost_cny": 20,
+        "max_job_seconds": 600,
+        "max_model_turns": 20,
+        "max_patches": 4,
+        "max_total_job_seconds": 1200,
+        "max_training_jobs": 2
+      },
+      "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+      "mode": "single",
+      "question": "在固定 Beauty 公开数据和预算下，提出并验证一次 SASRec 改进，输出基线与候选的独立验证集对比报告。",
+      "schema_version": 1,
+      "task_id": "beauty-sasrec-first-run"
+    },
+    "test_labels_read": false,
+    "training_started": false
+  }
+}

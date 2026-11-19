@@ -1,6 +1,90 @@
-# Docker Worker：实现、故障恢复与验收边界
+# 执行层：AutoDL SSH+tmux 与 Docker Worker
 
-2026-10-20。第二周执行层的实现说明。本次已在本机 WSL2 Ubuntu 的真实 Linux Docker 完成受控 CPU 验收和 CLI 训练→预测→独立评分；见 [CPU 验收报告](../reports/week-02-cpu-acceptance-20261020.json)。Linux 全量188/188通过、0跳过，Windows178通过/10平台条件跳过/0失败。真实云端 Docker、GPU/PyTorch 与 Beauty 新训练仍待验；AutoDL 容器实例不支持 Docker，禁止改用宿主进程运行候选代码。假 Docker 测试只证明控制逻辑，本次 CPU fixture 也不证明 GPU 或推荐质量提升。
+当前 AutoDL 采用用户选择的 `ssh_tmux` 原生执行模式；Docker 部署暂缓。两个执行配置分别声明运行环境，不在 Docker 不可用时自动切换。
+
+2026-11-19 已在实际 RTX 4090 上验收七个工具及两次三轮短训：独立验证集 NDCG@20 从 0.061478 到 0.065730，Recall@20 从 0.123118 到 0.131992。完整运行身份、评分哈希、日志和 checkpoint 位置见[实测报告](../reports/autodl-ssh-tmux-20261119.json)。本次由 Codex 会话控制，没有调用独立 Agent 的大模型 API；短训结果不代表充分训练后的最终提升。
+
+## AutoDL：SSH 工具与持久化训练
+
+控制器通过 SSH 上传源码和公开数据，在现有 Python/CUDA 环境启动作业，下载预测后交给固定评分器。远端不需要运行 Agent 模型或保存其 API Key。此模式直接执行模型代码，不启动 Docker，也不提供容器隔离；下文 Docker Worker 的隔离与镜像约定继续适用于 `docker` 配置。
+
+将[连接配置示例](../configs/autodl-ssh.example.json)复制为 `configs/autodl-ssh.json`，填写实际主机、端口、私钥和 `known_hosts` 路径。实际连接文件已被 Git 忽略，示例使用占位信息。配置只保存连接参数和路径，不保存密码或私钥内容；先完成公钥登录及 SSH 主机指纹登记。任务配置的执行段为：
+
+```json
+{
+  "execution": {
+    "backend": "ssh_tmux",
+    "connection": "autodl-ssh.json"
+  }
+}
+```
+
+`connection` 相对任务配置文件所在目录解析；它与 Docker 的 `policy` 字段互斥。实验记录使用实际运行环境的 `runtime.details` 及其 SHA256 指纹，`image` 为 `null`。
+
+在项目根目录启动本地控制器，注册允许上传的模型目录和 `public` 数据目录：
+
+```python
+from reclab_agent.remote import RemoteTools, SSHConnection
+
+connection = SSHConnection.from_json("configs/autodl-ssh.json")
+remote = RemoteTools(
+    connection,
+    upload_roots={"model": "backends/sasrec", "public": ".reclab/datasets/beauty-d1/public"},
+    download_root=".reclab/native-artifacts",
+)
+remote.bootstrap()  # 部署小型远端监督脚本并校验 SHA256；此操作由控制器执行。
+remote.gpu_status()
+```
+
+示例中的相对密钥和 `known_hosts` 路径以连接配置文件所在目录为基准；须换成本机实际路径，Windows、Linux/WSL 分别使用各自可访问的路径。远端需要 Linux、配置指定的 Python、tmux、可用的 CUDA/PyTorch 环境；本机需要 OpenSSH 的 `ssh` 和 `scp`。`bootstrap` 不安装这些依赖。
+
+远程执行工具箱包含以下七个工具；连接、密钥位置及本地可读写目录由控制器固定：
+
+| Python API | 行为 |
+|---|---|
+| `remote.upload(source_root, source, destination)` | 从注册目录上传一个普通文件，核对 SHA256；例如 `("model", "src/train.py", "inputs/model/src/train.py")`。 |
+| `remote.download(source, destination)` | 下载一个产物至本地收集目录，核对大小和 SHA256。 |
+| `remote.run_remote(job_id, argv, cwd, timeout_seconds, seed=2026)` | 启动 tmux 作业，立即返回作业状态；`argv` 为 Python 脚本参数数组。相同 ID、相同请求只恢复观察，相同 ID 的不同请求被拒绝。 |
+| `remote.gpu_status()` | 读取 `nvidia-smi` 返回的 GPU 状态。 |
+| `remote.tail_log(job_id, lines=100)` | 有界读取作业日志。 |
+| `remote.job_status(job_id)` | 查询持久化状态及 `exit_code`；仅会话消失不算成功。 |
+| `remote.stop_job(job_id)` | 请求停止该作业进程组，保留状态及日志。 |
+
+上传、下载的远端路径以及 `cwd` 均相对 `remote_root`；`cwd="."` 表示该根目录。上传逐文件进行，public 目录只传 `manifest.json`、`train.json`、`valid.json`。例如上传完整模型和公开数据后，训练请求为：
+
+```python
+job = remote.run_remote(
+    "baseline-train-2026",
+    [connection.python_executable, "-u", "inputs/model/src/train.py",
+     "--data", "inputs/public", "--output", "outputs/baseline-train-2026",
+     "--config", "inputs/model/configs/default.json"],
+    cwd=".", timeout_seconds=600, seed=2026,
+)
+status = remote.job_status(job["job_id"])
+```
+
+模型入口遵循下文训练/预测参数协议，种子通过 `RECLAB_SEED` 传入。训练结束后再启动预测，下载 `predictions.json` 交给本地独立评分器。七个工具也可通过 `remote.specs` / `remote.invoke(name, arguments)` 接入现有工具注册表；`invoke` 返回 `{ok, tool, result}` 或结构化错误。
+
+`bind_task_tools()` 按任务配置选择 `RemoteExperimentRunner`，自动组合这些原子工具；优化 Agent 使用既有的 `run_experiment`，无需为每个新模型写 runner。预测阶段只强制要求 `predictions.json`，训练统计等文件是可选产物。任务输出目录记录活动作业 ID；控制器崩溃后，再次执行实验会先停止并确认上一阶段，避免遗留任务与新实验重叠。仅查看现有训练时直接调用 `job_status` 和 `tail_log`。
+
+独立运行 `create_task_agent()` 需要在本地控制端配置 `OPENAI_API_KEY`、`RECLAB_MODEL` 及可选的 SDK 服务地址；SSH 工具、人工控制的实验和 GPU 本身不需要这些凭据。原生模式通过运行前后的哈希检查发现输入修改，适用于用户自己审阅的模型代码；它没有 Docker 的只读挂载、禁网及资源隔离。费用上限仍需结合 AutoDL 计费与实例关机策略管理，代码没有自动核验账单或关闭实例。
+
+每个长作业由独立 tmux 会话中的远端监督进程管理。SSH 断开后，训练、日志和超时监督继续；实例关机、重启或被回收后，tmux 不能保证恢复训练。远端超时监督和 `stop_job` 停止作业进程组，先请求退出，再强制终止；停止未确认时返回错误，须继续查询。监督进程无退出记录便消失时标记 `lost`，不当成完成。仅关闭 SSH 连接不会取消训练。
+
+## Docker Worker：实现、故障恢复与验收边界
+
+2026-10-20 的第二周执行层实现说明：已在本机 WSL2 Ubuntu 的真实 Linux Docker 完成受控 CPU 验收和 CLI 训练→预测→独立评分；见 [CPU 验收报告](../reports/week-02-cpu-acceptance-20261020.json)。Linux 全量188/188通过、0跳过，Windows178通过/10平台条件跳过/0失败。真实云端 Docker、GPU/PyTorch 与 Beauty 新训练仍待验。Docker 配置不允许在容器能力缺失时改用宿主进程运行候选代码。假 Docker 测试只证明控制逻辑，本次 CPU fixture 也不证明 GPU 或推荐质量提升。
+
+## 2026-11-19：早期 GPU 检查记录与 Docker 待办
+
+- SSH 公钥登录已验证，远端 GPU 为 NVIDIA GeForce RTX 4090，显存 24564 MiB。
+- RecLab Agent、原始 SASRec 源码及 Beauty 公开训练/验证数据已上传至 `/root/autodl-tmp/reclab-agent-runs/20261119-1127`，上传包 SHA256 已在远端核对一致；未上传私有测试标签。
+- PyTorch `2.8.0+cu128`、CUDA `12.8` 可用，真实 CUDA 张量计算通过。可信 Popularity 验证基线已评分；它不代表神经模型训练或 Agent 优化。
+- 该次早期检查时尚未启动候选训练。环境、数据身份和评分见 [GPU 检查报告](../reports/gpu-preflight-20261119.json)；后续实际短训见本文顶部的实测报告。
+- 当时已新增模型/训练统一配置、任务配置和只读检查入口。真实 Beauty 输入检查通过；`inputs_valid=true`、`ready_to_run=false`，见 [任务检查报告](../reports/task-config-check-20261119.json)。该报告反映当时数值验收和绑定尚待完成的状态。
+- 当时通用 `run_experiment` 的源码权限、固定评分器及脚本 Agent 控制流使用合成数据和假 Worker 验证，见 [工具控制流验证](../reports/experiment-tool-verification-20261119.json)；该次验证没有启动真实 GPU 训练。
+- [ ] 云端 Docker/GPU Worker：**按用户 2026-11-19 的要求暂缓，之后单独处理**。当前实例未发现 Docker CLI 或 daemon socket；本轮未安装或配置 Docker。
+- [ ] 恢复 Docker 实验前，配置该模式的执行 Policy、独立监督进程和驱动 Agent 的模型后端。早期检查时远端未安装 OpenAI SDK、未配置 `OPENAI_API_KEY`；SSH 模式由本地控制器驱动，无需把这些凭据上传。
 
 ## 信任边界与使用位置
 

@@ -1,6 +1,6 @@
 # RecLab Agent
 
-RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐模型改进。项目将 Agent 策略与模型实验分开：Agent 选择动作，工具执行确定性操作，Docker Worker 运行候选程序，独立评分器判断模型效果。当前提供证据诊断、多种 Agent 策略，以及需要显式配置可信实验执行器的优化适配层。
+RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐模型改进。项目将 Agent 策略与模型实验分开：Agent 选择动作，工具执行确定性操作，执行层运行候选程序，独立评分器判断模型效果。当前提供证据诊断、多种 Agent 策略，以及按任务配置绑定的优化适配层。AutoDL 使用 SSH+tmux，Docker 暂缓。
 
 当前里程碑提供：
 
@@ -68,6 +68,14 @@ python -m reclab_agent --model YOUR_MODEL_ID --agent reflection --max-reflection
 
 完整架构、Python 接口和模型优化接入方式见[Agent 框架与扩展](docs/agent-framework.md)。
 
+模型优化任务的路径、数据身份、评分器、指标和预算集中在任务配置中。先检查输入：
+
+```bash
+python -B -m reclab_agent.research_cli check --config configs/beauty-sasrec-task.json
+```
+
+`inputs_valid` 表示文件与接入合同通过检查；`ready_to_run` 表示真实执行条件是否就绪。检查入口不启动训练。通用 `run_experiment` 工具提供训练→预测→独立评分的固定流程，通过 `create_task_agent()` 按任务配置绑定，模型无需实现自己的 runner。将 [autodl-ssh.example.json](configs/autodl-ssh.example.json) 复制为被 Git 忽略的 `configs/autodl-ssh.json` 并填写实际连接信息；七个远程工具和 tmux 恢复约定见[执行层说明](docs/execution.md)。独立 Agent 的大模型 Key 和模型名配置在本地控制端环境变量中。
+
 ## 项目结构
 
 ```text
@@ -75,17 +83,21 @@ reclab_agent/   只读工具、Agent 运行时、轨迹评测与基准执行
 evidence/       可复现的脱敏实验事实
 tasks/          Agent 任务与确定性断言
 tests/          工具边界和基准测试
+backends/       自包含的推荐模型源码入口与统一模型/训练配置
+configs/        优化任务的路径、数据/评分器选择、范围和预算
 ```
 
 配套学习与面试说明见 [`docs/learning-roadmap.md`](docs/learning-roadmap.md)。
 
 ## 安全边界
 
-默认诊断 CLI 仍只注册原有 6 个只读证据工具。可选 `ResearchToolbox` 只允许修改登记的候选文件；补丁与实验检查匹配的研究计划审阅记录，只有宿主配置可信 runner 后才暴露实验工具。候选代码继续在隔离执行层运行，不向 Agent 开放任意 shell。实际时间、费用和训练/预测/独立评分由可信 runner 执行；新增适配层不代替持久化 Worker。
+默认诊断 CLI 仍只注册原有 6 个只读证据工具。可选 `ResearchToolbox` 只允许修改登记的候选文件；补丁与实验检查匹配的研究计划审阅记录，只有宿主配置可信 runner 后才暴露实验工具。执行配置显式选择 Docker 或 SSH+tmux；原生模式适用于自有、已审阅的代码，不提供容器隔离。远端监督进程管理超时和进程组停止；AutoDL 费用及实例生命周期由用户管理。
 
 ## 下一步
 
-下一步将优化适配层绑定到真实推荐模型的 Docker 训练、预测与独立评分，补齐跨进程预算、恢复与端到端评测。现有策略与适配测试证明控制流和协议兼容；合成实验 Demo、脚本模型回复和自评均不能证明真实模型效果已提高。
+当前先完成 AutoDL SSH+tmux 执行链路和短训验收；独立大模型 Agent 的完整优化仍需本地 API 配置与正式实验。短训、合成 Demo 和脚本回复分别记录，不能当作充分训练后的模型改进证据。Docker 后续单独处理。
+
+本次真实 GPU 的工具验收、三轮基线/候选对比及 checkpoint 位置见[AutoDL 实测报告](reports/autodl-ssh-tmux-20261119.json)。
 
 ## 研究流程与内部结构
 
@@ -100,6 +112,8 @@ reclab_agent/
   tools/            工具接口、注册表、证据工具、能力目录及公开导出
   research/         研究契约、阶段规范、可选优化工具与 Agent 组合
   execution.py      DockerWorker 与原有执行 API
+  remote.py         SSH 上传/下载、tmux 作业及 GPU 状态工具
+  remote_agent.py   无第三方依赖的远端任务监督脚本
   _execution/       执行类型、Docker 适配、锁与 Policy 加载
   files.py          共享路径校验和文件操作
 ```

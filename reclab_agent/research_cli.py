@@ -1,4 +1,4 @@
-"""Week-two controlled fixture demo. Candidate code runs exclusively in Docker."""
+"""Inspect research task inputs or run the controlled Docker fixture demo."""
 from __future__ import annotations
 
 import argparse
@@ -76,6 +76,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.add_argument("--image", required=True)
     else:
         commands = parser.add_subparsers(dest="command", required=True)
+        check = commands.add_parser("check", help="validate a task configuration and its inputs without running experiments")
+        check.add_argument("--config", type=Path, required=True, help="task configuration JSON; paths are relative to this file")
+        check.set_defaults(operation="check")
         commands = commands.add_parser("demo", help="audited fixture, not an LLM research agent").add_subparsers(dest="operation", required=True)
         for name in ("prepare", "status", "doctor", "run"):
             command = commands.add_parser(name)
@@ -84,7 +87,14 @@ def main(argv: list[str] | None = None) -> int:
                 command.add_argument("--image", required=True, help="pre-pulled administrator-approved repository@sha256:digest")
     args = parser.parse_args(argv)
     try:
-        if args.operation == "prepare":
+        if args.operation == "check":
+            from .research.configuration import load_task_configuration
+            from .research.inspection import inspect_task
+            value = inspect_task(load_task_configuration(args.config))
+            result = {"ok": value["inputs_valid"], "result": value}
+            print(canonical_json(result))
+            return 0 if result["ok"] else 2
+        elif args.operation == "prepare":
             value = demo.prepare(args.root)
         elif args.operation == "status":
             value = demo.status(args.root)

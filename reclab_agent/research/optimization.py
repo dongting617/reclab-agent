@@ -42,6 +42,8 @@ class OptimizationAgent:
             "task": {"task_id": task.task_id, "question": task.question,
                      "dataset_id": task.dataset_id, "baseline_id": task.baseline_id},
             "target_model": self.target_model,
+            "source_files": sorted(self.research.workspace.source_paths),
+            "readonly_files": sorted(self.research.workspace.source_paths - self.research.workspace.editable_paths),
             "plan": {"plan_id": plan.plan_id, "plan_hash": plan.plan_hash,
                      "hypothesis": plan.hypothesis, "data_profile": plan.data_profile,
                      "protocol_hash": plan.protocol_hash, "primary_metric": plan.primary_metric,

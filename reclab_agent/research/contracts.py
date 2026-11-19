@@ -6,6 +6,7 @@ Only a trusted coordinator may record a user's review or verify actual artifacts
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import math
 from pathlib import PurePosixPath, PureWindowsPath
 import re
 from typing import Any
@@ -21,6 +22,23 @@ def _text(value: str, name: str) -> None:
 def _digest(value: str, name: str) -> None:
     if not isinstance(value, str) or not re.fullmatch(r"[a-f0-9]{64}", value):
         raise ValueError(f"{name} must be a lowercase SHA256 digest")
+
+
+def _json_value(value: Any) -> None:
+    """Reject Python-only values and nonfinite numbers in runtime evidence."""
+    if value is None or type(value) in (str, bool, int):
+        return
+    if type(value) is float and math.isfinite(value):
+        return
+    if isinstance(value, list):
+        for item in value:
+            _json_value(item)
+        return
+    if isinstance(value, dict) and all(isinstance(key, str) for key in value):
+        for item in value.values():
+            _json_value(item)
+        return
+    raise ValueError("runtime must contain finite JSON values only")
 
 
 def _tuple(value: tuple, name: str, *, nonempty: bool = False) -> None:
@@ -207,7 +225,7 @@ class ExperimentRecord(_JsonContract):
     config_hash: str
     dataset_id: str
     protocol_hash: str
-    image: str
+    image: str | None
     seed: int
     status: str = "planned"
     program_validation: str = "pending"
@@ -215,14 +233,31 @@ class ExperimentRecord(_JsonContract):
     prediction_job_id: str | None = None
     score: EvidenceRef | None = None
     failure: str | None = None
+    runtime: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         for name in ("experiment_id", "candidate_id", "dataset_id"):
             identifier(getattr(self, name))
         for name in ("plan_hash", "source_hash", "config_hash", "protocol_hash"):
             _digest(getattr(self, name), name)
-        if not isinstance(self.image, str) or not re.fullmatch(r"[a-z0-9][a-z0-9./:_-]*@sha256:[a-f0-9]{64}", self.image):
-            raise ValueError("experiment image must be an immutable repository digest")
+        if self.runtime is None:
+            if not isinstance(self.image, str) or not re.fullmatch(r"[a-z0-9][a-z0-9./:_-]*@sha256:[a-f0-9]{64}", self.image):
+                raise ValueError("experiment image must be an immutable repository digest")
+        else:
+            if (not isinstance(self.runtime, dict)
+                    or self.runtime.keys() != {"backend", "fingerprint", "details"}
+                    or self.runtime["backend"] != "ssh_tmux"
+                    or not isinstance(self.runtime["details"], dict)):
+                raise ValueError("native runtime must contain ssh_tmux backend, fingerprint and details")
+            if self.image is not None:
+                raise ValueError("native runtime cannot carry a Docker image")
+            _digest(self.runtime["fingerprint"], "runtime fingerprint")
+            try:
+                _json_value(self.runtime)
+            except RecursionError as error:
+                raise ValueError("runtime must contain finite acyclic JSON values only") from error
+            if self.runtime["fingerprint"] != content_hash(self.runtime["details"]):
+                raise ValueError("runtime fingerprint must match its details")
         if type(self.seed) is not int or not 0 <= self.seed < 2**31:
             raise ValueError("seed must be a nonnegative 31-bit integer")
         if self.status not in {"planned", "running", "completed", "failed", "cancelled", "timed_out", "lost"}:
@@ -243,6 +278,12 @@ class ExperimentRecord(_JsonContract):
             raise ValueError("only completed experiments can carry an independent score")
         if self.status == "completed" and self.failure is not None:
             raise ValueError("execution failure cannot be represented as a completed experiment")
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = asdict(self)
+        if self.runtime is None:
+            del payload["runtime"]
+        return payload
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> ExperimentRecord:

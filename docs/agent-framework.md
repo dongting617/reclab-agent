@@ -18,7 +18,7 @@ ToolRegistry：组合已有工具箱或注册新 Tool / 函数
 RecLabToolbox                  ResearchToolbox（显式配置）
 只读历史证据                  Workspace + 可信实验 runner
                                       |
-                     Docker Worker → 预测 → 独立评分
+                     SSH+tmux / Docker → 预测 → 独立评分
 ```
 
 `core/` 不知道 SASRec、Semantic ID、Docker 参数或推荐指标；策略只决定何时规划、执行或评价。`Toolbox` 只要求 `specs` 和 `invoke()`，因此旧 `RecLabToolbox` 无需改写即可使用。
@@ -91,13 +91,32 @@ tools.register_function(
 4. 配置可信 runner 后提供 `run_experiment`：校验候选、种子与计划范围，冻结快照后交给 runner。
 5. `get_experiment`：返回本实例保存的实验记录和独立评分引用。
 
-宿主必须提供以下回调，而不是让模型生成执行命令：
+推荐通过任务配置绑定内置通用工具，模型作者只提供标准训练、预测入口、数据与模型配置。Agent 自主选择候选、修改代码并调用 `run_experiment(candidate_id, seed)`；工具内部的 `ExperimentRunner` 固定执行训练→预测→独立评分，无需为每个模型另外编写 runner。
+
+```python
+from reclab_agent.research import create_task_agent
+
+agent = create_task_agent(
+    "configs/beauty-sasrec-task.json",
+    plan=reviewed_plan,
+    review=user_review,
+)
+result = agent.run()
+```
+
+这里的计划、审阅和执行 Policy 来自可信控制端；构造函数不发起实验，也不从任务 JSON 自动生成批准记录。数据与评分器由登记名选择，任务模型不提供评分数值作为正式结论。Skill 可描述研究步骤、对照设计与报告要求；实际执行、失败处理和评分由工具程序实现，不依赖语言模型每次重新拼接固定步骤。
+
+训练入口固定接收 `--data --output --config` 并写出模型产物；预测入口还接收 `--model --split valid` 并导出逐用户排名。现有 `valid.py` 可通过薄封装映射为 `src/predict.py`；若它仅打印汇总指标，需要增加排名导出，供固定评分器独立重算。
+
+通用工具保留全部登记源码，只开放计划中的可编辑子集。快照、数据、配置、种子及评分协议均纳入实验身份。训练失败不提交预测，预测失败不评分；控制器超时或提交结果不确定时保存停止观察，未确认的停止会阻断同一输出目录中的后续实验。阶段限额采用确定的训练 80%/预测 20% 分配以稳定作业身份；轮询截止时间不替代外部硬超时 supervisor 与独立 watchdog。每个实验保存其实际 Worker Policy，供后续恢复与核对。
+
+底层仍支持下面的回调接口，供可信宿主集成其他执行后端及控制流测试；常规模型接入使用上述内置绑定即可：
 
 ```python
 runner(snapshot, *, candidate_id, seed, max_seconds) -> ExperimentRecord
 ```
 
-`snapshot` 是 `Workspace.snapshot()` 的真实返回值。runner 应使用已有 `SourceBackend`、`DockerWorker`、数据适配器和评分器实现训练→预测→评分，并返回匹配身份的终态 `ExperimentRecord`。完成记录仍要求训练/预测作业身份与独立评分引用；候选自报指标不能替代评分。runner 只允许开发集反馈，最终测试仍走可信冻结流程。
+`snapshot` 是 `Workspace.snapshot()` 的真实返回值。标准绑定按配置选择 `ExperimentRunner`（Docker）或 `RemoteExperimentRunner`（SSH+tmux），复用数据适配器和固定评分器完成训练→预测→评分；新模型无需实现 runner。完成记录要求训练/预测作业身份与独立评分引用；候选自报指标不能替代评分。runner 只允许开发集反馈，最终测试仍走可信冻结流程。独立大模型 Agent 的 API Key 留在控制端；SSH 工具不依赖大模型 API。
 
 接入代码示意，变量由宿主提供的任务、工作区、审阅和实验配置产生：
 
@@ -131,7 +150,7 @@ result = agent.run()
 
 适配层检查任务/计划身份、审阅版本、文件/候选/种子范围、补丁与实验尝试次数、候选数量、保守预留的训练秒数。模型轮次上限取调用方、任务和计划三者最小值；runner 报错也扣实验尝试次数。同实例内，相同快照/候选/种子的已记录请求复用结果。
 
-这是单实例的开发适配层，没有新增跨进程恢复、完整研究阶段状态机、实际模型费用账本或默认生产 runner。实际容器隔离、时间/费用强制执行和训练后评分由配置好的可信 runner 承担。原 Docker Worker 的持久身份、恢复和停止机制保持独立；不能把工具层的内存去重当作跨进程幂等保证。
+通用 `ExperimentRunner` 已连接固定训练/预测/独立评分步骤，`bind_task_tools()` 和 `create_task_agent()` 负责按配置绑定。当前仍没有完整研究阶段状态机或实际模型费用账本，工具预算为单实例计数；实验目录与稳定作业参数可供同一实验重放，但不能据此宣称全局调度或跨进程预算保证。实际容器隔离依赖已配置 Worker，硬超时与停止确认依赖外部 supervisor/watchdog。真实 GPU/隔离数值验收仍待完成；当前测试中的假 Worker 不证明模型效果提高。
 
 当前新增测试验证了多种策略、共享权限与轮次、真实源码补丁/快照和可信 runner fixture 的往返。fixture 不是真实推荐训练；尚不能声称本次重构已经提高 SASRec/Semantic ID 的效果。后续验收需要真实模型的有效改进、有效负结果、失败修复和同预算策略对照。
 
@@ -160,4 +179,4 @@ $env:TMP = $testTempRoot
 python -B -m unittest discover -s tests -v
 ```
 
-2026-11-19 验证记录：短临时目录下全量回归运行 246 项，结果成功，11 项按平台或显式验收条件跳过；原开发任务 15/15。清理旧构建缓存后重建 wheel，检查包内没有已删除的 `runtime.py`、`tools.py`、`_tools/`，隔离导入和 ReAct 冒烟测试通过。没有发送在线模型请求或启动真实推荐训练。
+2026-11-19 早期结构验证：短临时目录下全量回归运行 246 项，结果成功，11 项按平台或显式验收条件跳过；原开发任务 15/15。清理旧构建缓存后重建 wheel，检查包内没有已删除的 `runtime.py`、`tools.py`、`_tools/`，隔离导入和 ReAct 冒烟测试通过；该次结构验证没有启动真实推荐训练。同日后续已完成 SSH+tmux 的实际 GPU 短训，见[实测报告](../reports/autodl-ssh-tmux-20261119.json)，仍未调用独立 Agent 的大模型 API。

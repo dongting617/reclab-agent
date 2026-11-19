@@ -11,27 +11,43 @@ from .files import atomic_write, confined_path
 
 
 class Workspace:
+    """Register complete source inputs separately from the files an Agent may edit.
+
+    With no explicit ``source_paths`` the original behavior is preserved: every
+    registered file is editable. Read-only dependencies remain readable and are
+    validated, hashed and copied into every snapshot.
+    """
+
     ALLOWED_EXTENSIONS = {".py", ".json", ".yaml", ".yml"}
 
-    def __init__(self, root: str | Path, editable_paths: list[str]):
+    def __init__(self, root: str | Path, editable_paths: list[str], *,
+                 source_paths: list[str] | None = None):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self.editable_paths = frozenset(editable_paths)
         if not self.editable_paths:
             raise ValueError("explicit editable paths are required")
-        for relative in self.editable_paths:
+        self.source_paths = (self.editable_paths if source_paths is None
+                             else frozenset(source_paths))
+        if not self.source_paths or not self.editable_paths <= self.source_paths:
+            raise ValueError("editable paths must be a subset of the registered source paths")
+        for relative in self.source_paths:
             path = confined_path(self.root, relative)
-            if not relative.startswith(("src/", "configs/")) or path.suffix not in self.ALLOWED_EXTENSIONS:
-                raise ValueError("only registered src/configs text files may be edited")
+            if (not relative.startswith(("src/", "configs/"))
+                    or any(part in {"", ".", ".."} for part in relative.split("/"))
+                    or path.suffix not in self.ALLOWED_EXTENSIONS):
+                raise ValueError("only registered src/configs text files are allowed")
 
     def read(self, path: str) -> dict[str, str]:
-        if path not in self.editable_paths:
+        if path not in self.source_paths:
             raise ValueError("file is not in the candidate source allowlist")
         text = confined_path(self.root, path).read_text(encoding="utf-8")
         return {"path": path, "text": text, "sha256": content_hash(text)}
 
     def replace(self, path: str, old: str, new: str, expected_sha256: str) -> dict[str, Any]:
         """Apply an exact text edit; return the actual unified diff, not a claimed diff."""
+        if path not in self.editable_paths:
+            raise ValueError("file is not in the candidate editable allowlist")
         current = self.read(path)
         if current["sha256"] != expected_sha256:
             raise ValueError("stale patch: read current source before editing")
@@ -51,7 +67,7 @@ class Workspace:
 
     def validate(self) -> dict[str, Any]:
         errors = []
-        for path in sorted(self.editable_paths):
+        for path in sorted(self.source_paths):
             try:
                 source = self.read(path)["text"]
                 if path.endswith(".py"):
@@ -64,7 +80,7 @@ class Workspace:
         return {"ok": not errors, "errors": errors, "checks": "syntax_only; does not execute candidate code"}
 
     def snapshot(self, destination: str | Path) -> dict[str, Any]:
-        files = {path: self.read(path)["text"] for path in sorted(self.editable_paths)}
+        files = {path: self.read(path)["text"] for path in sorted(self.source_paths)}
         source_hash = content_hash(files)
         base = Path(destination) / source_hash
         for relative, source in files.items():
@@ -76,11 +92,14 @@ class Workspace:
         return {"source_hash": source_hash, "directory": str(base), "files": sorted(files)}
 
 
-def create_workspace(root: str | Path, name: str, files: dict[str, str]) -> Workspace:
+def create_workspace(root: str | Path, name: str, files: dict[str, str], *,
+                     editable_paths: list[str] | None = None) -> Workspace:
     directory = Path(root) / identifier(name)
     if directory.exists():
         raise ValueError("workspace already exists")
-    workspace = Workspace(directory, list(files))
+    source_paths = list(files)
+    workspace = Workspace(directory, source_paths if editable_paths is None else editable_paths,
+                          source_paths=source_paths)
     for relative, source in files.items():
         if not isinstance(source, str):
             raise ValueError("candidate source must be text")

@@ -1,0 +1,59 @@
+{
+  "actual_gpu_jobs_started": false,
+  "actual_model_imported": false,
+  "actual_training_started": false,
+  "checked_at_utc": "2026-11-19T05:05:07Z",
+  "docker_status": "deferred by user",
+  "implementation_sha256": {
+    "reclab_agent/research/binding.py": "adf210a1bd25e960360ef5964b62a713ae641f83b89e513ebb2ad840039793d3",
+    "reclab_agent/research/inspection.py": "b8b900fb2e24c68329adb7642b5e8769101f9ce1c60acad4b8e256818ca0481b",
+    "reclab_agent/research/optimization.py": "48260846c8121687551cd0230350e72468cf47ef07c36041f09fab5971858a12",
+    "reclab_agent/research/runner.py": "1663109ac5f1cb15c6cb1523291d8ea0c5b8416dcfcafe32b3fb809780f76bef",
+    "reclab_agent/research/toolbox.py": "6e8f37989cf987702e6050b2d845dd73a9005b974d4d68bd1082085d00c5b67c",
+    "reclab_agent/workspace.py": "f0225a064f67404e599a5b2a5e5bdde826b3972c0340ef1013cc86aba32551c9"
+  },
+  "model_quality_improved": null,
+  "model_specific_runner_required": false,
+  "paid_llm_requests": false,
+  "pending": [
+    "real isolated model training/prediction and checkpoint numerical acceptance",
+    "trusted execution Policy and independent supervisor/watchdog deployment",
+    "Agent language-model backend credentials and model selection",
+    "real baseline/candidate optimization comparison"
+  ],
+  "purpose": "Generic Agent tool automatically orchestrates train, predict and independent scoring",
+  "scope": "synthetic public data, scripted language model and nonexecuting fake Worker only",
+  "status": "control_flow_verified_with_fixtures",
+  "test_groups": [
+    {
+      "command": "python -B -m unittest tests.test_workspace_sources tests.test_registry_scoring tests.test_foundation tests.test_optimization_agent -v",
+      "failed": 0,
+      "passed": 38,
+      "run": 38
+    },
+    {
+      "command": "python -B -m unittest tests.test_experiment_runner -v",
+      "failed": 0,
+      "note": "Initial runner suite before four additional focused regression tests were added.",
+      "passed": 14,
+      "run": 14
+    },
+    {
+      "failed": 0,
+      "group": "four new hardening checks plus scripted Agent pipeline regression",
+      "passed": 5,
+      "run": 5
+    }
+  ],
+  "test_labels_read": false,
+  "verified": [
+    "complete readonly dependencies retained without granting edit access",
+    "Worker train and predict phases share the exact trained model job identity",
+    "fixed scorer recomputes metrics from collected predictions",
+    "Worker self-reported metrics are ignored",
+    "failure and timeout stop later phases without a success score",
+    "uncertain stopping blocks later experiments under the same task output root",
+    "effective Worker Policy is saved for reconciliation",
+    "scripted Agent reads, edits, calls run_experiment, verifies report hash and reads metrics"
+  ]
+}

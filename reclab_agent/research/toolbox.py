@@ -1,7 +1,8 @@
 """Reviewed source edits and development experiments, independent of Agent style.
 
 The injected experiment runner is trusted host configuration. It must enforce
-Docker isolation, train/predict/independent scoring, and actual time/cost limits.
+the explicitly configured execution profile, train/predict/independent scoring,
+and actual time limits. Docker and native SSH/tmux profiles have different isolation.
 This toolbox bounds attempts within one live session; it is not a durable job
 coordinator and does not execute candidate Python on the host.
 """
@@ -44,7 +45,7 @@ class ResearchToolbox:
         self._register("validate_candidate", "Check candidate syntax without executing it.", {},
                        self.validate_candidate)
         if self._runner is not None:
-            self._register("run_experiment", "Freeze and run one reviewed development experiment through the trusted runner.",
+            self._register("run_experiment", "Freeze one candidate and automatically train, predict, and independently score it within the reviewed budget.",
                            {"candidate_id": {"type": "string"}, "seed": {"type": "integer"}},
                            self.run_experiment)
             self._register("get_experiment", "Read a recorded experiment and its independent score reference.",

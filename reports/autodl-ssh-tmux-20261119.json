@@ -1,0 +1,280 @@
+{
+    "schema_version":  1,
+    "date":  "2026-11-19",
+    "status":  "passed",
+    "scope":  "SSH+tmux toolkit and controlled three-epoch real-GPU train/predict/independent-score acceptance",
+    "controller":  "Codex session calling ResearchToolbox; independent online OptimizationAgent not run",
+    "llm_api_called":  false,
+    "independent_agent_api_configuration_required":  true,
+    "execution_backend":  "ssh_tmux",
+    "docker_deferred":  true,
+    "container_isolation":  false,
+    "environment":  {
+                        "gpu":  {
+                                    "exit_code":  0,
+                                    "stderr":  "",
+                                    "stdout":  "NVIDIA GeForce RTX 4090, GPU-8c570821-ad6a-a46e-f03a-7595f2c0a180, 570.124.04, 24564\n"
+                                },
+                        "helper_sha256":  "b1dbc8595e6fda1cbfe348171827de272a04e81ee5a8c5089f1cc8f31b1048cd",
+                        "hostname":  "autodl-container-b322478f1d-4da1878c",
+                        "libraries":  {
+                                          "numpy":  "2.3.2",
+                                          "torch":  "2.8.0+cu128"
+                                      },
+                        "platform":  "linux",
+                        "protocol_version":  1,
+                        "python":  "/root/miniconda3/bin/python",
+                        "python_version":  "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+                        "root":  "/root/autodl-tmp/reclab-agent-runs/ssh-tmux-20261119",
+                        "tmux":  {
+                                     "exit_code":  0,
+                                     "stderr":  "",
+                                     "stdout":  "tmux 3.2a\n"
+                                 },
+                        "torch_cuda":  "12.8"
+                    },
+    "primitive_checks":  {
+                             "duplicate_submission_reuses_pid":  true,
+                             "verified_download":  true,
+                             "remote_timeout_confirmed":  true,
+                             "running_after_separate_ssh_connection":  true,
+                             "explicit_stop_confirmed":  true
+                         },
+    "dataset":  {
+                    "id":  "beauty-d1-e2c0b12d23d8e77b",
+                    "data_hash":  "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917",
+                    "split":  "valid",
+                    "test_labels_uploaded":  false,
+                    "test_evaluated":  false,
+                    "train_users":  22363,
+                    "train_examples":  131413,
+                    "valid_users":  22312
+                },
+    "comparison":  {
+                       "epochs_per_run":  3,
+                       "seed":  2026,
+                       "changed_parameter":  "learning_rate",
+                       "baseline":  0.001,
+                       "candidate":  0.002
+                   },
+    "tests":  [
+                  {
+                      "modules":  [
+                                      "test_remote_runner",
+                                      "test_remote_agent",
+                                      "test_remote_tools",
+                                      "test_native_contracts"
+                                  ],
+                      "passed":  53,
+                      "failed":  0,
+                      "execution":  "Linux local/fake SSH; separate from real GPU acceptance"
+                  },
+                  {
+                      "modules":  [
+                                      "test_experiment_runner"
+                                  ],
+                      "passed":  18,
+                      "failed":  0,
+                      "execution":  "existing Docker controller fixtures, no real Docker/GPU"
+                  },
+                  {
+                      "modules":  [
+                                      "test_remote_runner (earlier six cases)",
+                                      "test_experiment_runner",
+                                      "test_task_configuration",
+                                      "test_task_inspection",
+                                      "test_native_contracts"
+                                  ],
+                      "passed":  66,
+                      "failed":  0,
+                      "overlaps_other_test_groups":  true
+                  }
+              ],
+    "prelaunch_transport_failure":  {
+                                        "phase":  "candidate bootstrap hello",
+                                        "message":  "SSH connection reset before any candidate job creation",
+                                        "recovery":  "new controller for the unstarted candidate; baseline preserved; total two actual training jobs"
+                                    },
+    "runs":  [
+                 {
+                     "candidate_id":  "sasrec-b1-retrain",
+                     "experiment_id":  "exp-a07d1793cde90a4d2537c20262a415d3",
+                     "source_hash":  "210c0fe9ac527cdf448a31222e7afc2c19df0e8724cfc3d2414b77ce7e1b3c9c",
+                     "config_hash":  "e0976ce37da004f2cf775d27a78985f09e03795f1839cfa981a6d17f0a39ec06",
+                     "runtime_fingerprint":  "8c3fd0c6da3d1ca5954de839db15e1450a6c4dab7fcc26f1fe99a6806a69d0dd",
+                     "protocol_hash":  "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+                     "seed":  2026,
+                     "learning_rate":  0.001,
+                     "epochs_run":  3,
+                     "selected_epoch":  3,
+                     "metrics":  {
+                                     "ndcg@10":  0.05289899558450058,
+                                     "ndcg@20":  0.06147785620809068,
+                                     "recall@10":  0.08892076012907853,
+                                     "recall@20":  0.12311760487629975,
+                                     "users":  22312
+                                 },
+                     "epochs":  [
+                                    {
+                                        "epoch":  1,
+                                        "seconds":  7.589906722307205,
+                                        "selection_valid_ndcg@20":  0.026244460862065732,
+                                        "train_loss":  8.668017475639827
+                                    },
+                                    {
+                                        "epoch":  2,
+                                        "seconds":  6.98331855982542,
+                                        "selection_valid_ndcg@20":  0.045910548599005015,
+                                        "train_loss":  7.96276206211052
+                                    },
+                                    {
+                                        "epoch":  3,
+                                        "seconds":  7.035347148776054,
+                                        "selection_valid_ndcg@20":  0.06147785620809068,
+                                        "train_loss":  7.554649728777042
+                                    }
+                                ],
+                     "elapsed_seconds":  137.99775814099996,
+                     "jobs":  [
+                                  {
+                                      "job_id":  "exp-a07d1793cde90a4d2537c20262a415d3-train",
+                                      "phase":  "train",
+                                      "status":  "completed",
+                                      "exit_code":  0,
+                                      "stop_confirmed":  true,
+                                      "started_at":  1795067506.9642842,
+                                      "finished_at":  1795067532.9091897
+                                  },
+                                  {
+                                      "job_id":  "exp-a07d1793cde90a4d2537c20262a415d3-predict",
+                                      "phase":  "predict",
+                                      "status":  "completed",
+                                      "exit_code":  0,
+                                      "stop_confirmed":  true,
+                                      "started_at":  1795067536.2480152,
+                                      "finished_at":  1795067541.3568182
+                                  }
+                              ],
+                     "grade_sha256":  "ed24e9707f31cf1f7e46266d1b814012dff4c9c1f6be09fd2f43a74da49ff0d8",
+                     "checkpoint":  {
+                                        "source":  "results/exp-a07d1793cde90a4d2537c20262a415d3/train/best.pt",
+                                        "destination":  "experiments/exp-a07d1793cde90a4d2537c20262a415d3/train/best.pt",
+                                        "size":  3359914,
+                                        "sha256":  "aeca16a5b8e768d0f0dfc628f803e8a04381fdcf3f80f76380d6d292b1939634"
+                                    },
+                     "local_artifact_directory":  ".reclab/ssh-acceptance-20261119/experiment/experiments/exp-a07d1793cde90a4d2537c20262a415d3",
+                     "remote_artifact_directory":  "/root/autodl-tmp/reclab-agent-runs/ssh-tmux-20261119/results/exp-a07d1793cde90a4d2537c20262a415d3"
+                 },
+                 {
+                     "candidate_id":  "candidate-1",
+                     "experiment_id":  "exp-3d6c53831314260bba9cce11948d6c44",
+                     "source_hash":  "5fa68e8d8633006ae0320e97ab8d96e8e2c212f4cf5c6dd1246bebfa1666bc8b",
+                     "config_hash":  "a6ab30114e3bffc627f4c102a61ee34d023661f27d4c11c7bf67dc031ffdbbbb",
+                     "runtime_fingerprint":  "8c3fd0c6da3d1ca5954de839db15e1450a6c4dab7fcc26f1fe99a6806a69d0dd",
+                     "protocol_hash":  "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+                     "seed":  2026,
+                     "learning_rate":  0.002,
+                     "epochs_run":  3,
+                     "selected_epoch":  3,
+                     "metrics":  {
+                                     "ndcg@10":  0.05655029975462315,
+                                     "ndcg@20":  0.06573024064190346,
+                                     "recall@10":  0.09528504840444604,
+                                     "recall@20":  0.13199175331660093,
+                                     "users":  22312
+                                 },
+                     "epochs":  [
+                                    {
+                                        "epoch":  1,
+                                        "seconds":  7.119775600731373,
+                                        "selection_valid_ndcg@20":  0.035693543402385446,
+                                        "train_loss":  8.501555266165537
+                                    },
+                                    {
+                                        "epoch":  2,
+                                        "seconds":  6.889272153377533,
+                                        "selection_valid_ndcg@20":  0.05321726606615146,
+                                        "train_loss":  7.8165848109199505
+                                    },
+                                    {
+                                        "epoch":  3,
+                                        "seconds":  7.2261276468634605,
+                                        "selection_valid_ndcg@20":  0.06573024064190346,
+                                        "train_loss":  7.491172186237764
+                                    }
+                                ],
+                     "elapsed_seconds":  208.233621181,
+                     "jobs":  [
+                                  {
+                                      "job_id":  "exp-3d6c53831314260bba9cce11948d6c44-train",
+                                      "phase":  "train",
+                                      "status":  "completed",
+                                      "exit_code":  0,
+                                      "stop_confirmed":  true,
+                                      "started_at":  1795073010.0580032,
+                                      "finished_at":  1795073035.5902107
+                                  },
+                                  {
+                                      "job_id":  "exp-3d6c53831314260bba9cce11948d6c44-predict",
+                                      "phase":  "predict",
+                                      "status":  "completed",
+                                      "exit_code":  0,
+                                      "stop_confirmed":  true,
+                                      "started_at":  1795073044.0071945,
+                                      "finished_at":  1795073049.317568
+                                  }
+                              ],
+                     "grade_sha256":  "3eb2da55fc3741906241a7938a84f6502aee21d92b1d9404bc9ac622132d7601",
+                     "checkpoint":  {
+                                        "source":  "results/exp-3d6c53831314260bba9cce11948d6c44/train/best.pt",
+                                        "destination":  "experiments/exp-3d6c53831314260bba9cce11948d6c44/train/best.pt",
+                                        "size":  3359914,
+                                        "sha256":  "33b77bf6358f6f7301ff7a520b9a2f79e8c3d65e4452da6df34da8514b92d69e"
+                                    },
+                     "local_artifact_directory":  ".reclab/ssh-acceptance-20261119/experiment/experiments/exp-3d6c53831314260bba9cce11948d6c44",
+                     "remote_artifact_directory":  "/root/autodl-tmp/reclab-agent-runs/ssh-tmux-20261119/results/exp-3d6c53831314260bba9cce11948d6c44"
+                 }
+             ],
+    "limitations":  [
+                        "Single seed, only three epochs; this is not a fully trained-model conclusion.",
+                        "This Codex-driven acceptance is not an independent LLM Agent optimization run.",
+                        "Native reviewed-code execution; no container, memory, disk or adversarial-code isolation.",
+                        "AutoDL billing/instance shutdown not automated; no actual monetary charge was verified.",
+                        "tmux persists SSH disconnects, not instance shutdown or reclaim."
+                    ],
+    "delta":  {
+                  "ndcg@10":  {
+                                  "absolute":  0.00365130417012257,
+                                  "relative_percent":  6.902407370457531
+                              },
+                  "ndcg@20":  {
+                                  "absolute":  0.004252384433812775,
+                                  "relative_percent":  6.9169367575526275
+                              },
+                  "recall@10":  {
+                                    "absolute":  0.006364288275367516,
+                                    "relative_percent":  7.1572580645161255
+                                },
+                  "recall@20":  {
+                                    "absolute":  0.008874148440301183,
+                                    "relative_percent":  7.207863123407354
+                                }
+              },
+    "candidate_improves_short_validation":  true,
+    "conclusion":  "Candidate improves NDCG@20 and meets Recall@20 guardrail within the three-epoch acceptance.",
+    "gpu_status_after":  {
+                             "exit_code":  0,
+                             "stderr":  "",
+                             "stdout":  "0, NVIDIA GeForce RTX 4090, GPU-8c570821-ad6a-a46e-f03a-7595f2c0a180, 1, 24564, 0\n"
+                         },
+    "publication_validation":  {
+                                   "date":  "2026-11-19",
+                                   "command":  "python -B -m unittest discover -s tests -v",
+                                   "tests_run":  383,
+                                   "passed":  375,
+                                   "skipped":  8,
+                                   "failed":  0,
+                                   "scope":  "Local Linux full unit discovery after cleanup; no new GPU or online API calls",
+                                   "local_log":  ".reclab/verification/github-sync-20261119/unittest.log"
+                               }
+}

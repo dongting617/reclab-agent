@@ -1,0 +1,9 @@
+{
+  "host": "connect.example.com",
+  "port": 22,
+  "user": "root",
+  "key_path": "../.reclab/ssh/id_ed25519_gpu",
+  "known_hosts_path": "../.reclab/ssh/known_hosts",
+  "remote_root": "/root/autodl-tmp/reclab-agent-runs/ssh-tmux",
+  "python_executable": "/root/miniconda3/bin/python"
+}
