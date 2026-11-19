@@ -76,6 +76,16 @@ python -B -m reclab_agent.research_cli check --config configs/beauty-sasrec-task
 
 `inputs_valid` 表示文件与接入合同通过检查；`ready_to_run` 表示真实执行条件是否就绪。检查入口不启动训练。通用 `run_experiment` 工具提供训练→预测→独立评分的固定流程，通过 `create_task_agent()` 按任务配置绑定，模型无需实现自己的 runner。将 [autodl-ssh.example.json](configs/autodl-ssh.example.json) 复制为被 Git 忽略的 `configs/autodl-ssh.json` 并填写实际连接信息；七个远程工具和 tmux 恢复约定见[执行层说明](docs/execution.md)。独立 Agent 的大模型 Key 和模型名配置在本地控制端环境变量中。
 
+真实优化 Agent 的入口为 `research_cli run`。将 `OPENAI_API_KEY`、`RECLAB_MODEL` 和可选的 `OPENAI_BASE_URL` 填入本地 `.reclab/agent.env` 后，在装有 `.[openai]` 可选依赖的 Python 环境中运行：
+
+```bash
+python -B -m reclab_agent.research_cli plan --config configs/beauty-sasrec-task.json
+python -B -m reclab_agent.research_cli api-check --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env
+python -B -m reclab_agent.research_cli run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan
+```
+
+`plan` 只显示范围；`api-check` 发送一次 Responses API 工具调用探测，不启动训练。`run` 先检查接口，再训练和独立评分原配置基线，然后让 Agent 在同一预算内提出并验证候选。`--approve-plan` 明确批准已查看的配置范围。当前配置最多两次训练（基线和候选各一次），启动探测计入模型轮次。每次输出到配置目录下独立的 `sessions/<时间>-<ID>/`，包含 `report.json`、`plan.json`、审阅记录、`agent.jsonl` 和实验产物。缺少实测候选时报告为 `incomplete`。WSL 控制端若复用 Windows 私钥与 OpenSSH，在 `run` 命令添加 `--windows-ssh`。
+
 ## 项目结构
 
 ```text

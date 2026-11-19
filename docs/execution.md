@@ -69,6 +69,8 @@ status = remote.job_status(job["job_id"])
 
 独立运行 `create_task_agent()` 需要在本地控制端配置 `OPENAI_API_KEY`、`RECLAB_MODEL` 及可选的 SDK 服务地址；SSH 工具、人工控制的实验和 GPU 本身不需要这些凭据。原生模式通过运行前后的哈希检查发现输入修改，适用于用户自己审阅的模型代码；它没有 Docker 的只读挂载、禁网及资源隔离。费用上限仍需结合 AutoDL 计费与实例关机策略管理，代码没有自动核验账单或关闭实例。
 
+命令行启动使用 `python -B -m reclab_agent.research_cli run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan`。环境文件仅解析白名单的字面赋值，不执行 shell；密钥不写入报告。可先运行 `plan` 查看预算和范围，或运行 `api-check` 验证 Responses API 与工具调用。真实运行将原配置基线和后续候选计入同一个 `ResearchToolbox` 的训练/时间预算，每次使用新的会话目录。WSL 可添加 `--windows-ssh`，通过 Windows 原有 OpenSSH 使用 Windows 路径的身份文件。
+
 每个长作业由独立 tmux 会话中的远端监督进程管理。SSH 断开后，训练、日志和超时监督继续；实例关机、重启或被回收后，tmux 不能保证恢复训练。远端超时监督和 `stop_job` 停止作业进程组，先请求退出，再强制终止；停止未确认时返回错误，须继续查询。监督进程无退出记录便消失时标记 `lost`，不当成完成。仅关闭 SSH 连接不会取消训练。
 
 ## Docker Worker：实现、故障恢复与验收边界

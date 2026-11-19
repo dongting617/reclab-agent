@@ -1,4 +1,4 @@
-"""Inspect research task inputs or run the controlled Docker fixture demo."""
+"""Inspect inputs, launch a configured optimization Agent, or run the fixture demo."""
 from __future__ import annotations
 
 import argparse
@@ -79,6 +79,21 @@ def main(argv: list[str] | None = None) -> int:
         check = commands.add_parser("check", help="validate a task configuration and its inputs without running experiments")
         check.add_argument("--config", type=Path, required=True, help="task configuration JSON; paths are relative to this file")
         check.set_defaults(operation="check")
+        for name in ("plan", "api-check", "run"):
+            command = commands.add_parser(name, help={
+                "plan": "show the baseline/candidate scope without API requests or jobs",
+                "api-check": "test Responses API tool calls without starting GPU jobs",
+                "run": "run the real baseline/candidate optimization Agent",
+            }[name])
+            command.add_argument("--config", type=Path, required=True)
+            command.set_defaults(operation=name)
+            if name != "plan":
+                command.add_argument("--env-file", type=Path, help="load named API settings as data, without executing shell")
+            if name == "run":
+                command.add_argument("--approve-plan", action="store_true",
+                                     help="explicitly approve the configured scope shown by the plan command")
+                command.add_argument("--windows-ssh", action="store_true",
+                                     help="use Windows OpenSSH from the WSL control process")
         commands = commands.add_parser("demo", help="audited fixture, not an LLM research agent").add_subparsers(dest="operation", required=True)
         for name in ("prepare", "status", "doctor", "run"):
             command = commands.add_parser(name)
@@ -94,6 +109,22 @@ def main(argv: list[str] | None = None) -> int:
             result = {"ok": value["inputs_valid"], "result": value}
             print(canonical_json(result))
             return 0 if result["ok"] else 2
+        elif not internal and args.command in {"plan", "api-check", "run"}:
+            from .research.launch import check_agent_api, prepare_launch, run_optimization
+            if args.operation == "plan":
+                config, plan, _ = prepare_launch(args.config)
+                value = {"plan": plan.to_dict(), "plan_hash": plan.plan_hash,
+                         "output_directory": str(config.output_directory), "api_requested": False,
+                         "training_started": False}
+            elif args.operation == "api-check":
+                value = check_agent_api(args.config, env_file=args.env_file)
+            else:
+                value = run_optimization(args.config, env_file=args.env_file,
+                    approve_plan=args.approve_plan, windows_ssh=args.windows_ssh,
+                    progress=lambda message: print(message, file=sys.stderr, flush=True))
+                result = {"ok": value["status"] == "completed", "result": value}
+                print(canonical_json(result))
+                return 0 if result["ok"] else 2
         elif args.operation == "prepare":
             value = demo.prepare(args.root)
         elif args.operation == "status":
