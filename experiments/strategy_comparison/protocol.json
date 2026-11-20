@@ -1,0 +1,13 @@
+{
+  "task_config": "../../configs/beauty-sasrec-task.json",
+  "env_file": "../../.reclab/agent.env",
+  "output_directory": "../../.reclab/sc",
+  "strategies": ["react", "plan_execute", "reflection"],
+  "candidates_per_strategy": 5,
+  "model_calls_per_strategy": 60,
+  "patches_per_strategy": 10,
+  "max_plan_steps": 3,
+  "max_reflections": 1,
+  "max_job_seconds": 600,
+  "seed": 2026
+}
