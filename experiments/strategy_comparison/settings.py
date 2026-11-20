@@ -64,5 +64,3 @@ def with_comparison(configuration, comparison, **changes):
     values = {field.name: getattr(configuration, field.name) for field in fields(TaskConfiguration)}
     values.update(changes)
     return ExperimentConfiguration(**values, comparison=comparison)
-
-
