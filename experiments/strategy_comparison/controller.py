@@ -23,6 +23,7 @@ from reclab_agent.research.launch import (LaunchError, _backend, _configuration,
                      _scored_record, prepare_launch)
 from reclab_agent.research.launch_environment import build_remote_tools, load_agent_environment
 from reclab_agent.research.optimization import OptimizationAgent
+from reclab_agent.research.reporting import write_user_report
 
 
 def _write(root, name, value):
@@ -168,6 +169,12 @@ def _run_strategy(config, global_plan, baseline, baseline_bytes, strategy, backe
             _write(global_output, "report.json", global_report)
         state["status"] = "completed" if state["candidate_count"] == len(candidates) else "incomplete"
     finally:
+        # Interrupted/scoring-failed rounds still retain their actual attempts.
+        # These raw records carry no accepted metrics or promotion decision.
+        for item in state["rounds"]:
+            if not item["experiments"]:
+                item["experiments"] = [{"record": value} for value in research.experiments
+                    if value["candidate_id"] == item["candidate_id"]]
         state.update(best=best, budget_usage=research.usage, model_calls=counted.calls,
                      model_usage=counted.usage, elapsed_seconds=time.monotonic() - started)
         _write(output, "report.json", state)
@@ -215,6 +222,14 @@ def run_comparison(configuration, *, approve_plan=False, env_file=None, windows_
                   "limitations": ["One training seed and one search per strategy; no statistical superiority claim.",
                                   "Only independent validation scores select best sources; no final-test evaluation.",
                                   "Provider and AutoDL billing are not automatically enforced."]}
+        report_context = {
+            "task_question": effective.task.question, "task_id": effective.task.task_id,
+            "target_model": read_json_strict(effective.model_config_path, max_bytes=1_000_000)["model"]["class"],
+            "agent_mode": "strategy_comparison", "dataset_id": effective.task.dataset_id,
+            "seed": plan.seeds[0], "primary_metric": plan.primary_metric,
+            "guardrail_metrics": list(plan.guardrail_metrics), "editable_files": list(plan.editable_files),
+        }
+        report["context"] = report_context
         review = PlanReview(plan.plan_hash, "approved", "cli-user", datetime.now(timezone.utc).isoformat(),
                             "Explicit startup authorization for the configured independent strategy comparison.")
         _write(output, "plan.json", plan.to_dict())
@@ -300,6 +315,8 @@ def run_comparison(configuration, *, approve_plan=False, env_file=None, windows_
         finally:
             usages = [state.get("budget_usage", {}) for state in report["strategies"]]
             baseline_usage = baseline_research.usage if baseline_research is not None else {}
+            if "baseline" not in report and baseline_research is not None and baseline_research.experiments:
+                report["baseline"] = {"record": baseline_research.experiments[0]}
             report["budget_usage"] = {
                 "experiment_attempts": baseline_usage.get("experiment_attempts", 0) + sum(u.get("experiment_attempts", 0) for u in usages),
                 "patch_attempts": sum(u.get("patch_attempts", 0) for u in usages),
@@ -309,6 +326,10 @@ def run_comparison(configuration, *, approve_plan=False, env_file=None, windows_
             report["elapsed_seconds"] = time.monotonic() - started
             unsafe = _unconfirmed(baseline_output) or any(_unconfirmed(path) for path in child_outputs)
             report["requires_reconciliation"] = unsafe
+            try:
+                report.update(write_user_report(output, report, context=report_context))
+            except Exception as error:
+                report["user_report_error"] = _public_error(error)
             _write(output, "report.json", report)
             if not unsafe:
                 active.unlink(missing_ok=True)

@@ -14,6 +14,7 @@ from ._execution.locking import job_lock
 from .files import atomic_write
 from .research.configuration import load_task_configuration, read_json_strict
 from .research.launch import LaunchError, prepare_launch, run_optimization
+from .research.reporting import format_user_summary
 
 
 def load_profile(root, config=None, env_file=None):
@@ -98,6 +99,8 @@ def _progress(message):
         message = "本轮结果目录：" + message.removeprefix("Session: ")
     elif message.startswith("Baseline metrics: "):
         message = "基线指标：" + message.removeprefix("Baseline metrics: ")
+    elif message.startswith("User report: "):
+        message = "结果报告：" + message.removeprefix("User report: ")
     print(translations.get(message, message), flush=True)
 
 
@@ -139,9 +142,7 @@ def main(argv=None, *, project_root=None):
             report = run_optimization(config, env_file=env_path, approve_plan=True,
                                       windows_ssh=args.windows_ssh, progress=_progress)
         status = report["status"]
-        print({"completed": "本轮实验已完成。", "incomplete": "本轮未产出可比较的候选实验。"}
-              .get(status, "本轮实验未完成。"), flush=True)
-        print("报告：" + report["report_path"], flush=True)
+        print(format_user_summary(report), flush=True)
         return 0 if status == "completed" else 2
     except KeyboardInterrupt:
         print("已中断，实验状态保留在本地结果目录。", file=sys.stderr)

@@ -309,6 +309,60 @@ class ComparisonTests(unittest.TestCase):
         self.assertTrue(Path(second["report_path"]).is_file())
         self.assertFalse((self.config.output_directory / "comparison-active.json").exists())
 
+    def assert_user_reports(self, report):
+        html = Path(report["user_report_path"])
+        markdown = Path(report["user_report_markdown_path"])
+        self.assertTrue(html.is_file())
+        self.assertTrue(markdown.is_file())
+        self.assertEqual(html.parent, Path(report["session_directory"]))
+        self.assertIn("ndcg@20", html.read_text(encoding="utf-8"))
+        self.assertIn("ndcg@20", markdown.read_text(encoding="utf-8"))
+        self.assertTrue(report["user_summary"])
+        self.assertNotIn("Untrusted claim", report["user_summary"])
+        saved = json.loads(Path(report["report_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(saved["user_report_path"], str(html))
+
+    def test_completed_comparison_automatically_writes_user_reports(self):
+        report = self.run_comparison()
+        self.assert_user_reports(report)
+        self.assertEqual(report["context"]["target_model"], self.model_config["model"]["class"])
+        self.assertEqual(report["context"]["guardrail_metrics"], list(self.config.guardrail_metrics))
+
+    def test_incomplete_comparison_still_writes_user_reports(self):
+        self.no_candidate = True
+        report = self.run_comparison()
+        self.assertEqual(report["status"], "incomplete")
+        self.assert_user_reports(report)
+        self.assertFalse(report["winning_strategies"])
+
+    def test_failed_score_keeps_attempt_evidence_and_user_reports(self):
+        self.corrupt_strategy = "react"
+        report = self.run_comparison()
+        self.assertEqual(report["status"], "failed")
+        self.assert_user_reports(report)
+        attempted = report["strategies"][0]["rounds"][0]["experiments"]
+        self.assertEqual(len(attempted), 1)
+        self.assertNotIn("metrics", attempted[0])
+
+    def test_cancelled_comparison_writes_user_reports_before_reraising(self):
+        with patch.object(self, "agent_factory", side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.run_comparison()
+        session, = (self.config.output_directory / "sessions").iterdir()
+        report = json.loads((session / "report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "cancelled")
+        self.assert_user_reports(report)
+        self.assertFalse((self.config.output_directory / "comparison-active.json").exists())
+
+    def test_report_export_error_preserves_machine_report_and_safe_cleanup(self):
+        with patch.object(comparison, "write_user_report", side_effect=OSError("private fixture detail")):
+            report = self.run_comparison()
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["user_report_error"], "OSError")
+        self.assertNotIn("private fixture detail", json.dumps(report))
+        self.assertTrue(Path(report["report_path"]).is_file())
+        self.assertFalse((self.config.output_directory / "comparison-active.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

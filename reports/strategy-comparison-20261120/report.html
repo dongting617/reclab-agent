@@ -1,0 +1,266 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>模型优化实验报告</title><style>body{margin:0;background:#f3f5f8;color:#17263c;font:16px/1.7 system-ui,'Microsoft YaHei',sans-serif}main{max-width:1080px;margin:32px auto;padding:0 22px 48px}header,section{background:white;border:1px solid #dce3ed;border-radius:14px;padding:24px;margin:18px 0}h1{font-size:30px;margin:8px 0 14px}h2{font-size:21px;margin:0 0 16px}h3{font-size:17px;margin:18px 0 8px}.badge{display:inline-block;background:#edf2fa;border-radius:20px;padding:3px 12px;color:#294b7e;font-size:14px}.summary{font-size:18px;line-height:1.8;border-left:4px solid #3a6ac0;padding-left:16px}dl{display:grid;grid-template-columns:130px 1fr;gap:7px 12px}dt{color:#5c6c82}dd{margin:0;overflow-wrap:anywhere}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #e5eaf1}th{background:#f5f7fb;font-weight:600}tr:first-child td{color:#57687e}small,.muted{color:#5c6c82}details{border-top:1px solid #e5eaf1;padding:14px 0}summary{cursor:pointer;font-weight:600}pre{font:13px/1.6 ui-monospace,Consolas,monospace;background:#f4f6f9;padding:16px;overflow:auto;white-space:pre;max-height:480px}a{color:#245bad}li{margin:6px 0}.resource{padding:12px 0;border-bottom:1px solid #e5eaf1}@media(max-width:600px){main{padding:0 12px;margin-top:12px}header,section{padding:18px}h1{font-size:25px}dl{grid-template-columns:90px 1fr}}@media print{body{background:white}main{max-width:none;margin:0}header,section{break-inside:avoid;border-radius:0}pre{max-height:none;white-space:pre-wrap}details{display:block}}</style></head><body><main><header><span class="badge">已结束，结果不完整</span><h1>模型优化实验报告</h1><p class="summary">本轮记录的最佳候选为 ReAct · candidate-4：ndcg@20 从 0.080042 提高到 0.081267，绝对变化 +0.001225（相对 +1.53%），保护指标达标。 各模式有效候选数量不完整，不宣布模式胜者。</p><dl><dt>任务</dt><dd>相同预算下的三种 Agent 模式模型优化实验</dd><dt>模型</dt><dd>SASRec</dd><dt>Agent 模式</dt><dd>模式对比实验</dd><dt>数据集</dt><dd>beauty-d1-e2c0b12d23d8e77b</dd><dt>训练种子</dt><dd>2026</dd></dl></header><section><h2>实测结果</h2><div class="scroll"><table><thead><tr><th>候选</th><th>ndcg@20</th><th>recall@20</th><th>主指标变化（绝对 / 相对）</th><th>判定</th></tr></thead><tbody><tr><td>基线 · sasrec-b1-retrain</td><td>0.080042</td><td>0.154222</td><td>—</td><td>基线</td></tr><tr><td>ReAct · candidate-1</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>ReAct · candidate-2</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>ReAct · candidate-3</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>ReAct · candidate-4</td><td>0.081267</td><td>0.155835</td><td>+0.001225 / +1.53%</td><td>优于基线且保护指标达标</td></tr><tr><td>ReAct · candidate-5</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>Plan and Execute · candidate-1</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>Plan and Execute · candidate-3</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>Plan and Execute · candidate-5</td><td>0.08057</td><td>0.157314</td><td>+0.000529 / +0.66%</td><td>优于基线且保护指标达标</td></tr><tr><td>Reflection · candidate-1</td><td>—</td><td>—</td><td>—</td><td>无有效评分</td></tr><tr><td>Reflection · candidate-2</td><td>0.081188</td><td>0.154984</td><td>+0.001146 / +1.43%</td><td>优于基线且保护指标达标</td></tr><tr><td>Reflection · candidate-3</td><td>0.080722</td><td>0.154625</td><td>+0.000681 / +0.85%</td><td>未超过已记录最佳主指标</td></tr><tr><td>Reflection · candidate-4</td><td>0.080715</td><td>0.155567</td><td>+0.000673 / +0.84%</td><td>未超过已记录最佳主指标</td></tr></tbody></table></div><p class="muted">失败或缺失评分以 — 表示，不按零分参与比较。保护指标要求不低于基线。</p></section><section><h2>最佳记录与产物</h2><p><strong>ReAct · candidate-4</strong></p><p><a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train/best.pt">模型权重</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/c7553d42a06cae1c5ab296f3a08f8894156435c3f4439a61d0d0bcde7fc49dab/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/c7553d42a06cae1c5ab296f3a08f8894156435c3f4439a61d0d0bcde7fc49dab/src/sasrec.py">源码 · src/sasrec.py</a></p></section><section><h2>执行情况与资源</h2><p>实际训练尝试合计 13 次（含基线）。</p><div class="resource"><strong>ReAct</strong> · 训练尝试 5 次 · 可用评分 1 个 · 无可用评分 4 个<div class="muted">模型轮次 42 次 · 记录 tokens 323,875 · 服务器训练/预测 252.1 秒</div></div><div class="resource"><strong>Plan and Execute</strong> · 训练尝试 3 次 · 可用评分 1 个 · 无可用评分 2 个<div class="muted">模型轮次 40 次 · 记录 tokens 333,007 · 服务器训练/预测 268.2 秒</div><p class="muted">candidate-2：规划输出未通过格式检查，未启动训练。</p><p class="muted">candidate-4：规划输出未通过格式检查，未启动训练。</p></div><div class="resource"><strong>Reflection</strong> · 训练尝试 4 次 · 可用评分 3 个 · 无可用评分 1 个<div class="muted">模型轮次 48 次 · 记录 tokens 512,602 · 服务器训练/预测 595.7 秒</div><p class="muted">candidate-5：补丁预算耗尽，重复候选请求被拦截，未启动新训练。</p></div></section><section><h2>候选改动与失败记录</h2><details><summary>ReAct · candidate-1 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -3,10 +3,10 @@
+     &quot;file&quot;: &quot;src/sasrec.py&quot;,
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+-      &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
+-      &quot;dropout&quot;: 0.4
++      &quot;hidden_size&quot;: 128,
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
++      &quot;dropout&quot;: 0.3
+     }
+   },
+   &quot;max_length&quot;: 50,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-a75c67fe5ae6dad0cc536b8127b8c385/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/e0cbc027013e6b1470932c9ea968e1133a182dc8a32ab00f0f4cf52e6997736b/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/e0cbc027013e6b1470932c9ea968e1133a182dc8a32ab00f0f4cf52e6997736b/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>ReAct · candidate-2 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -3,10 +3,10 @@
+     &quot;file&quot;: &quot;src/sasrec.py&quot;,
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+-      &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
+-      &quot;dropout&quot;: 0.4
++      &quot;hidden_size&quot;: 128,
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
++      &quot;dropout&quot;: 0.1
+     }
+   },
+   &quot;max_length&quot;: 50,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-1952406884533138a1cf780d4e84af87/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/2e238cd5f06719d610d14888d71eb7d260e0c0a1dc7b24029a67794c6113990f/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/2e238cd5f06719d610d14888d71eb7d260e0c0a1dc7b24029a67794c6113990f/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>ReAct · candidate-3 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -4,9 +4,9 @@
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+       &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
+-      &quot;dropout&quot;: 0.4
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
++      &quot;dropout&quot;: 0.2
+     }
+   },
+   &quot;max_length&quot;: 50,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-8b0c28ec72d46ecaccf7a2a470c09405/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/ead13a1cc948e0c516e1227db8060de71e79ef049d1f0e23287eeea1170cf063/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/ead13a1cc948e0c516e1227db8060de71e79ef049d1f0e23287eeea1170cf063/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>ReAct · candidate-4 · 优于基线且保护指标达标</summary><h3>src/sasrec.py</h3><small>冻结源码快照</small><pre><code>--- src/sasrec.py
++++ src/sasrec.py
+@@ -33,7 +33,7 @@
+             dropout=dropout,
+             activation=&quot;gelu&quot;,
+             batch_first=True,
+-            norm_first=True,
++            norm_first=False,
+         )
+         self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+         self.output_norm = nn.LayerNorm(hidden_size)
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/train/best.pt">模型权重</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-283754078c08998409c76ef38d8ba51c/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/c7553d42a06cae1c5ab296f3a08f8894156435c3f4439a61d0d0bcde7fc49dab/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/c7553d42a06cae1c5ab296f3a08f8894156435c3f4439a61d0d0bcde7fc49dab/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>ReAct · candidate-5 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -3,10 +3,10 @@
+     &quot;file&quot;: &quot;src/sasrec.py&quot;,
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+-      &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
+-      &quot;dropout&quot;: 0.4
++      &quot;hidden_size&quot;: 128,
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
++      &quot;dropout&quot;: 0.3
+     }
+   },
+   &quot;max_length&quot;: 50,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/experiments/exp-89f220bb1cbab2b214749e8fc8fd85ed/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/25f5b2ac2d32f4cb326ea32d23d8d27230e54044749678051b6e3ddcb848b372/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/react/snapshots/25f5b2ac2d32f4cb326ea32d23d8d27230e54044749678051b6e3ddcb848b372/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Plan and Execute · candidate-1 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -3,9 +3,9 @@
+     &quot;file&quot;: &quot;src/sasrec.py&quot;,
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+-      &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
++      &quot;hidden_size&quot;: 128,
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
+       &quot;dropout&quot;: 0.4
+     }
+   },
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-b708ae5fa0163b142c2ce8f7a8273fd6/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/e69978dff16b80f602b6960da9e566ecd7bad20fe7581331cd8d2d4ce878f3c3/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/e69978dff16b80f602b6960da9e566ecd7bad20fe7581331cd8d2d4ce878f3c3/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Plan and Execute · candidate-3 · 无有效评分</summary><p>验证预测出现非有限 logits（NaN/Inf），没有取得有效评分；日志未证明梯度爆炸。</p><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -3,17 +3,17 @@
+     &quot;file&quot;: &quot;src/sasrec.py&quot;,
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+-      &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
+-      &quot;num_heads&quot;: 1,
++      &quot;hidden_size&quot;: 128,
++      &quot;num_layers&quot;: 2,
++      &quot;num_heads&quot;: 4,
+       &quot;dropout&quot;: 0.4
+     }
+   },
+   &quot;max_length&quot;: 50,
+   &quot;epochs&quot;: 30,
+   &quot;patience&quot;: 5,
+-  &quot;batch_size&quot;: 256,
+-  &quot;eval_batch_size&quot;: 256,
++  &quot;batch_size&quot;: 128,
++  &quot;eval_batch_size&quot;: 128,
+   &quot;learning_rate&quot;: 0.001,
+   &quot;weight_decay&quot;: 0.0001,
+   &quot;grad_clip&quot;: 5.0,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-f4e4cb1e2c1bd65305d3b8ef1efbb246/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/848acc74476f57ce6c2b69ba496fc5cddbc6ad9c2a9e4b81edc1593264bc7786/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/848acc74476f57ce6c2b69ba496fc5cddbc6ad9c2a9e4b81edc1593264bc7786/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Plan and Execute · candidate-5 · 优于基线且保护指标达标</summary><h3>configs/default.json</h3><small>冻结源码快照</small><pre><code>--- configs/default.json
++++ configs/default.json
+@@ -4,9 +4,9 @@
+     &quot;class&quot;: &quot;SASRec&quot;,
+     &quot;kwargs&quot;: {
+       &quot;hidden_size&quot;: 64,
+-      &quot;num_layers&quot;: 1,
++      &quot;num_layers&quot;: 2,
+       &quot;num_heads&quot;: 1,
+-      &quot;dropout&quot;: 0.4
++      &quot;dropout&quot;: 0.5
+     }
+   },
+   &quot;max_length&quot;: 50,
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-fc6c310740f68013e0a4e1a6113c93d5/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-fc6c310740f68013e0a4e1a6113c93d5/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-fc6c310740f68013e0a4e1a6113c93d5/train/best.pt">模型权重</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/experiments/exp-fc6c310740f68013e0a4e1a6113c93d5/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/a88176d9b2ee79df5ef2d5740d4e5296ba76d6fbaeef5a4aee8bfda946a282d0/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/plan_execute/snapshots/a88176d9b2ee79df5ef2d5740d4e5296ba76d6fbaeef5a4aee8bfda946a282d0/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Reflection · candidate-1 · 无有效评分</summary><p>模型执行触发递归深度错误（RecursionError），没有取得有效评分。</p><h3>src/sasrec.py</h3><small>冻结源码快照</small><pre><code>--- src/sasrec.py
++++ src/sasrec.py
+@@ -62,5 +62,19 @@
+         return self.output_norm(x[:, -1])
+
+     def catalog_logits(self, user_states: torch.Tensor) -&gt; torch.Tensor:
++        &quot;&quot;&quot;Original baseline logit computation with reflection enhancement.&quot;&quot;&quot;
++        # Use reflection-aware logits for better discrimination
++        mixed, gate = self.reflection_logits(user_states)
++        return mixed
++
++    def reflection_logits(self, user_states: torch.Tensor) -&gt; torch.Tensor:
++        &quot;&quot;&quot;Reflection-aware logits: combine original scores with negation signal.&quot;&quot;&quot;
++        base_logits = self.catalog_logits(user_states)
++        # Compute mean item representation for negation signal
+         catalog = self.item_embedding.weight[1:]
+-        return user_states @ catalog.t() + self.item_bias[1:]
++        mean_item = catalog.mean(dim=0, keepdim=True)  # [1, hidden_size]
++        negation_signal = (mean_item - user_states.unsqueeze(1)) @ catalog.t()  # [batch, num_items]
++        # Learnable gate to balance original vs reflection
++        gate = torch.sigmoid(torch.zeros(1, device=user_states.device) * 0.5)
++        mixed_logits = (1.0 - gate) * base_logits + gate * negation_signal
++        return mixed_logits, gate
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-50ece63042d1981aae2dee4d7e5c38b3/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/acb92ecc5955df4a54e38b9eaa5795182e4319ed61eea29fbf5ce06927ec9e7d/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/acb92ecc5955df4a54e38b9eaa5795182e4319ed61eea29fbf5ce06927ec9e7d/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Reflection · candidate-2 · 优于基线且保护指标达标</summary><h3>src/sasrec.py</h3><small>冻结源码快照</small><pre><code>--- src/sasrec.py
++++ src/sasrec.py
+@@ -38,6 +38,9 @@
+         self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+         self.output_norm = nn.LayerNorm(hidden_size)
+         self.item_bias = nn.Parameter(torch.zeros(num_items + 1))
++        # Reflection enhancement components
++        self.reflection_fc1 = nn.Linear(hidden_size, hidden_size)
++        self.gate_weight = nn.Parameter(torch.zeros(1))
+         self.reset_parameters()
+
+     def reset_parameters(self) -&gt; None:
+@@ -62,5 +65,28 @@
+         return self.output_norm(x[:, -1])
+
+     def catalog_logits(self, user_states: torch.Tensor) -&gt; torch.Tensor:
++        &quot;&quot;&quot;Base recommendation logits from item similarity.&quot;&quot;&quot;
+         catalog = self.item_embedding.weight[1:]
+         return user_states @ catalog.t() + self.item_bias[1:]
++
++    def reflection_logits(self, user_states: torch.Tensor) -&gt; torch.Tensor:
++        &quot;&quot;&quot;Reflection-aware scoring: refine user states with contrastive signal.&quot;&quot;&quot;
++        # Reflect user state through a lightweight MLP for nuanced features
++        h = self.output_norm(
++            self.input_dropout(
++                torch.relu(self.reflection_fc1(user_states))
++            )
++        )
++        catalog = self.item_embedding.weight[1:]
++        ref_logits = h @ catalog.t() + self.item_bias[1:]
++        return ref_logits
++
++    def forward(self, histories: torch.Tensor) -&gt; torch.Tensor:
++        &quot;&quot;&quot;Override to enable reflection-based scoring.&quot;&quot;&quot;
++        user_states = self.encode(histories)
++        base_logits = self.catalog_logits(user_states)
++        ref_logits = self.reflection_logits(user_states)
++        # Learnable gate to blend base and reflection scores
++        gate = torch.sigmoid(self.gate_weight)
++        mixed_logits = (1.0 - gate) * base_logits + gate * ref_logits
++        return mixed_logits
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-9cb5ed2900e269883155dc7070b9cb55/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-9cb5ed2900e269883155dc7070b9cb55/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-9cb5ed2900e269883155dc7070b9cb55/train/best.pt">模型权重</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-9cb5ed2900e269883155dc7070b9cb55/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/0e66288a361fce2f71ea7388110b72813474fc277993cfb976c6f3d7ea4f1ca7/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/0e66288a361fce2f71ea7388110b72813474fc277993cfb976c6f3d7ea4f1ca7/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Reflection · candidate-3 · 未超过已记录最佳主指标</summary><h3>src/sasrec.py</h3><small>冻结源码快照</small><pre><code>--- src/sasrec.py
++++ src/sasrec.py
+@@ -38,9 +38,13 @@
+         self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+         self.output_norm = nn.LayerNorm(hidden_size)
+         self.item_bias = nn.Parameter(torch.zeros(num_items + 1))
+-        # Reflection enhancement components
+-        self.reflection_fc1 = nn.Linear(hidden_size, hidden_size)
+-        self.gate_weight = nn.Parameter(torch.zeros(1))
++        # Adaptive reflection enhancement
++        self.reflection_mlp = nn.Sequential(
++            nn.Linear(hidden_size, hidden_size),
++            nn.ReLU(),
++            nn.Linear(hidden_size, hidden_size),
++        )
++        self.adaptive_gate = nn.Linear(hidden_size, 1)
+         self.reset_parameters()
+
+     def reset_parameters(self) -&gt; None:
+@@ -70,23 +74,19 @@
+         return user_states @ catalog.t() + self.item_bias[1:]
+
+     def reflection_logits(self, user_states: torch.Tensor) -&gt; torch.Tensor:
+-        &quot;&quot;&quot;Reflection-aware scoring: refine user states with contrastive signal.&quot;&quot;&quot;
+-        # Reflect user state through a lightweight MLP for nuanced features
+-        h = self.output_norm(
+-            self.input_dropout(
+-                torch.relu(self.reflection_fc1(user_states))
+-            )
+-        )
++        &quot;&quot;&quot;Reflect user state through adaptive MLP to capture latent preferences.&quot;&quot;&quot;
++        h = self.output_norm(self.input_dropout(self.reflection_mlp(user_states)))
+         catalog = self.item_embedding.weight[1:]
+-        ref_logits = h @ catalog.t() + self.item_bias[1:]
+-        return ref_logits
++        return h @ catalog.t() + self.item_bias[1:]
+
+     def forward(self, histories: torch.Tensor) -&gt; torch.Tensor:
+-        &quot;&quot;&quot;Override to enable reflection-based scoring.&quot;&quot;&quot;
++        &quot;&quot;&quot;Enable sequence-aware reflection-based scoring.&quot;&quot;&quot;
+         user_states = self.encode(histories)
+         base_logits = self.catalog_logits(user_states)
+         ref_logits = self.reflection_logits(user_states)
+-        # Learnable gate to blend base and reflection scores
+-        gate = torch.sigmoid(self.gate_weight)
+-        mixed_logits = (1.0 - gate) * base_logits + gate * ref_logits
++
++        # Adaptive gating: condition blend ratio on state representation
++        gate_logit = self.adaptive_gate(user_states).squeeze(-1)
++        gate = torch.sigmoid(gate_logit)
++        mixed_logits = (1.0 - gate.unsqueeze(1)) * base_logits + gate.unsqueeze(1) * ref_logits
+         return mixed_logits
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-747a184da0f57a9af7c28f92ada87b8d/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-747a184da0f57a9af7c28f92ada87b8d/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-747a184da0f57a9af7c28f92ada87b8d/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/576a677a723f6264f95564907c9b46c7f43d1206b968ce736ec31fc918d4ace7/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/576a677a723f6264f95564907c9b46c7f43d1206b968ce736ec31fc918d4ace7/src/sasrec.py">源码 · src/sasrec.py</a></p></details><details><summary>Reflection · candidate-4 · 未超过已记录最佳主指标</summary><h3>src/sasrec.py</h3><small>冻结源码快照</small><pre><code>--- src/sasrec.py
++++ src/sasrec.py
+@@ -38,8 +38,13 @@
+         self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+         self.output_norm = nn.LayerNorm(hidden_size)
+         self.item_bias = nn.Parameter(torch.zeros(num_items + 1))
+-        # Reflection enhancement components
+-        self.reflection_fc1 = nn.Linear(hidden_size, hidden_size)
++        # Refined reflection enhancement with deeper MLP and stability
++        self.reflection_mlp = nn.Sequential(
++            nn.Linear(hidden_size, hidden_size),
++            nn.ReLU(),
++            nn.LayerNorm(hidden_size),
++            nn.Linear(hidden_size, hidden_size)
++        )
+         self.gate_weight = nn.Parameter(torch.zeros(1))
+         self.reset_parameters()
+
+</code></pre><p>产物：<a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-7bad925abfa75d3e80486fb05756c117/train/training.json">训练记录</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-7bad925abfa75d3e80486fb05756c117/train-log.json">训练日志</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/experiments/exp-7bad925abfa75d3e80486fb05756c117/grade.json">评分证据</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/79657896ab452d9f8e26e2c146fbd7815e0c5ff152d2eabb34cfc9b03f97f085/configs/default.json">源码 · configs/default.json</a> · <a href="../../.reclab/sc/sessions/20261120T020207Z-compare-eeddcd55/strategies/reflection/snapshots/79657896ab452d9f8e26e2c146fbd7815e0c5ff152d2eabb34cfc9b03f97f085/src/sasrec.py">源码 · src/sasrec.py</a></p></details></section><section><h2>补充审计与诊断</h2><ul><li>Reflection candidate-1 的 catalog_logits 与 reflection_logits 互相调用，触发 RecursionError；此项与其余候选的非有限 logits 故障不同。</li><li>Reflection candidate-2 新增混合 forward 分支，但固定 train/runtime 实际调用 catalog_logits(encode(...))，该分支未参与训练和预测。新增 Linear 初始化会消耗随机数，不能把分数变化归因于未调用的 MLP 分支，也不能假定原路径初始权重与基线相同。</li><li>Reflection candidate-3 的两层 MLP 和 adaptive_gate 同样仅在未调用的 forward 中使用；配置、train 和 runtime 与 candidate-2 相同。不能把其分数变化归因于新分支。</li><li>Reflection candidate-4 的新增 MLP 和 gate 仍未接入训练/预测路径；reflection_logits 还引用已删除的 reflection_fc1，若调用将触发 AttributeError。该潜在缺陷未在实际路径触发。critic 审核通过不构成新结构生效或因果归因正确的证据。</li><li>32 个微型条件中 30 个输出有限、2 个出现非有限 logits，没有执行训练或载入 checkpoint，初始化参数均有限，推理前后参数与缓冲哈希未改变。</li><li>两处 NaN 都是 hidden64、两层、四头、左填充且允许 MHA fastpath 的条件（norm_first True/False 各一个）；同模型、同输入关闭 fastpath 后输出有限。</li><li>该探针表明至少存在无需训练即可触发的推理数值问题，不支持将主实验失败一概归因于梯度爆炸。探针使用微型随机初始化输入，不能独自证明所有真实失败的完整根因，也没有记录具体执行内核。</li></ul></section><section><h2>结论边界与下一步</h2><ul><li>由独立评分器对同一验证集的预测评分；验证集也用于 checkpoint 选择和候选搜索，分数提升不等于最终测试集提升。</li><li>本轮未评测最终测试集。</li><li>仅使用一个训练种子，不能据此宣称统计显著提升或某种 Agent 模式普遍更优。</li><li>未核验实际货币账单；只有记录中的调用量和作业耗时可用于本轮资源对照。</li></ul><p>保留本轮已评分的最佳源码与模型产物，再用额外训练种子和最终测试集验证改进是否稳定。</p><p><a href="../strategy-comparison-20261120.json">机器可读实验记录</a></p></section></main></body></html>

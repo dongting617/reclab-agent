@@ -127,6 +127,15 @@ class LaunchTests(unittest.TestCase):
                                        backend=backend or ScriptedLaunchBackend(),
                                        registry=self.registry, binder=self.binder, **kwargs)
 
+    def assert_user_report(self, report):
+        self.assertTrue(Path(report["user_report_path"]).is_file())
+        self.assertTrue(Path(report["user_report_markdown_path"]).is_file())
+        self.assertTrue(report["user_summary"])
+        self.assertNotIn("credential-never-returned",
+                         Path(report["user_report_path"]).read_text(encoding="utf-8"))
+        saved = json.loads(Path(report["report_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(saved["user_report_path"], report["user_report_path"])
+
     def test_unapproved_launch_never_calls_provider_or_binds_execution(self):
         backend = ScriptedLaunchBackend()
         with self.assertRaises(launch.LaunchError):
@@ -154,6 +163,7 @@ class LaunchTests(unittest.TestCase):
 
     def test_baseline_and_candidate_share_budget_and_independent_scores(self):
         report = self.run_launch()
+        self.assert_user_report(report)
         self.assertEqual(report["status"], "completed")
         self.assertEqual(len(self.research_instances), 1)
         self.assertEqual(report["budget_usage"]["experiment_attempts"], 2)
@@ -172,6 +182,8 @@ class LaunchTests(unittest.TestCase):
 
     def test_agent_completion_without_candidate_is_incomplete(self):
         report = self.run_launch(ScriptedLaunchBackend(no_candidate=True))
+        self.assert_user_report(report)
+        self.assertNotIn("candidate quality is excellent", report["user_summary"])
         self.assertEqual(report["status"], "incomplete")
         self.assertEqual(len(self.records), 1)
         self.assertEqual(report["budget_usage"]["experiment_attempts"], 1)
@@ -190,6 +202,8 @@ class LaunchTests(unittest.TestCase):
         report = self.run_launch()
         self.assertEqual(report["status"], "failed")
         self.assertFalse(report["comparison"])
+        self.assert_user_report(report)
+        self.assertTrue(all("metrics" not in entry for entry in report["experiments"]))
 
     def test_failed_baseline_stops_before_candidate_agent(self):
         self.failed_baseline = True
@@ -200,6 +214,40 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(backend.steps, 0)
         self.assertEqual(report["budget_usage"]["experiment_attempts"], 1)
         self.assertFalse(report["comparison"])
+        self.assert_user_report(report)
+
+    def test_agent_failure_preserves_verified_baseline_and_writes_user_report(self):
+        agent = Mock()
+        agent.run.side_effect = RuntimeError("credential-never-returned")
+        report = self.run_launch(agent_factory=Mock(return_value=agent))
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["error"], "RuntimeError")
+        self.assertEqual(len(report["experiments"]), 1)
+        self.assertIn("metrics", report["experiments"][0])
+        self.assert_user_report(report)
+
+    def test_interrupted_agent_writes_cancelled_user_report_before_reraising(self):
+        agent = Mock()
+        agent.run.side_effect = KeyboardInterrupt()
+        progress = []
+        with self.assertRaises(KeyboardInterrupt):
+            self.run_launch(agent_factory=Mock(return_value=agent), progress=progress.append)
+        output = self.bound_configurations[-1].output_directory
+        saved = json.loads((output / "report.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["status"], "cancelled")
+        self.assertIn("metrics", saved["experiments"][0])
+        self.assert_user_report(saved)
+        self.assertTrue(progress[-1].startswith("User report: "))
+
+    def test_user_report_write_failure_keeps_machine_evidence_and_measured_status(self):
+        with patch.object(launch, "write_user_report", side_effect=OSError("credential-never-returned")):
+            report = self.run_launch()
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["user_report_error"], "OSError")
+        self.assertEqual(len(report["experiments"]), 2)
+        saved = Path(report["report_path"]).read_text(encoding="utf-8")
+        self.assertNotIn("credential-never-returned", saved)
+        self.assertEqual(json.loads(saved)["user_report_error"], "OSError")
 
     def test_two_explicit_runs_get_distinct_output_sessions(self):
         first = self.run_launch()

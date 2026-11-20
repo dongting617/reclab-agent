@@ -39,6 +39,8 @@ class SimpleStartTests(unittest.TestCase):
 
     def report(self, status="completed"):
         return {"status": status, "report_path": str(self.root / "results/report.json"),
+                "user_report_path": str(self.root / "results/report.html"),
+                "user_summary": "本轮实验已完成。" if status == "completed" else "本轮没有有效候选分数。",
                 "comparison": [], "experiments": []}
 
     def test_profile_paths_are_relative_to_project_not_calling_directory(self):
@@ -84,7 +86,7 @@ class SimpleStartTests(unittest.TestCase):
         with patch.object(start, "load_task_configuration", return_value=self.config), \
                 patch.object(start, "ensure_runtime", return_value=None), \
                 patch.object(start, "run_optimization", run), \
-                contextlib.redirect_stdout(io.StringIO()):
+                contextlib.redirect_stdout(io.StringIO()) as output:
             result = start.main(["--windows-ssh"], project_root=self.root)
         self.assertEqual(result, 0)
         self.assertEqual(run.call_count, 1)
@@ -92,6 +94,8 @@ class SimpleStartTests(unittest.TestCase):
         self.assertTrue(run.call_args.kwargs["approve_plan"])
         self.assertTrue(run.call_args.kwargs["windows_ssh"])
         self.assertEqual(run.call_args.kwargs["env_file"], self.root / ".reclab/agent.env")
+        self.assertIn("本轮实验已完成", output.getvalue())
+        self.assertIn("report.html", output.getvalue())
 
     def test_runtime_reexecution_returns_child_exit_without_second_launch(self):
         with patch.object(start, "load_task_configuration", return_value=self.config), \
@@ -143,7 +147,8 @@ class SimpleStartTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()) as output:
             result = start.main([], project_root=self.root)
         self.assertEqual(result, 2)
-        self.assertIn("report.json", output.getvalue())
+        self.assertIn("没有有效候选分数", output.getvalue())
+        self.assertIn("report.html", output.getvalue())
 
     def test_unexpected_provider_errors_do_not_echo_credentials_or_tracebacks(self):
         with patch.object(start, "load_task_configuration", return_value=self.config), \

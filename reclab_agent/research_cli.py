@@ -90,10 +90,17 @@ def main(argv: list[str] | None = None) -> int:
             if name != "plan":
                 command.add_argument("--env-file", type=Path, help="load named API settings as data, without executing shell")
             if name == "run":
+                command.add_argument("--json", action="store_true",
+                                     help="print the structured result instead of the user summary")
                 command.add_argument("--approve-plan", action="store_true",
                                      help="explicitly approve the configured scope shown by the plan command")
                 command.add_argument("--windows-ssh", action="store_true",
                                      help="use Windows OpenSSH from the WSL control process")
+        report = commands.add_parser("report", help="render a saved experiment report without API or GPU calls")
+        report.add_argument("--input", type=Path, required=True, help="saved experiment report JSON")
+        report.add_argument("--output-directory", type=Path, help="write report.html and report.md here; defaults beside input")
+        report.add_argument("--json", action="store_true", help="print generated report paths as JSON")
+        report.set_defaults(operation="report")
         commands = commands.add_parser("demo", help="audited fixture, not an LLM research agent").add_subparsers(dest="operation", required=True)
         for name in ("prepare", "status", "doctor", "run"):
             command = commands.add_parser(name)
@@ -109,6 +116,22 @@ def main(argv: list[str] | None = None) -> int:
             result = {"ok": value["inputs_valid"], "result": value}
             print(canonical_json(result))
             return 0 if result["ok"] else 2
+        elif args.operation == "report":
+            from .research.configuration import read_json_strict
+            from .research.reporting import format_user_summary, write_user_report
+            saved = read_json_strict(args.input, max_bytes=32_000_000)
+            if not isinstance(saved, dict):
+                raise ValueError("saved experiment report must be a JSON object")
+            output = args.output_directory if args.output_directory is not None else args.input.parent
+            context = dict(saved["context"]) if isinstance(saved.get("context"), dict) else {}
+            context["artifact_directory"] = args.input.absolute().parent
+            context["report_json_path"] = args.input.absolute()
+            generated = write_user_report(output, saved, context=context)
+            if args.json:
+                print(canonical_json({"ok": True, "result": generated}))
+            else:
+                print(format_user_summary({**saved, **generated}))
+            return 0
         elif not internal and args.command in {"plan", "api-check", "run"}:
             from .research.launch import check_agent_api, prepare_launch, run_optimization
             if args.operation == "plan":
@@ -123,7 +146,11 @@ def main(argv: list[str] | None = None) -> int:
                     approve_plan=args.approve_plan, windows_ssh=args.windows_ssh,
                     progress=lambda message: print(message, file=sys.stderr, flush=True))
                 result = {"ok": value["status"] == "completed", "result": value}
-                print(canonical_json(result))
+                if args.json:
+                    print(canonical_json(result))
+                else:
+                    from .research.reporting import format_user_summary
+                    print(format_user_summary(value))
                 return 0 if result["ok"] else 2
         elif args.operation == "prepare":
             value = demo.prepare(args.root)
@@ -141,6 +168,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             value = demo.cancel_and_confirm(args.root, args.image)
         result = {"ok": True, "result": value}
+    except KeyboardInterrupt:
+        print("已中断；已启动实验的报告保留在本轮结果目录。", file=sys.stderr)
+        return 130
     except (CapabilityError, DockerError, ValueError, KeyError, OSError, TimeoutError, sqlite3.Error) as error:
         result = _error(error)
     print(canonical_json(result))

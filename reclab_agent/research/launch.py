@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import time
 import uuid
 
 from ..contracts import canonical_json, content_hash
@@ -19,6 +20,7 @@ from .contracts import EvidenceRef, ExperimentRecord, PlanReview, ResearchPlan
 from .inspection import TaskAdapterRegistry, inspect_task
 from .launch_environment import build_remote_tools, load_agent_environment
 from .optimization import OptimizationAgent
+from .reporting import write_user_report
 
 
 class LaunchError(ValueError):
@@ -154,13 +156,21 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
     api_check = _probe(backend)
     session_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     output = effective.output_directory / "sessions" / session_id
+    selected = read_json_strict(effective.model_config_path, max_bytes=1_000_000)["model"]
     # A fresh directory is a new session, never a disguised budget-recovery path.
     output.mkdir(parents=True, exist_ok=False)
     effective = replace(effective, output_directory=output)
+    report_context = {"task_id": effective.task.task_id, "task_question": effective.task.question,
+                      "target_model": selected["class"], "agent_mode": effective.task.mode,
+                      "dataset_id": effective.task.dataset_id, "seed": plan.seeds[0],
+                      "primary_metric": plan.primary_metric,
+                      "guardrail_metrics": list(plan.guardrail_metrics),
+                      "editable_files": list(plan.editable_files)}
     report = {"status": "running", "session_id": session_id, "session_directory": str(output),
               "report_path": str(output / "report.json"), "api_check": api_check,
               "plan_hash": plan.plan_hash, "baseline_id": effective.task.baseline_id,
               "primary_metric": plan.primary_metric, "comparison": [], "experiments": [],
+              "context": report_context, "started_at_utc": datetime.now(timezone.utc).isoformat(),
               "test_evaluated": False, "cost_enforcement": "time/job limits only; provider and AutoDL billing not verified"}
 
     def write(name, value):
@@ -172,6 +182,7 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
     write("review.json", review.to_dict())
     write("report.json", report)
     research = None
+    started = time.monotonic()
     try:
         remote_tools = build_remote_tools(effective, windows_ssh=windows_ssh)
         research = binder(effective, plan=plan, review=review, registry=registry, remote_tools=remote_tools)
@@ -188,7 +199,6 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
         if progress:
             progress("Baseline metrics: " + canonical_json(baseline_score["metrics"]))
             progress("Starting the optimization Agent; trace: " + str(output / "agent.jsonl"))
-        selected = read_json_strict(effective.model_config_path, max_bytes=1_000_000)["model"]
         agent = agent_factory(research, backend, target_model=selected["class"],
                               evidence=RecLabToolbox(output), max_steps=plan.budget.max_model_turns - 1,
                               trace_path=output / "agent.jsonl")
@@ -198,8 +208,12 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
             ". Read the independent score and report a measured positive, negative or inconclusive result in Chinese. "
             "Keep all actions within the supplied plan. Baseline evidence: " + canonical_json(baseline_score))
         report["agent_result"] = agent.run(prompt)
-        scored = [_scored_record(output, value, plan) for value in research.experiments]
+        scored = []
         report["experiments"] = scored
+        for value in research.experiments:
+            # Keep earlier verified entries if a later artifact fails its
+            # integrity check; the failed entry remains record-only in finally.
+            scored.append(_scored_record(output, value, plan))
         for candidate in scored:
             record = candidate["record"]
             if record["candidate_id"] == effective.task.baseline_id or "metrics" not in candidate:
@@ -224,6 +238,22 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
         if research is not None:
             report["budget_usage"] = research.usage
             if report["status"] not in {"completed", "incomplete"}:
-                report["experiments"] = [{"record": value} for value in research.experiments]
+                verified = {entry["record"]["experiment_id"]: entry for entry in report["experiments"]
+                            if "metrics" in entry}
+                report["experiments"] = [verified.get(value["experiment_id"], {"record": value})
+                                         for value in research.experiments]
+        report["elapsed_seconds"] = time.monotonic() - started
+        report["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
+        report["requires_reconciliation"] = any(confined_path(output, name).exists()
+            for name in ("active-remote-job.json", "execution-blocked.json"))
+        # Preserve the machine evidence even if report formatting or disk writes
+        # fail; user-facing text is derived from this evidence, never LLM claims.
         write("report.json", report)
+        try:
+            report.update(write_user_report(output, report, context=report_context))
+        except Exception as error:
+            report["user_report_error"] = _public_error(error)
+        write("report.json", report)
+        if report["status"] == "cancelled" and progress:
+            progress("User report: " + report.get("user_report_path", report["report_path"]))
     return report

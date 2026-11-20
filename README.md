@@ -10,7 +10,11 @@ RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐�
 .\start.cmd
 ```
 
-启动器自动加载本地 API 配置、选择 Python/WSL 环境、准备 SDK 并连接 GPU，随后完成基线训练、Agent 优化、候选实验与独立评分。结束时直接显示报告位置。启动此命令即运行当前配置的范围；当前任务最多两次训练，基线与候选共用预算。
+启动器自动加载本地 API 配置、选择 Python/WSL 环境、准备 SDK 并连接 GPU，随后完成基线训练、Agent 优化、候选实验与独立评分。结束时直接显示中文结论、关键指标和可打开的报告位置。启动此命令即运行当前配置的范围；当前任务最多两次训练，基线与候选共用预算。
+
+每轮实验结束会在会话目录自动生成面向用户的 `report.html` 和 `report.md`，包含任务与范围、实际代码改动、基线/候选指标和变化、失败记录、最佳产物位置与结论边界；失败、无有效候选或中断也会留下报告。原始 `report.json` 保留用于程序处理，报告整理在本地完成。
+
+本次真实 GPU 实验已补齐[中文结果报告](reports/strategy-comparison-20261120/report.md)和[可离线打开的 HTML 报告](reports/strategy-comparison-20261120/report.html)。
 
 只查看任务和预算：
 
@@ -95,6 +99,12 @@ python -B -m reclab_agent.research_cli check --config configs/beauty-sasrec-task
 `inputs_valid` 表示文件与接入合同通过检查；`ready_to_run` 表示真实执行条件是否就绪。检查入口不启动训练。通用 `run_experiment` 工具提供训练→预测→独立评分的固定流程，通过 `create_task_agent()` 按任务配置绑定，模型无需实现自己的 runner。将 [autodl-ssh.example.json](configs/autodl-ssh.example.json) 复制为被 Git 忽略的 `configs/autodl-ssh.json` 并填写实际连接信息；七个远程工具和 tmux 恢复约定见[执行层说明](docs/execution.md)。独立 Agent 的大模型 Key 和模型名配置在本地控制端环境变量中。
 
 默认使用上方的 `start.cmd`。底层 `research_cli` 的计划查看、API 预检及显式参数用于开发集成，见[执行层说明](docs/execution.md)。每次实验使用独立的 `sessions/<时间>-<ID>/`，包含报告、计划、Agent 轨迹和实验产物；缺少实测候选时标记为 `incomplete`。
+
+已有实验 JSON 可以直接补生成用户报告：
+
+```bash
+python -B -m reclab_agent.research_cli report --input path/to/session/report.json
+```
 
 ## 项目结构
 

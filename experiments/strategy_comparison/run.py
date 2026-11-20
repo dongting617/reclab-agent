@@ -9,6 +9,7 @@ import os
 from reclab_agent.contracts import Budget, canonical_json
 from reclab_agent.files import atomic_write
 from reclab_agent.research.configuration import load_task_configuration, read_json_strict
+from reclab_agent.research.reporting import format_user_summary
 from .controller import run_comparison
 from .settings import ComparisonConfiguration, with_comparison
 from .runner import bind_experiment_tools
@@ -52,6 +53,7 @@ def main(argv=None):
     parser.add_argument("--protocol", type=Path, default=Path(__file__).with_name("protocol.json"))
     parser.add_argument("--run", action="store_true", help="execute this experiment; default only prints the protocol")
     parser.add_argument("--windows-ssh", action="store_true", help="use Windows OpenSSH when Python runs under WSL")
+    parser.add_argument("--json", action="store_true", help="print the final machine-readable result instead of the user summary")
     args = parser.parse_args(argv)
     config, environment, protocol = prepare(args.protocol)
     print(canonical_json({"strategies": list(config.comparison.strategies),
@@ -67,8 +69,13 @@ def main(argv=None):
     report = run_comparison(config, approve_plan=True, env_file=environment, windows_ssh=args.windows_ssh,
                             binder=bind_experiment_tools,
                             progress=lambda message: print(message, flush=True))
-    print(canonical_json({"status": report["status"], "report_path": report["report_path"],
-                          "comparison": report["comparison"], "winning_strategies": report["winning_strategies"]}), flush=True)
+    if args.json:
+        print(canonical_json({"status": report["status"], "report_path": report["report_path"],
+                              "user_report_path": report.get("user_report_path"),
+                              "user_report_markdown_path": report.get("user_report_markdown_path"),
+                              "comparison": report["comparison"], "winning_strategies": report["winning_strategies"]}), flush=True)
+    else:
+        print(format_user_summary(report), flush=True)
     return 0 if report["status"] == "completed" else 2
 
 

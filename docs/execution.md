@@ -73,6 +73,10 @@ status = remote.job_status(job["job_id"])
 
 命令行启动使用 `python -B -m reclab_agent.research_cli run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan`。环境文件仅解析白名单的字面赋值，不执行 shell；密钥不写入报告。可先运行 `plan` 查看预算和范围，或运行 `api-check` 验证 Responses API 与工具调用。真实运行将原配置基线和后续候选计入同一个 `ResearchToolbox` 的训练/时间预算，每次使用新的会话目录。WSL 可添加 `--windows-ssh`，通过 Windows 原有 OpenSSH 使用 Windows 路径的身份文件。
 
+真实实验结束后，默认终端输出中文摘要和 `report.html` 位置，同目录还有 `report.md` 和机器可读的 `report.json`。用户报告从已记录的实测指标、冻结源码和作业证据生成；Agent 的文字回答不构成模型提升证据。候选失败、没有有效评分或用户中断时仍生成报告，保留此前已核验的基线数据。开发集成需要原 JSON 输出时，为 `run` 添加 `--json`。
+
+使用 `python -B -m reclab_agent.research_cli report --input path/to/session/report.json` 可在本地离线重建用户报告；默认写到 JSON 所在目录，也可用 `--output-directory path/to/readable` 单独指定。离线报告命令不加载 API 配置或启动训练。若会话还未开始，例如输入检查或 API 预检失败，则直接返回启动错误。
+
 每个长作业由独立 tmux 会话中的远端监督进程管理。SSH 断开后，训练、日志和超时监督继续；实例关机、重启或被回收后，tmux 不能保证恢复训练。远端超时监督和 `stop_job` 停止作业进程组，先请求退出，再强制终止；停止未确认时返回错误，须继续查询。监督进程无退出记录便消失时标记 `lost`，不当成完成。仅关闭 SSH 连接不会取消训练。
 
 ## Docker Worker：实现、故障恢复与验收边界
