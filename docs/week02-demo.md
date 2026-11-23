@@ -29,7 +29,7 @@ docker info
 这里的 root 仅用于可信控制器管理本机 daemon；候选容器仍为 UID/GID 65532。已有实跑目录为 `/var/lib/reclab-agent-week02-demo-20261020`，镜像为验收报告中记录的 ECR RepoDigest；重新准备演示时使用新的目录名，不覆盖证据。
 
 ```bash
-python3 -m reclab_agent.research_cli demo prepare --root "$PWD/.reclab/week02-demo-001"
+python3 -m reclab_agent.cli.research demo prepare --root "$PWD/.reclab/week02-demo-001"
 ```
 
 目标目录必须不存在，避免覆盖已有实验。准备结果写入 `demo.json`，包括数据哈希、源码内容哈希、源码目录哈希、公共数据目录哈希、固定种子 42 和每个作业 30 秒限制。
@@ -39,7 +39,7 @@ python3 -m reclab_agent.research_cli demo prepare --root "$PWD/.reclab/week02-de
 ```bash
 docker pull python:3.12-slim-bookworm
 IMAGE=$(docker image inspect python:3.12-slim-bookworm --format '{{index .RepoDigests 0}}')
-python3 -m reclab_agent.research_cli demo doctor --root "$PWD/.reclab/week02-demo-001" --image "$IMAGE"
+python3 -m reclab_agent.cli.research demo doctor --root "$PWD/.reclab/week02-demo-001" --image "$IMAGE"
 ```
 
 Worker 使用 digest 并设置 `--pull never`；示例不会自动拉取镜像。`doctor` 仅检查能力，真正运行的容器才提供执行证据。若普通 Linux 用户无 Docker 权限，管理员可以在既有 WSL 发行版中以 root 运行可信控制器；不需要把用户加入 docker 组，不需要开放 TCP daemon。候选容器本身使用 UID 65532。
@@ -47,14 +47,14 @@ Worker 使用 digest 并设置 `--pull never`；示例不会自动拉取镜像�
 `doctor` 会建立 Worker 数据库并生成 `worker-policy.json`。在执行 run 前，管理员先在另一个终端显式启动独立监督（Ctrl+C 停止监督进程，不会删除作业）：
 
 ```bash
-python3 -m reclab_agent.watchdog --state "$PWD/.reclab/week02-demo-001/worker" --policy "$PWD/.reclab/week02-demo-001/worker-policy.json" serve --interval 0.2
+python3 -m reclab_agent.execution.watchdog --state "$PWD/.reclab/week02-demo-001/worker" --policy "$PWD/.reclab/week02-demo-001/worker-policy.json" serve --interval 0.2
 ```
 
 保持该进程运行，在原终端中继续：
 
 ```bash
-python3 -m reclab_agent.research_cli demo run --root "$PWD/.reclab/week02-demo-001" --image "$IMAGE"
-python3 -m reclab_agent.research_cli demo status --root "$PWD/.reclab/week02-demo-001"
+python3 -m reclab_agent.cli.research demo run --root "$PWD/.reclab/week02-demo-001" --image "$IMAGE"
+python3 -m reclab_agent.cli.research demo status --root "$PWD/.reclab/week02-demo-001"
 ```
 
 这不是自动后台服务；CLI 不检查常驻 Watchdog 存在与否。为验收中断/挂起场景，应提前保持该独立进程运行。本次实际使用官方 ECR Python 镜像，保留其真实 `public.ecr.aws/docker/library/python@sha256:...` 身份；上面的 Docker Hub 准备命令是可选官方来源，不能拿另一个 registry 的名字替换已记录 digest。

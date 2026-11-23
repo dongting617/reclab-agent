@@ -1,6 +1,6 @@
 """Minimal reusable agent interfaces, independent of recommendation jobs."""
-from .agent import Agent
-from .config import AgentConfig
-from .llm import ModelBackend, ModelTurn, OpenAIResponsesBackend
+from reclab_agent.core.agent import Agent
+from reclab_agent.core.config import AgentConfig
+from reclab_agent.core.llm import ModelBackend, ModelTurn, OpenAIResponsesBackend
 
 __all__ = ["Agent", "AgentConfig", "ModelBackend", "ModelTurn", "OpenAIResponsesBackend"]

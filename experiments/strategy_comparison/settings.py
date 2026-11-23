@@ -1,8 +1,8 @@
 """Protocol settings for this experiment; not an Agent configuration extension."""
 from __future__ import annotations
 from dataclasses import dataclass, fields
-from reclab_agent.contracts import Budget
-from reclab_agent.research.configuration import TaskConfiguration
+from reclab_agent.domain.contracts import Budget
+from reclab_agent.domain.configuration import TaskConfiguration
 
 @dataclass(frozen=True)
 class ComparisonConfiguration:

@@ -1,6 +1,6 @@
 # Beauty D1 数据适配协议
 
-`reclab_agent.beauty.import_beauty_bundle` 只负责把已经划分好的 D1 文件接入 RecLab，不重新过滤、划分或选择用户。它要求源文件使用 schema 2、`sasrec_source_order_train_catalog` 协议，并要求调用者提供预先冻结的源文件字节 SHA256。
+`reclab_agent.data.beauty.import_beauty_bundle` 只负责把已经划分好的 D1 文件接入 RecLab，不重新过滤、划分或选择用户。它要求源文件使用 schema 2、`sasrec_source_order_train_catalog` 协议，并要求调用者提供预先冻结的源文件字节 SHA256。
 
 ## 保留什么
 
@@ -25,7 +25,7 @@
 | `private/test.json` | 独立暖测试用户的 history/target，只供受信评分器使用 |
 | `private/provenance.json` | 完整准备文件字节哈希、源统计、目录元数据哈希、测试人群/排除计数/内容哈希 |
 
-公开验证目标是开发集信息，允许实验过程使用；它不构成独立的最终测试证据。原始完整 JSON 绝不能作为候选挂载的数据文件，因为其中包含测试目标。目录文本元数据目前只记录来源内容哈希，尚未导出为候选 RAG 语料。
+公开验证目标允许用于 checkpoint 选择和候选比较；项目统一报告验证集评估，默认使用一个固定随机种子，不要求另行测试集评估，也不将验证集分数表述为独立测试集结果。原始完整 JSON 绝不能作为候选挂载的数据文件，因为其中包含测试目标。目录文本元数据目前只记录来源内容哈希，尚未导出为候选 RAG 语料。
 
 源准备文件的 SHA256 是“原始文件字节身份”，`bundle.data_hash` 是规范化公开 manifest/train/valid 的身份，两者数值不同。改变私有测试值会改变准备文件哈希和私有 provenance，但不会改变公开验证人群、公开文件字节、数据 ID 或 `data_hash`。公开身份同时绑定原始 reviews/metadata 来源哈希；若更换了原始数据来源，应产生新的公开身份。
 
@@ -34,7 +34,7 @@
 从仓库根目录运行：
 
 ```powershell
-.\.venv\Scripts\python.exe -m reclab_agent.beauty `
+.\.venv\Scripts\python.exe -m reclab_agent.data.beauty `
   --source .reclab/cloud-source/beauty-sasrec.json `
   --destination .reclab/datasets/beauty-d1 `
   --expected-sha256 7a2dae80bf7053c91d4eda79f33ff997df45c07c1fd968f36d77b591ed828efb `

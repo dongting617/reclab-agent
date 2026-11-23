@@ -1,5 +1,10 @@
 # RecLab Agent 文档导航
 
+- [项目架构与代码导航](architecture.md)
+- [功能需求](plan.md)
+- [重构与功能完善实施方案](implementation-plan.md)
+- [仓库优化记录](optimization-log.md)
+- [四阶段研究、实验账本与记忆使用说明](research-usage.md)
 - [Agent 工具、研究流程与代码职责](agent-workflow.md)
 - [飞书八周总计划](https://my.feishu.cn/docx/DZ1Hdi6pToY617xyCEWceXmvnKa)
 - [本地八周总计划](eight-week-plan.md)
@@ -13,4 +18,4 @@
 - 第5周：多Agent、状态图与持久化：[本地](weeks/week-05.md)｜[飞书](https://my.feishu.cn/docx/CVnvdNVuIoIDzIxG5N2cdwhwnLf)
 - 第6周：Web工作台、CLI与服务化：[本地](weeks/week-06.md)｜[飞书](https://my.feishu.cn/docx/DDz1d2wBsoe05gxaFLRcpPXgnOh)
 - 第7周：冻结评测、消融与成本分析：[本地](weeks/week-07.md)｜[飞书](https://my.feishu.cn/docx/OfksdqjSUoY52wxfg8BcjWLan6g)
-- 第8周：最终确认、迁移验证与面试表达：[本地](weeks/week-08.md)｜[飞书](https://my.feishu.cn/docx/RdaVdad4ioBPDDxg211ca4Mvnrq)
+- 第8周：验证集结果复核、迁移验证与面试表达：[本地](weeks/week-08.md)｜[飞书](https://my.feishu.cn/docx/RdaVdad4ioBPDDxg211ca4Mvnrq)

@@ -1,10 +1,9 @@
 """Select an execution strategy without coupling it to model experiments."""
 from __future__ import annotations
-
-from .plan_execute_agent import PlanExecuteAgent
-from .react_agent import ReActAgent
-from .reflection_agent import ReflectionAgent
-from .simple_agent import SimpleAgent
+from reclab_agent.agents.plan_execute_agent import PlanExecuteAgent
+from reclab_agent.agents.react_agent import ReActAgent
+from reclab_agent.agents.reflection_agent import ReflectionAgent
+from reclab_agent.agents.simple_agent import SimpleAgent
 
 
 AGENT_TYPES = {

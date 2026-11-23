@@ -1,16 +1,14 @@
 """Common dependency injection and run interface for agent strategies."""
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import copy
 from pathlib import Path
 from typing import Any
-
-from ..tools.base import Toolbox
-from .config import AgentConfig
-from .llm import ModelBackend
-from .session import RunSession, SYSTEM_INSTRUCTIONS
-from .trace import TraceWriter
+from reclab_agent.tools.base import Toolbox
+from reclab_agent.core.config import AgentConfig
+from reclab_agent.core.llm import ModelBackend
+from reclab_agent.core.session import RunSession, SYSTEM_INSTRUCTIONS
+from reclab_agent.core.trace import TraceWriter
 
 
 class Agent(ABC):
@@ -34,6 +32,16 @@ class Agent(ABC):
                  allowed_tools: set[str] | frozenset[str] | None = None) -> RunSession:
         session = RunSession(self.toolbox, self.backend, self.config, self.trace,
                              self.system_prompt, prompt, task_id=task_id, allowed_tools=allowed_tools)
+        conversation = getattr(self.toolbox, "conversation_path", None)
+        if conversation is not None:
+            import json
+            from reclab_agent.infrastructure.files import read_regular_file
+            session.conversation_path = Path(conversation)
+            if session.conversation_path.exists():
+                history = json.loads(read_regular_file(session.conversation_path, max_bytes=16_000_000))
+                if not isinstance(history, list) or any(not isinstance(x, dict) for x in history):
+                    raise ValueError("invalid saved conversation")
+                session.inputs = history
         # Each run starts fresh. History inspection never grants cross-task memory.
         self._history = session.inputs
         return session

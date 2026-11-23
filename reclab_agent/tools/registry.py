@@ -1,11 +1,9 @@
 """Explicit tool registration; registration never grants task permissions."""
 from __future__ import annotations
-
 import copy
 from typing import Any, Callable
-
-from .base import FunctionTool, Tool, Toolbox
-from .contracts import ToolError, ToolSpec
+from reclab_agent.tools.base import FunctionTool, Tool, Toolbox
+from reclab_agent.tools.contracts import ToolError, ToolSpec
 
 
 class ToolRegistry:

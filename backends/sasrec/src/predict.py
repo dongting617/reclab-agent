@@ -8,7 +8,7 @@ from data import load_config, load_public_data
 
 
 def predict(data_path, model_path, output, config_path):
-    from runtime import initialize, load_checkpoint, predict_valid, write_json
+    from runtime import initialize, load_checkpoint, predict_valid, write_json, collect_diagnostics
 
     data, config = load_public_data(data_path), load_config(config_path)
     device, seed = initialize(config)
@@ -21,6 +21,8 @@ def predict(data_path, model_path, output, config_path):
     model, selected = load_checkpoint(model_path / "best.pt", data, config, seed)
     predictions = predict_valid(model.to(device), data, device, config["eval_batch_size"])
     write_json(output / "predictions.json", predictions)
+    write_json(output / "process_metrics.json", collect_diagnostics({"model": model, "data": data,
+        "config": config, "device": device, "predictions": predictions, "selected": selected}))
     write_json(output / "prediction.json", {"data_hash": data["data_hash"], "seed": seed,
                                            "selected_epoch": selected["epoch"], "split": "valid",
                                            "users": len(predictions), "test_evaluated": False})

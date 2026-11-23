@@ -8,13 +8,12 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent import demo
-from reclab_agent.contracts import content_hash
-from reclab_agent.datasets import popularity_predictions
-from reclab_agent.execution import CapabilityError, DockerWorker, InputTree, JobSpec
-from reclab_agent.research_cli import main, run_supervised
-from reclab_agent.workspace import Workspace
+import reclab_agent.examples.demo as demo
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.data.datasets import popularity_predictions
+from reclab_agent.execution.worker import CapabilityError, DockerWorker, InputTree, JobSpec
+from reclab_agent.cli.research import main, run_supervised
+from reclab_agent.experiments.workspace import Workspace
 from tests.support.docker import WatchdogFakeDocker
 
 
@@ -141,7 +140,7 @@ class DemoTests(unittest.TestCase):
     def test_missing_docker_is_structured_and_has_no_host_fallback(self):
         self.prepare()
         output = io.StringIO()
-        with patch("reclab_agent.execution.DockerWorker.capabilities", side_effect=CapabilityError("no Docker")), contextlib.redirect_stdout(output):
+        with patch("reclab_agent.execution.worker.DockerWorker.capabilities", side_effect=CapabilityError("no Docker")), contextlib.redirect_stdout(output):
             code = main(["_execute", "--root", str(self.root), "--image", IMAGE])
         value = json.loads(output.getvalue())
         self.assertEqual(code, 2)
@@ -157,7 +156,7 @@ class DemoTests(unittest.TestCase):
             if operation == "_execute":
                 raise subprocess.TimeoutExpired(["trusted-controller"], timeout)
             return {"ok": True, "result": {"stop_confirmed": True, "jobs": []}}
-        with patch("reclab_agent.research_cli._child", side_effect=child):
+        with patch("reclab_agent.cli.research._child", side_effect=child):
             result = run_supervised(str(self.root), IMAGE)
         self.assertEqual(calls, [("_execute", 120), ("_cancel", 30)])
         self.assertFalse(result["ok"])
@@ -165,7 +164,7 @@ class DemoTests(unittest.TestCase):
 
     def test_cancellation_timeout_never_claims_stopped(self):
         self.prepare()
-        with patch("reclab_agent.research_cli._child", side_effect=subprocess.TimeoutExpired(["trusted-controller"], 1)):
+        with patch("reclab_agent.cli.research._child", side_effect=subprocess.TimeoutExpired(["trusted-controller"], 1)):
             result = run_supervised(str(self.root), IMAGE)
         self.assertFalse(result["stop"]["stop_confirmed"])
         self.assertIn("watchdog", result["operator_action"])
@@ -184,7 +183,7 @@ class DemoTests(unittest.TestCase):
         container = fake.containers[job["container"]]
         container["State"]["Status"] = "running"
         before = fake.count("inspect")
-        with patch("reclab_agent.demo.worker_for", return_value=(worker, bundle, manifest)):
+        with patch("reclab_agent.examples.demo.worker_for", return_value=(worker, bundle, manifest)):
             result = demo.cancel_and_confirm(self.root, IMAGE)
         self.assertTrue(result["stop_confirmed"])
         self.assertGreater(fake.count("inspect"), before)
@@ -201,7 +200,7 @@ class DemoTests(unittest.TestCase):
         fake, worker, bundle, manifest, job = self.docker_fixture(exit_code=1)
         self.assertEqual(job["status"], "failed")
         fake.containers[job["container"]]["State"]["Status"] = "running"
-        with patch("reclab_agent.demo.worker_for", return_value=(worker, bundle, manifest)):
+        with patch("reclab_agent.examples.demo.worker_for", return_value=(worker, bundle, manifest)):
             result = demo.cancel_and_confirm(self.root, IMAGE)
         self.assertTrue(result["stop_confirmed"])
         self.assertEqual(fake.containers[job["container"]]["State"]["Status"], "exited")
@@ -212,7 +211,7 @@ class DemoTests(unittest.TestCase):
         container["Config"]["Labels"]["io.reclab.worker"] = "another-owner"
         container["State"]["Status"] = "running"
         before = fake.count("kill")
-        with patch("reclab_agent.demo.worker_for", return_value=(worker, bundle, manifest)):
+        with patch("reclab_agent.examples.demo.worker_for", return_value=(worker, bundle, manifest)):
             result = demo.cancel_and_confirm(self.root, IMAGE)
         self.assertFalse(result["stop_confirmed"])
         self.assertEqual(fake.count("kill"), before)
@@ -221,7 +220,7 @@ class DemoTests(unittest.TestCase):
     def test_unconfirmed_kill_preserves_unconfirmed_state(self):
         fake, worker, bundle, manifest, job = self.docker_fixture(finish=False)
         fake.kill_confirmed = False
-        with patch("reclab_agent.demo.worker_for", return_value=(worker, bundle, manifest)):
+        with patch("reclab_agent.examples.demo.worker_for", return_value=(worker, bundle, manifest)):
             result = demo.cancel_and_confirm(self.root, IMAGE)
         self.assertFalse(result["stop_confirmed"])
         self.assertEqual(demo.status(self.root)["run"]["status"], "stop_unconfirmed")
@@ -233,8 +232,8 @@ class DemoTests(unittest.TestCase):
             if operation == "_execute":
                 return {"ok": False, "error": "DockerError", "detail": "injected failure"}
             return {"ok": True, "result": demo.cancel_and_confirm(root, image)}
-        with patch("reclab_agent.demo.worker_for", return_value=(worker, bundle, manifest)), \
-                patch("reclab_agent.research_cli._child", side_effect=child):
+        with patch("reclab_agent.examples.demo.worker_for", return_value=(worker, bundle, manifest)), \
+                patch("reclab_agent.cli.research._child", side_effect=child):
             result = run_supervised(str(self.root), IMAGE)
         state = demo.status(self.root)["run"]
         self.assertFalse(result["ok"])

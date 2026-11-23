@@ -2,7 +2,7 @@
 
 RecLab 将推荐后端与 Agent 编排分开。接入新模型时，保留核心工具调用、实验预算、Trace 和独立评分器，仅增加遵循训练/预测入口协议的源码后端与经过验证的数据包；执行配置选择 SSH+tmux 或 Docker。
 
-当前落实了通用接入边界、合成数据、可信的确定性 Popularity 基线，以及以 SASRec 为默认模型的配置驱动源码入口。`synthetic-smoke` 用于程序合同验证，其分数不能作为真实推荐质量证据。新链路已通过实际 AutoDL GPU 的三轮训练、独立预测和本机评分，见[实测报告](../reports/autodl-ssh-tmux-20261119.json)；这是 Codex 会话控制的短训验收，独立大模型 Agent 优化仍需配置 API 并正式运行。历史数据与冻结 B1 验收见 reports/week-01-completion-20261020.json。
+当前落实了通用接入边界、合成数据、可信的确定性 Popularity 基线，以及以 SASRec 为默认模型的配置驱动源码入口。`synthetic-smoke` 用于程序合同验证，其分数不能作为真实推荐质量证据。新链路已通过实际 AutoDL GPU 的三轮训练、独立预测和本机评分，见[实测报告](../reports/autodl-ssh-tmux-20261119.json)；这是 Codex 会话控制的训练验收，独立大模型 Agent 优化仍需配置 API 并正式运行。历史数据与冻结 B1 验收见 reports/week-01-completion-20261020.json。
 
 ## 数据包
 
@@ -20,9 +20,9 @@ dataset/
 
 `train.json` 是 `dict[str, list[int]]`，保存每用户的时间有序训练历史。`valid.json` 是 `dict[str, {"history": list[int], "target": int}]`；同一用户的验证 history 必须等于冻结的训练历史，单一验证目标不能已在历史中。`private/test.json` 采用相同的单目标结构，通常测试 history 为 train＋valid 交互。数据适配器必须先完成时间划分、商品映射和过滤，再冻结数据包。
 
-候选容器的 `/data` **只挂载 `public/`**。测试标签留在可信控制器的 private 区域，不进入工作区、镜像、RAG 索引或候选日志。当前 `SourceBackend.prediction_command()` 只开放 valid；最终测试是独立的可信冻结操作，不能通过传入 `--split test` 绕过冻结。
+候选容器的 `/data` **只挂载 `public/`**。测试标签留在可信控制器的 private 区域，不进入工作区、镜像、RAG 索引或候选日志。当前 `SourceBackend.prediction_command()` 只开放 valid；默认只进行验证集评估，不提供 `--split test` 入口。
 
-`DatasetBundle` 将 public manifest、train 和 valid 的规范内容组成 `data_hash`。独立评分报告还使用评价上下文哈希绑定该划分的真实目标和 seen 集合。private 标签变动不会改变可公开的训练数据身份，但会改变最终测试报告的评价身份，因此旧、新标签结果不能错误配对。
+`DatasetBundle` 将 public manifest、train 和 valid 的规范内容组成 `data_hash`。独立评分报告还使用评价上下文哈希绑定该划分的真实目标和 seen 集合。private 标签变动不会改变可公开的训练数据身份，但会改变该测试划分的评价身份，因此旧、新标签结果不能错误配对。
 
 ## 源码后端
 
@@ -62,7 +62,7 @@ Worker 将种子注入 `RECLAB_SEED`，**入口必须主动读取并配置所用
 `configs/beauty-sasrec-task.json` 是一次优化任务的配置入口，引用已有的模型/训练参数文件。两者职责分别是：任务配置登记源码目录、数据目录、评分器、优化指标、编辑范围、种子、预算、语言模型环境变量名和输出目录；`source.config` 选择源码目录中的 `configs/<名称>.json`，其中定义模型文件、类、参数和训练超参数。相对路径以任务配置文件所在目录解析，与启动命令的当前目录无关。
 
 ```bash
-python -B -m reclab_agent.research_cli check --config configs/beauty-sasrec-task.json
+python -B -m reclab_agent.cli.research check --config configs/beauty-sasrec-task.json
 ```
 
 检查入口读取公开数据、计算身份、检查源码语法和配置指向的模型类是否存在，核对评分器支持的指标。它不导入目标模型、不加载权重、不读取测试标签、不调用在线语言模型、不启动 Worker，也不创建配置指定的输出目录。`source.editable_files` 可只列模型和配置；完整源码清单与可编辑子集分别登记，通用工具冻结所有依赖，Agent 只能修改已批准的子集。
@@ -72,8 +72,8 @@ JSON 输出分别给出 `inputs_valid` 和 `ready_to_run`。检查通过时返�
 当前内置数据适配器为 `next_item_v1`，要求商品目录按 ID 连续排列为 1…N；评分器描述为 `next_item_ranking_v1`。任务配置只能选择登记名，不能提供要导入的 Python 模块或执行命令。后续新任务可以在可信控制端注册数据加载与评分器描述回调，复用检查逻辑：
 
 ```python
-from reclab_agent.research.configuration import load_task_configuration
-from reclab_agent.research.inspection import TaskAdapterRegistry, inspect_task
+from reclab_agent.domain.configuration import load_task_configuration
+from reclab_agent.application.inspection import TaskAdapterRegistry, inspect_task
 
 registry = TaskAdapterRegistry()
 registry.register_dataset("my_dataset_v1", trusted_dataset_loader)
@@ -123,7 +123,7 @@ report = inspect_task(load_task_configuration("my-task.json"), registry=registry
 
 训练按公开验证集 NDCG@20 选择最佳轮次，只保存一个 `best.pt`、训练配置与逐轮日志，不读测试标签。独立预测入口核对源码、数据、配置和种子身份后，读取只读权重并输出 `predictions.json`；只开放 `--split valid`。训练过程的选轮分数只作诊断，最终报告仍以宿主独立评分器为准。
 
-默认 B1 配置请求 CUDA；不可用时明确失败，CPU 只能在配置中显式选择。代码和数据的静态检查、GPU 短训、独立 Agent 优化分别记录证据，不能相互替代。Docker 按用户要求暂缓。
+默认 B1 配置请求 CUDA；不可用时明确失败，CPU 只能在配置中显式选择。代码和数据的静态检查、GPU 训练、独立 Agent 优化分别记录证据，不能相互替代。Docker 按用户要求暂缓。
 
 ## 实验身份与首次接入验收
 
@@ -137,4 +137,10 @@ report = inspect_task(load_task_configuration("my-task.json"), registry=registry
 4. 用可信 targets 和 histories 独立评分，复现人工基线结果。
 5. 再开放模型、损失、采样或训练逻辑给 Agent 修改，保留评分器和数据协议只读。
 
-通用合同测试通过仅证明边界与程序行为正确。新模型的真实训练、算力成本、重复种子波动及质量收益都要在接回该后端后独立验证并记录。
+通用合同测试通过仅证明边界与程序行为正确。新模型的固定单个随机种子的真实训练、算力成本及验证集质量收益都要在接回该后端后独立验证并记录。
+
+## 过程指标与诊断扩展
+
+受控新增代码目录为 `src/diagnostics/`，扩展提供 `evaluate(context) -> dict[str, finite number]`，在预测 Worker 中执行。SASRec 已输出带定义哈希的 `predict/process_metrics.json`；训练器在参数更新前输出 `train/smoke.json`。没有这些产物的后端仍可训练和正式评分，但必需过程条件按缺失处理。
+
+诊断与正式排序评分分别保留，控制端不导入候选诊断模块。源码哈希包含诊断文件，checkpoint 的模型实现指纹排除诊断目录，避免仅新增诊断就改变已训练模型的身份。上下文和条件声明见[研究使用说明](research-usage.md)。

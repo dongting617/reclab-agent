@@ -4,14 +4,21 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from reclab_agent.contracts import Budget, TaskSpec, content_hash
+from reclab_agent.domain.contracts import Budget
+
+from reclab_agent.domain.contracts import TaskSpec
+
+from reclab_agent.domain.contracts import content_hash
 from reclab_agent.core import ModelTurn
 from experiments.strategy_comparison.tools import (
     CountedBackend, ModelBudgetExceeded, RoundResearch, restore_snapshot,
 )
-from reclab_agent.research.contracts import EvidenceRef, ExperimentRecord, PlanReview, ResearchPlan
-from reclab_agent.research.toolbox import ResearchToolbox
-from reclab_agent.workspace import create_workspace
+from reclab_agent.domain.research import EvidenceRef
+from reclab_agent.domain.research import ExperimentRecord
+from reclab_agent.domain.research import PlanReview
+from reclab_agent.domain.research import ResearchPlan
+from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.experiments.workspace import create_workspace
 
 
 class FakeBackend:
@@ -110,7 +117,7 @@ class RoundResearchTests(unittest.TestCase):
                 training_job_id=experiment_id + "-train", prediction_job_id=experiment_id + "-predict",
                 score=EvidenceRef("fixture-grade.json", "d" * 64, "/metrics/ndcg@20", "Synthetic only"))
 
-        self.research = ResearchToolbox(self.workspace, task=self.task, plan=self.plan, review=review,
+        self.research = OptimizationToolbox(self.workspace, task=self.task, plan=self.plan, review=review,
                                        snapshots_root=self.root / "snapshots", run_experiment=runner)
         self.baseline = self.workspace.snapshot(self.research.snapshots_root)
 

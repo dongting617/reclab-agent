@@ -1,10 +1,16 @@
 """RecLab Agent: a verifiable tool environment for recommendation experiments."""
 
-from .benchmark import load_tasks, run_reference_suite
-from .evaluation import load_trace, replay_trace
-from .core import Agent, AgentConfig, ModelBackend, ModelTurn, OpenAIResponsesBackend
-from .agents import ReActAgent, SimpleAgent, PlanExecuteAgent, ReflectionAgent, create_agent
-from .tools import RecLabToolbox, Tool, ToolRegistry, ToolSpec, Toolbox
+from reclab_agent.evaluation.benchmark import load_tasks, run_reference_suite
+from reclab_agent.evaluation.traces import load_trace, replay_trace
+from reclab_agent.core import Agent, AgentConfig, ModelBackend, ModelTurn, OpenAIResponsesBackend
+from reclab_agent.agents import (
+    ReActAgent,
+    SimpleAgent,
+    PlanExecuteAgent,
+    ReflectionAgent,
+    create_agent,
+)
+from reclab_agent.tools import RecLabToolbox, Tool, ToolRegistry, ToolSpec, Toolbox
 
 __all__ = [
     "ModelTurn", "OpenAIResponsesBackend", "RecLabToolbox",

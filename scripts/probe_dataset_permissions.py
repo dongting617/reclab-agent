@@ -5,7 +5,6 @@ fixed probe which drops root privileges before attempting known file accesses.
 Original files and permissions are never changed. No shell/code argument exists.
 """
 from __future__ import annotations
-
 import argparse
 import codecs
 import ctypes

@@ -4,7 +4,6 @@ No candidate model is imported, no checkpoint is loaded, and no Docker/GPU job
 is started. Fixture metrics establish only the pipeline's scoring provenance.
 """
 from __future__ import annotations
-
 import copy
 from dataclasses import asdict, replace
 import hashlib
@@ -12,17 +11,16 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.contracts import Budget, TaskSpec, content_hash
+from reclab_agent.domain.contracts import Budget, TaskSpec, content_hash
 from reclab_agent.core import ModelTurn
-from reclab_agent._execution.config import load_policy
-from reclab_agent.datasets import create_synthetic_bundle
-from reclab_agent.execution import InputTree, WorkerPolicy, ResourceLimits
-from reclab_agent.research.configuration import load_task_configuration
-from reclab_agent.research.binding import bind_task_tools, create_task_agent
-from reclab_agent.research.contracts import PlanReview, ResearchPlan
-from reclab_agent.research.inspection import TaskAdapterRegistry
-from reclab_agent.research.runner import ExperimentRunner
+from reclab_agent.execution.config import load_policy
+from reclab_agent.data.datasets import create_synthetic_bundle
+from reclab_agent.execution.worker import InputTree, WorkerPolicy, ResourceLimits
+from reclab_agent.domain.configuration import load_task_configuration
+from reclab_agent.application.binding import bind_task_tools, create_task_agent
+from reclab_agent.domain.research import PlanReview, ResearchPlan
+from reclab_agent.experiments.adapters import TaskAdapterRegistry
+from reclab_agent.experiments.runner import ExperimentRunner
 
 
 FIXTURE_IMAGE = "example/reclab-orchestration-fixture@sha256:" + "a" * 64

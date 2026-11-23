@@ -5,7 +5,6 @@ It is deliberately limited to the official Python stdlib acceptance image. A rea
 model image needs its own administrator review, not a different CLI argument here.
 """
 from __future__ import annotations
-
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -59,7 +58,7 @@ def prepare(image: str, evidence: Path) -> dict:
     info = docker_json(["info", "--format", "{{json .}}"], config=config)
     if info.get("OSType") != "linux":
         raise RuntimeError("a local Linux Docker daemon is required")
-    files = ["reclab_agent/execution.py", "reclab_agent/watchdog.py", "reclab_agent/grading.py", "tests/test_real_execution.py",
+    files = ["reclab_agent/execution/worker.py", "reclab_agent/execution/watchdog.py", "reclab_agent/evaluation/ranking.py", "tests/test_real_execution.py",
              "scripts/prepare_worker_acceptance.py"]
     repository = Path(__file__).resolve().parents[1]
     provenance = {

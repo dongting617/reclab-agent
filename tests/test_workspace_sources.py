@@ -2,10 +2,9 @@
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.contracts import content_hash
-from reclab_agent.execution import InputTree
-from reclab_agent.workspace import Workspace, create_workspace
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.execution.worker import InputTree
+from reclab_agent.experiments.workspace import Workspace, create_workspace
 
 
 FILES = {

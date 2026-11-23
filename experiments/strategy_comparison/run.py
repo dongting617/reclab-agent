@@ -1,15 +1,13 @@
 """Run this experiment protocol without changing the Agent's product behavior."""
 from __future__ import annotations
-
 import argparse
 from dataclasses import replace
 from pathlib import Path
 import os
-
-from reclab_agent.contracts import Budget, canonical_json
-from reclab_agent.files import atomic_write
-from reclab_agent.research.configuration import load_task_configuration, read_json_strict
-from reclab_agent.research.reporting import format_user_summary
+from reclab_agent.domain.contracts import Budget, canonical_json
+from reclab_agent.infrastructure.files import atomic_write
+from reclab_agent.domain.configuration import load_task_configuration, read_json_strict
+from reclab_agent.reporting import format_user_summary
 from .controller import run_comparison
 from .settings import ComparisonConfiguration, with_comparison
 from .runner import bind_experiment_tools

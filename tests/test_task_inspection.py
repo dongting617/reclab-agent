@@ -1,6 +1,5 @@
 """Task inspection exercises real assets while never importing model code."""
 from __future__ import annotations
-
 import contextlib
 import copy
 import io
@@ -11,12 +10,12 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.contracts import TaskSpec
-from reclab_agent.datasets import DatasetBundle, create_synthetic_bundle
-from reclab_agent.research.configuration import load_task_configuration
-from reclab_agent.research.inspection import EvaluatorDescription, TaskAdapterRegistry, inspect_task
-from reclab_agent.research_cli import main
+from reclab_agent.domain.contracts import TaskSpec
+from reclab_agent.data.datasets import DatasetBundle, create_synthetic_bundle
+from reclab_agent.domain.configuration import load_task_configuration
+from reclab_agent.experiments.adapters import EvaluatorDescription, TaskAdapterRegistry
+from reclab_agent.application.inspection import inspect_task
+from reclab_agent.cli.research import main
 
 
 class TaskInspectionTests(unittest.TestCase):
@@ -203,7 +202,7 @@ class TaskInspectionTests(unittest.TestCase):
         value = copy.deepcopy(self.value)
         value["data"]["expected_hash"] = None
         with patch.dict(os.environ, {"RECLAB_INSPECT_MODEL": "", "RECLAB_INSPECT_KEY": ""}), \
-                patch("reclab_agent.research.inspection.importlib.util.find_spec", return_value=None):
+                patch("reclab_agent.application.inspection.importlib.util.find_spec", return_value=None):
             result = inspect_task(self.configuration(value))
         self.assertTrue(result["inputs_valid"])
         self.assertFalse(result["ready_to_run"])
@@ -279,7 +278,7 @@ class TaskInspectionTests(unittest.TestCase):
         value = copy.deepcopy(self.value)
         value["agent"]["model_env"] = "RECLAB_INSPECT_KEY"
         with patch.dict(os.environ, {"RECLAB_INSPECT_KEY": "credential-must-not-be-reported"}), \
-                patch("reclab_agent.research.inspection.importlib.util.find_spec", return_value=object()):
+                patch("reclab_agent.application.inspection.importlib.util.find_spec", return_value=object()):
             result = inspect_task(self.configuration(value))
         self.assertTrue(result["agent_backend"]["model_configured"])
         self.assertTrue(result["agent_backend"]["credentials_configured"])

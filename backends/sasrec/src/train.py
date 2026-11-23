@@ -66,6 +66,15 @@ def train(data_path, output, config_path):
                 "valid_users": len(data["valid"]), "test_evaluated": False,
                 "selection_metric": "valid_ndcg@20", "official_score": "external_grader"}
     write_json(output / "training.json", metadata)
+    # A deterministic forward smoke check before optimizer updates. Avoid
+    # consuming the training loader's shuffle generator or dropout RNG.
+    model.eval()
+    sample_histories, sample_targets = collate(list(range(min(len(examples), config["batch_size"]))))
+    with torch.no_grad():
+        smoke_logits = model.catalog_logits(model.encode(sample_histories.to(device)))
+        if smoke_logits.shape != (len(sample_targets), data["num_items"]) or not bool(torch.isfinite(smoke_logits).all()):
+            raise RuntimeError("model forward smoke check failed")
+    write_json(output / "smoke.json", {"passed": True, "shape": list(smoke_logits.shape), "seed": seed})
     best_score, selected_epoch, stale_epochs = -1.0, 0, 0
     for epoch in range(1, config["epochs"] + 1):
         started = time.monotonic()

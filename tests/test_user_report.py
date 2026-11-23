@@ -1,15 +1,13 @@
 """User-facing experiment reports use measured evidence, without API/GPU calls."""
 from __future__ import annotations
-
 from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.contracts import canonical_json, content_hash
-from reclab_agent.research.reporting import (
+from reclab_agent.domain.contracts import canonical_json, content_hash
+from reclab_agent.reporting import (
     build_report_view,
     format_user_summary,
     render_html,
@@ -254,8 +252,13 @@ class UserReportTests(unittest.TestCase):
         report["elapsed_seconds"] = 123.5
         text = self.markdown(report)
         self.assertTrue(any(word in text for word in ("1,666", "1666")))
-        self.assertIn("验证", text)
-        self.assertIn("测试", text)
+        self.assertIn("验证集", text)
+        self.assertIn("一个固定随机种子", text)
+        self.assertNotIn("额外训练种子", text)
+        self.assertNotIn("最终测试集验证", text)
+        html = render_html(build_report_view(report, output_directory=self.root, context=self.context))
+        self.assertIn("一个固定随机种子", html)
+        self.assertNotIn("额外训练种子", html)
         self.assertTrue(any(word in text for word in ("费用", "账单", "计费")))
         self.assertTrue(any(word in text for word in ("未核验", "未验证", "未记录", "不代表")))
 

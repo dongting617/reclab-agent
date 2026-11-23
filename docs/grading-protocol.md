@@ -1,6 +1,6 @@
 # 独立推荐评分协议
 
-`reclab_agent.grading` 只接受普通数据，不运行候选代码，不读取 pickle 或权重。
+`reclab_agent.evaluation.ranking` 只接受普通数据，不运行候选代码，不读取 pickle 或权重。
 调用方从可信数据适配器提供 `targets` 与 `histories`；候选仅提供按分数降序排列的商品 ID。
 
 `RankingProtocol(dataset_id, split, catalog, ks=(10, 20), mask_seen=True)` 固定全目录、每用户一个目标的评价口径。
@@ -18,12 +18,12 @@ catalog 和 K 是唯一整数元组，构造时排序；布尔值不当作整数
 `compare_reports(baseline, candidate, bootstrap_samples=1000, seed=0)` 只比较相同协议、用户、目标与历史的报告。
 它按用户 ID 对齐，给出候选减基线的均值差和配对用户 bootstrap 的 95% percentile 区间。
 各指标使用同一组重采样用户。区间衡量用户抽样差异，不包含训练随机种子变化或多次选优偏差；负收益同样如实返回。
-评分和比较不会将任务成功等同于指标提升。
+默认基线与候选使用同一个固定随机种子各训练一次，在同一验证集上评估；不要求三个训练种子或另行测试集评估。用户 bootstrap 只重采样已有预测，不增加训练次数。评分和比较不会将任务成功等同于指标提升。
 
 调用示例：
 
 ```python
-from reclab_agent.grading import RankingProtocol, grade_rankings, compare_reports
+from reclab_agent.evaluation.ranking import RankingProtocol, grade_rankings, compare_reports
 
 protocol = RankingProtocol("tiny-v1", "valid", (1, 2, 3), (1, 2))
 trusted_targets = {"user-a": 3}

@@ -12,12 +12,19 @@ import time
 import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
-
-from reclab_agent.datasets import create_synthetic_bundle, popularity_predictions
-from reclab_agent.adapters import SourceBackend
-from reclab_agent.execution import (CapabilityError, DockerError, DockerWorker,
-                                    InputTree, JobSpec, OwnershipError, ResourceLimits,
-                                    SubprocessDocker, WorkerPolicy)
+from reclab_agent.data.datasets import create_synthetic_bundle, popularity_predictions
+from reclab_agent.experiments.backend import SourceBackend
+from reclab_agent.execution.worker import (
+    CapabilityError,
+    DockerError,
+    DockerWorker,
+    InputTree,
+    JobSpec,
+    OwnershipError,
+    ResourceLimits,
+    SubprocessDocker,
+    WorkerPolicy,
+)
 from tests.support.docker import FakeDocker, IMAGE, _hold_job_lock
 
 
@@ -99,9 +106,9 @@ class WorkerTests(unittest.TestCase):
         self.assertFalse(any("train.py" in value for call in self.fake.calls for value in call))
 
     def test_real_cli_wrapper_is_shell_free_local_and_drops_host_secret_environment(self):
-        with patch("reclab_agent._execution.docker.shutil.which", return_value="/usr/bin/docker"), \
-             patch("reclab_agent._execution.docker.sys.platform", "linux"), \
-             patch("reclab_agent._execution.docker.subprocess.run", return_value=SimpleNamespace(returncode=0, stdout="{}", stderr="")) as run, \
+        with patch("reclab_agent.execution.docker.shutil.which", return_value="/usr/bin/docker"), \
+             patch("reclab_agent.execution.docker.sys.platform", "linux"), \
+             patch("reclab_agent.execution.docker.subprocess.run", return_value=SimpleNamespace(returncode=0, stdout="{}", stderr="")) as run, \
              patch.dict(os.environ, {"DOCKER_HOST": "tcp://untrusted:2375", "AWS_SECRET_ACCESS_KEY": "never-forward", "PYTHONPATH": "/untrusted"}):
             runner = SubprocessDocker(self.root / "state")
             runner(["info", "--format", "{{json .}}"])

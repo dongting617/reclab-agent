@@ -4,8 +4,7 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.retrieval import (
+from reclab_agent.memory.retrieval import (
     KnowledgeIndex,
     RetrievalError,
     reciprocal_rank_fusion,

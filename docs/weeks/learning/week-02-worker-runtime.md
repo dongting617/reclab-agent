@@ -14,7 +14,7 @@ RecLab 为每个实验建立确定性身份：输入源码目录身份、公共�
 
 你可以把它与 checkpoint 做对照：模型 checkpoint 保存训练参数；Worker 数据库保存哪个作业在运行、对应哪个容器、deadline 和产物身份。只有 checkpoint，没有作业身份，仍可能重复启动两条训练；只有作业身份，也不自动获得模型训练步数的恢复能力。
 
-阅读 `reclab_agent/execution.py` 的 `JobSpec`、`DockerWorker._key`、`submit`、`poll`、`recover`。注意 `recover` 的职责是恢复管理关系，不是保证从上一次 optimizer step 接着训练。
+阅读 `reclab_agent/execution/worker.py` 的 `JobSpec`、`DockerWorker._key`、`submit`、`poll`、`recover`。注意 `recover` 的职责是恢复管理关系，不是保证从上一次 optimizer step 接着训练。
 
 ## 2. 租约不能证明旧进程已经死亡
 
@@ -66,16 +66,16 @@ FakeDocker 能在可控时刻模拟“daemon 已接受 create，但响应丢失�
 
 建议先读本课的前三节并画一遍时间线，再按以下路径阅读：
 
-1. `reclab_agent/execution.py`：JobSpec → WorkerPolicy → InputTree → 作业身份 → 锁与状态 → 挂载参数 → 产物收集。
-2. `reclab_agent/watchdog.py`：只停止的能力边界 → 所有权和不可变 ID → 停止意图 → 确认与记账。
+1. `reclab_agent/execution/worker.py`：JobSpec → WorkerPolicy → InputTree → 作业身份 → 锁与状态 → 挂载参数 → 产物收集。
+2. `reclab_agent/execution/watchdog.py`：只停止的能力边界 → 所有权和不可变 ID → 停止意图 → 确认与记账。
 3. `tests/test_execution.py`、`tests/test_watchdog.py`：挑选一项断线、一项持锁、一项陌生 ownership，预测断言再看实现。
 4. `tests/test_real_execution.py`：找到与模拟用例对应的真实容器证据，区分 inspect 参数与容器实际行为。
-5. `docs/week02-demo.md`、`reclab_agent/demo.py`、`research_cli.py`：理解 prepare → doctor → 独立监督 → run → 独立评分。
+5. `docs/week02-demo.md`、`reclab_agent/examples/demo.py`、`research_cli.py`：理解 prepare → doctor → 独立监督 → run → 独立评分。
 
 演示开始前，先在同一 Linux Docker 主机上完成 prepare 和 doctor。doctor 建立 Worker DB 与 `worker-policy.json`；随后在独立终端显式启动：
 
 ```bash
-python -m reclab_agent.watchdog --state <demo根目录>/worker --policy <demo根目录>/worker-policy.json serve --interval 0.2
+python -m reclab_agent.execution.watchdog --state <demo根目录>/worker --policy <demo根目录>/worker-policy.json serve --interval 0.2
 ```
 
 保持这个进程运行，再从另一个终端执行 `demo run --root <demo根目录> --image <管理员预拉取的真实RepoDigest>`。这是操作示意，路径和 digest 必须替换为已核对值；本课没有替你执行该命令。CLI 不会自动安装后台服务，也不会把缺少 Docker 的情况退回宿主训练。

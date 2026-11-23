@@ -1,21 +1,19 @@
 """Strategy comparison contracts with synthetic scores, never API/GPU execution."""
 from __future__ import annotations
-
 from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.contracts import Budget, canonical_json, content_hash
+from reclab_agent.domain.contracts import Budget, canonical_json, content_hash
 from reclab_agent.core import ModelTurn
 from experiments.strategy_comparison import controller as comparison
 from experiments.strategy_comparison.settings import ComparisonConfiguration, with_comparison
-from reclab_agent.research.contracts import EvidenceRef, ExperimentRecord
-from reclab_agent.research.launch import LaunchError
-from reclab_agent.research.toolbox import ResearchToolbox
-from reclab_agent.workspace import create_workspace
+from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
+from reclab_agent.application.launch import LaunchError
+from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.experiments.workspace import create_workspace
 from tests import test_experiment_runner as fixtures
 
 
@@ -123,7 +121,7 @@ class ComparisonTests(unittest.TestCase):
             self.records.append(record)
             return record
 
-        research = ResearchToolbox(workspace, task=config.task, plan=plan, review=review,
+        research = OptimizationToolbox(workspace, task=config.task, plan=plan, review=review,
                                    snapshots_root=config.output_directory / "snapshots", run_experiment=run)
         binding["research"] = research
         return research

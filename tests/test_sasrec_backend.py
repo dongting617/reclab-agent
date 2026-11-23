@@ -1,6 +1,5 @@
 """Public-data and source contracts; never execute SASRec training or Torch."""
 from __future__ import annotations
-
 import copy
 import hashlib
 import importlib.util
@@ -10,10 +9,9 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.datasets import DatasetBundle, create_synthetic_bundle
-from reclab_agent.execution import InputTree
-from reclab_agent.workspace import Workspace
+from reclab_agent.data.datasets import DatasetBundle, create_synthetic_bundle
+from reclab_agent.execution.worker import InputTree
+from reclab_agent.experiments.workspace import Workspace
 
 
 BACKEND = Path(__file__).resolve().parents[1] / "backends" / "sasrec"

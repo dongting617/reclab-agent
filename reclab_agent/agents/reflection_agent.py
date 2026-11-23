@@ -1,10 +1,8 @@
 """Explicit critique and revision over evidence-backed agent answers."""
 from __future__ import annotations
-
 import json
-
-from ..core.agent import Agent
-from ..core.session import StepLimitExceeded
+from reclab_agent.core.agent import Agent
+from reclab_agent.core.session import StepLimitExceeded
 
 
 class ReflectionAgent(Agent):

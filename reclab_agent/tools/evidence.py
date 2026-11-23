@@ -1,14 +1,12 @@
 """Read-only tools over registered recommendation evidence."""
 from __future__ import annotations
-
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
 from typing import Any, Callable
-
-from .contracts import ToolError, ToolSpec
+from reclab_agent.tools.contracts import ToolError, ToolSpec
 
 
 def _sha256(path: Path) -> str:

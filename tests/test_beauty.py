@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.beauty import import_beauty_bundle
-from reclab_agent.datasets import popularity_predictions
+from reclab_agent.data.beauty import import_beauty_bundle
+from reclab_agent.data.datasets import popularity_predictions
 
 
 def prepared_source():

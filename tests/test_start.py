@@ -1,6 +1,5 @@
 """The simple launcher delegates to the same bounded experiment workflow."""
 from __future__ import annotations
-
 import contextlib
 import io
 import json
@@ -9,9 +8,8 @@ from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
-
-from reclab_agent import start
-from reclab_agent.contracts import Budget
+import reclab_agent.application.start as start
+from reclab_agent.domain.contracts import Budget
 
 
 class SimpleStartTests(unittest.TestCase):
@@ -72,7 +70,7 @@ class SimpleStartTests(unittest.TestCase):
                 patch.object(start, "prepare_launch", return_value=(self.config, self.plan, {})), \
                 patch.object(start, "ensure_runtime", side_effect=AssertionError("SDK preparation during plan")), \
                 patch.object(start, "run_optimization") as run, \
-                patch("reclab_agent.research.launch_environment.load_agent_environment",
+                patch("reclab_agent.application.environment.load_agent_environment",
                       side_effect=AssertionError("environment read during plan")), \
                 patch("subprocess.run", side_effect=AssertionError("subprocess during plan")), \
                 contextlib.redirect_stdout(io.StringIO()) as output:
@@ -138,7 +136,7 @@ class SimpleStartTests(unittest.TestCase):
                 patch.object(start.subprocess, "run", side_effect=AssertionError("cached SDK reinstalled")), \
                 patch.object(start.subprocess, "call", return_value=7) as child:
             self.assertEqual(start.ensure_runtime(self.root, arguments), 7)
-        child.assert_called_once_with([str(runtime), "-B", "-m", "reclab_agent.start", *arguments], cwd=self.root)
+        child.assert_called_once_with([str(runtime), "-B", "-m", "reclab_agent.application.start", *arguments], cwd=self.root)
 
     def test_unmeasured_candidate_is_not_a_successful_start_result(self):
         with patch.object(start, "load_task_configuration", return_value=self.config), \

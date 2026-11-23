@@ -1,6 +1,5 @@
 """SSH transport contracts using fakes only; these tests never open a connection."""
 from __future__ import annotations
-
 import hashlib
 import json
 import os
@@ -10,8 +9,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
-
-from reclab_agent.remote import RemoteTools, SSHConnection
+from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.execution.ssh import SSHConnection
 
 
 class FakeSSH:

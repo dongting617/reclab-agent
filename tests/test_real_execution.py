@@ -17,9 +17,16 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 import uuid
-
-from reclab_agent.datasets import create_synthetic_bundle, popularity_predictions
-from reclab_agent.execution import CommandResult, DockerError, DockerWorker, InputTree, JobSpec, ResourceLimits, WorkerPolicy
+from reclab_agent.data.datasets import create_synthetic_bundle, popularity_predictions
+from reclab_agent.execution.worker import (
+    CommandResult,
+    DockerError,
+    DockerWorker,
+    InputTree,
+    JobSpec,
+    ResourceLimits,
+    WorkerPolicy,
+)
 
 
 _PREPARE_PATH = Path(__file__).resolve().parents[1] / "scripts/prepare_worker_acceptance.py"
@@ -461,7 +468,7 @@ class RealDockerAcceptanceTests(unittest.TestCase):
 
     def test_real_independent_watchdog_stops_while_worker_job_lock_is_held(self):
         import threading
-        from reclab_agent.watchdog import DockerDeadlineWatchdog
+        from reclab_agent.execution.watchdog import DockerDeadlineWatchdog
         self.make_worker("sleep", limits=ResourceLimits(cpus=.5, memory_mb=128, pids=16, seconds=5))
         job = self.submit()
         self.assertTrue(self.inspect(job)["State"]["Running"])

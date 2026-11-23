@@ -1,7 +1,6 @@
 """Registration and composition share the evidence-tool boundary."""
 from pathlib import Path
 import unittest
-
 from reclab_agent.core.session import function_tools
 from reclab_agent.tools import FunctionTool, RecLabToolbox, Tool, ToolError, ToolRegistry, ToolSpec
 

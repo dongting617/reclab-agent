@@ -3,8 +3,13 @@
 import hashlib
 import json
 import threading
-
-from reclab_agent.execution import CommandResult, DockerError, DockerWorker, InputTree, WorkerPolicy
+from reclab_agent.execution.worker import (
+    CommandResult,
+    DockerError,
+    DockerWorker,
+    InputTree,
+    WorkerPolicy,
+)
 
 
 IMAGE = "example/reclab@sha256:" + "a" * 64

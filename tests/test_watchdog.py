@@ -13,11 +13,16 @@ import tempfile
 import threading
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.datasets import create_synthetic_bundle
-from reclab_agent.execution import (DockerError, DockerWorker, InputTree,
-                                    JobSpec, ResourceLimits, WorkerPolicy)
-from reclab_agent.watchdog import DockerDeadlineWatchdog, main
+from reclab_agent.data.datasets import create_synthetic_bundle
+from reclab_agent.execution.worker import (
+    DockerError,
+    DockerWorker,
+    InputTree,
+    JobSpec,
+    ResourceLimits,
+    WorkerPolicy,
+)
+from reclab_agent.execution.watchdog import DockerDeadlineWatchdog, main
 from tests.support.docker import IMAGE, WatchdogFakeDocker, _hold_job_lock
 
 
@@ -333,8 +338,8 @@ class WatchdogTests(unittest.TestCase):
                 self.watchdog.serve(interval=invalid)
 
     def test_cli_only_exposes_once_and_serve_no_candidate_or_daemon_install(self):
-        with patch("reclab_agent.watchdog.load_policy", return_value=self.policy), \
-             patch("reclab_agent.watchdog.DockerDeadlineWatchdog", return_value=self.watchdog), \
+        with patch("reclab_agent.execution.watchdog.load_policy", return_value=self.policy), \
+             patch("reclab_agent.execution.watchdog.DockerDeadlineWatchdog", return_value=self.watchdog), \
              patch("builtins.print") as printed:
             self.assertEqual(main(["--state", str(self.state), "--policy", "approved.json", "once"]), 0)
             self.assertTrue(json.loads(printed.call_args.args[0])["ok"])

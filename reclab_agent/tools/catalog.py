@@ -4,7 +4,6 @@ Planned entries describe integration work. They have no callable or input schema
 and must never be passed to a model as executable function definitions.
 """
 from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Literal
 
@@ -36,8 +35,19 @@ TOOL_CATALOG: tuple[ToolCapability, ...] = (
 )
 
 
-def tool_catalog(*, availability: str | None = None) -> tuple[ToolCapability, ...]:
+def tool_catalog(*, availability: str | None = None, toolbox=None) -> tuple[ToolCapability, ...]:
     """Return immutable inventory entries, optionally filtered by readiness."""
     if availability not in {None, "available", "planned"}:
         raise ValueError("availability must be available or planned")
-    return tuple(entry for entry in TOOL_CATALOG if availability is None or entry.availability == availability)
+    entries = TOOL_CATALOG
+    if toolbox is not None:
+        registered = {spec.name: spec for spec in toolbox.specs}
+        groups = {name: group_name
+                  for group_name, group in getattr(toolbox, "groups", {}).items()
+                  for name, _, _ in group.definitions}
+        entries = tuple(ToolCapability(entry.name, entry.group,
+            "available" if entry.name in registered else "planned", entry.responsibility) for entry in entries)
+        known = {entry.name for entry in entries}
+        entries += tuple(ToolCapability(name, groups.get(name, "custom"), "available", spec.description)
+                         for name, spec in registered.items() if name not in known)
+    return tuple(entry for entry in entries if availability is None or entry.availability == availability)

@@ -1,14 +1,12 @@
 """Experiment-local deadline policy and verified reuse of the prepared baseline."""
 from __future__ import annotations
-
 import time
-
-from reclab_agent.contracts import content_hash
-from reclab_agent.research.binding import bind_task_tools
-from reclab_agent.research.configuration import read_json_strict
-from reclab_agent.research.contracts import ExperimentRecord
-from reclab_agent.research.launch import LaunchError
-from reclab_agent.research.remote_runner import RemoteExperimentRunner
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.application.binding import bind_task_tools
+from reclab_agent.domain.configuration import read_json_strict
+from reclab_agent.domain.research import ExperimentRecord
+from reclab_agent.application.launch import LaunchError
+from reclab_agent.experiments.remote_runner import RemoteExperimentRunner
 
 
 class ExperimentRemoteRunner(RemoteExperimentRunner):

@@ -1,7 +1,6 @@
 """Observation-driven tool use, retaining the original Runtime behavior."""
 from __future__ import annotations
-
-from ..core.agent import Agent
+from reclab_agent.core.agent import Agent
 
 
 class ReActAgent(Agent):

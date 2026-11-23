@@ -1,11 +1,11 @@
 # Explicit-corpus retrieval
 
-`reclab_agent.retrieval.KnowledgeIndex` is a dependency-free BM25 foundation for
+`reclab_agent.memory.retrieval.KnowledgeIndex` is a dependency-free BM25 foundation for
 the RecLab research knowledge base. It indexes only the files passed to
 `build`; it never walks a repository or discovers documents automatically.
 
 ```python
-from reclab_agent.retrieval import KnowledgeIndex
+from reclab_agent.memory.retrieval import KnowledgeIndex
 
 index = KnowledgeIndex(
     "knowledge",
@@ -82,3 +82,9 @@ algorithms using deterministic injected vectors/scores. No pretrained BGE
 embedding/reranker, retrieval-quality benchmark, or remote embedding provider
 has been run or validated by this implementation. Those are separate
 integration and evaluation steps, not claimed capabilities of these tests.
+
+## Project experience retrieval
+
+The standard coordinator writes experiment and literature Markdown into a project wiki. `Project.search(scope, query)` selects registered notes for the same dataset/protocol/model-interface/seed scope, then uses the existing BM25 index. The `search_knowledge` tool returns at most five cited chunks by default, including `source_relative`, line locations and hashes. Numeric claims still require original independent score evidence.
+
+The project CLI supports search, explicit historical import, note replacement and reindexing. See [research usage](research-usage.md). No production embedding or reranker is claimed.

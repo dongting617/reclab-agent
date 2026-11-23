@@ -2,11 +2,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-
 from reclab_agent.agents import ReActAgent
 from reclab_agent.core import ModelTurn
 from reclab_agent.tools import RecLabToolbox
-from reclab_agent.evaluation import evaluate_run, evaluate_tool_selection, replay_trace
+from reclab_agent.evaluation.traces import evaluate_run, evaluate_tool_selection, replay_trace
 from reclab_agent.core.session import function_tools
 
 

@@ -3,10 +3,13 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.adapters import SourceBackend
-from reclab_agent.datasets import DatasetBundle, create_synthetic_bundle, popularity_predictions
-from reclab_agent.grading import RankingProtocol, compare_reports, grade_rankings
+from reclab_agent.experiments.backend import SourceBackend
+from reclab_agent.data.datasets import (
+    DatasetBundle,
+    create_synthetic_bundle,
+    popularity_predictions,
+)
+from reclab_agent.evaluation.ranking import RankingProtocol, compare_reports, grade_rankings
 
 
 class DatasetAdapterTests(unittest.TestCase):

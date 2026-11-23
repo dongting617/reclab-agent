@@ -1,6 +1,5 @@
 """Task configuration contracts; no models, credentials or jobs are loaded."""
 from __future__ import annotations
-
 import copy
 from dataclasses import FrozenInstanceError
 import json
@@ -9,9 +8,8 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.contracts import Budget, TaskSpec
-from reclab_agent.research.configuration import load_task_configuration, read_json_strict
+from reclab_agent.domain.contracts import Budget, TaskSpec
+from reclab_agent.domain.configuration import load_task_configuration, read_json_strict
 
 
 def task_configuration_value():

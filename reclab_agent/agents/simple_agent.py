@@ -1,7 +1,6 @@
 """A single model turn without tool execution."""
 from __future__ import annotations
-
-from ..core.agent import Agent
+from reclab_agent.core.agent import Agent
 
 
 class SimpleAgent(Agent):

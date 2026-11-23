@@ -1,7 +1,6 @@
 """Keep documented readiness aligned with actual Agent tool exposure."""
 from pathlib import Path
 import unittest
-
 from reclab_agent.tools import RecLabToolbox, tool_catalog
 from reclab_agent.core.session import function_tools
 

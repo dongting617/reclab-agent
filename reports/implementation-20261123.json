@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-23",
+  "status": "implemented_with_external_acceptance_pending",
+  "scope": "Four-stage tool refactor, baseline reuse, project ledger/Git/wiki, recovery, scoped BM25 memory, Tavily adapter and process diagnostics",
+  "phase_a": {
+    "status": "passed",
+    "offline_tests_run": 464,
+    "skipped": 8,
+    "note": "Includes legacy/imported launch tests before fixture collection was deduplicated. Phase B began only after this gate passed."
+  },
+  "phase_b": {
+    "status": "offline_passed",
+    "offline_tests_run": 465,
+    "skipped": 8,
+    "test_execution": "Fresh WSL temporary source copy; no secrets or training data copied; python3 -B -m unittest discover -s tests -q",
+    "cases": [
+      "Four-stage order and stage permissions",
+      "Explicit historical baseline reuse with one training slot",
+      "Verified accepted source automatically becomes the next task baseline",
+      "Corrupt or incomplete history does not trigger new paid training",
+      "Durable idempotent ledger and isolated project Git",
+      "Scoped experience retrieval, note replacement and index rebuild",
+      "Network quota and deadlines persist across restart",
+      "Resume after scoring and pending submissions without resetting resource reservations",
+      "Worker diagnostic fixtures reject nonfinite values",
+      "Missing required process evidence cannot be reported as successful improvement",
+      "Project CLI initialization, knowledge operations and historical import"
+    ]
+  },
+  "live_model_api": {
+    "status": "passed",
+    "model": "qwen3.7-flash",
+    "responses_api": true,
+    "full_function_tool_schemas": 16,
+    "schema_check_requests": 1,
+    "schema_check_tokens": 2325,
+    "returned_tool": "record_hypothesis",
+    "returned_tool_executed": false,
+    "source": "../.reclab/verification/implementation-20261123/live-integration.json"
+  },
+  "live_gpu_acceptance": {
+    "status": "blocked_before_submission",
+    "execution_backend": "ssh_tmux",
+    "failure": "SSH transport exited with code 255: banner exchange: Connection to UNKNOWN port -1: Connection refused",
+    "new_training_scores": false,
+    "session": "../.reclab/runs/beauty-sasrec-first-run/sessions/20261123T093025Z-15e27e53/report.json",
+    "initial_issue_fixed": "Project Git now ignores global/system Git configuration and uses an isolated identity with hooks/signing disabled; an actual source snapshot commit succeeded.",
+    "isolated_project_commit": "bb97a4def6f0e93560c3993ded1e0add9aa2ebee",
+    "resume_verified": {
+      "experiment_attempts_before": 1,
+      "experiment_attempts_after": 1,
+      "reserved_job_seconds_before": 600,
+      "reserved_job_seconds_after": 600,
+      "model_requests_before": 1,
+      "model_requests_after": 1
+    }
+  },
+  "tavily": {
+    "implementation": "search/extract, cited wiki notes, bounded requests and normalized cache",
+    "offline_contract_tests": "passed",
+    "live_status": "not_configured",
+    "network_requests": 0,
+    "required_environment_variable": "TAVILY_API_KEY"
+  },
+  "limitations": [
+    "Mock/fixture tests do not establish recommendation quality improvements.",
+    "The new GPU execution path has not been accepted because the configured SSH connection is refused.",
+    "Tavily has not been verified against the live service without a local key.",
+    "Currency billing is not hard-enforced; time/request/job limits are enforced.",
+    "Controller/task recovery is implemented, not mid-epoch training recovery.",
+    "Local .reclab artifact references require retaining the original workspace."
+  ]
+}

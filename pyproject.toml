@@ -17,11 +17,11 @@ orchestration = ["langgraph>=1,<2", "langgraph-checkpoint-sqlite>=2,<4"]
 test = ["httpx>=0.27,<1"]
 
 [project.scripts]
-reclab = "reclab_agent.__main__:main"
-reclab-research = "reclab_agent.research_cli:main"
+reclab = "reclab_agent.cli.diagnostics:main"
+reclab-research = "reclab_agent.cli.research:main"
 
 [tool.setuptools.package-data]
-reclab_agent = ["templates/*.html", "static/*.js", "static/*.css"]
+"reclab_agent.web" = ["templates/*.html", "static/*.js", "static/*.css"]
 
 [tool.setuptools.packages.find]
 include = ["reclab_agent", "reclab_agent.*"]

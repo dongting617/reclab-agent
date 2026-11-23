@@ -6,8 +6,7 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.research import launch_environment as module
+import reclab_agent.application.environment as module
 
 
 class LaunchEnvironmentTests(unittest.TestCase):

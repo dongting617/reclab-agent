@@ -5,8 +5,10 @@ import copy
 import re
 import threading
 
-from reclab_agent.contracts import content_hash
-from reclab_agent.files import atomic_write, confined_path, read_regular_file
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.infrastructure.files import atomic_write
+from reclab_agent.infrastructure.files import confined_path
+from reclab_agent.infrastructure.files import read_regular_file
 
 
 class ModelBudgetExceeded(RuntimeError):
@@ -104,23 +106,4 @@ def _text(path):
     return read_regular_file(path, max_bytes=1_000_000).decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
-def restore_snapshot(research, source_hash):
-    """Restore an independently selected source without charging an Agent patch."""
-    if not isinstance(source_hash, str) or not re.fullmatch(r"[a-f0-9]{64}", source_hash):
-        raise ValueError("source_hash must be a lower-case SHA256 digest")
-    workspace = research.workspace
-    directory = confined_path(research.snapshots_root, source_hash)
-    files = {name: _text(confined_path(directory, name)) for name in sorted(workspace.source_paths)}
-    if content_hash(files) != source_hash:
-        raise ValueError("selected snapshot source hash does not match its contents")
-    # Validate everything before writing any editable file. A controller must
-    # not silently repair changes to a dependency outside the reviewed scope.
-    for name in workspace.source_paths - workspace.editable_paths:
-        if _text(confined_path(workspace.root, name)) != files[name]:
-            raise ValueError("read-only source dependency changed")
-    for name in sorted(workspace.editable_paths):
-        atomic_write(confined_path(workspace.root, name), files[name].encode("utf-8"))
-    restored = workspace.snapshot(research.snapshots_root)
-    if restored["source_hash"] != source_hash:
-        raise ValueError("restored workspace does not match the selected snapshot")
-    return restored
+from reclab_agent.experiments.outcomes import restore_snapshot

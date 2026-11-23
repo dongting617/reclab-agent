@@ -1,6 +1,5 @@
 """Compare independent Agent strategies with equal, cumulative search budgets."""
 from __future__ import annotations
-
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
 import difflib
@@ -8,22 +7,28 @@ import hashlib
 from pathlib import Path
 import time
 import uuid
-
-from reclab_agent._execution.locking import job_lock
-from reclab_agent.contracts import canonical_json
-from reclab_agent.execution import InputTree
-from reclab_agent.files import atomic_write, confined_path, read_regular_file
+from reclab_agent.execution.locking import job_lock
+from reclab_agent.domain.contracts import canonical_json
+from reclab_agent.execution.worker import InputTree
+from reclab_agent.infrastructure.files import atomic_write, confined_path, read_regular_file
 from reclab_agent.tools import RecLabToolbox
-from reclab_agent.research.binding import bind_task_tools
+from reclab_agent.application.binding import bind_task_tools
 from .tools import CountedBackend, RoundResearch, restore_snapshot
-from reclab_agent.research.configuration import read_json_strict
-from reclab_agent.research.contracts import EvidenceRef, PlanReview
-from reclab_agent.research.inspection import TaskAdapterRegistry
-from reclab_agent.research.launch import (LaunchError, _backend, _configuration, _probe, _public_error,
-                     _scored_record, prepare_launch)
-from reclab_agent.research.launch_environment import build_remote_tools, load_agent_environment
-from reclab_agent.research.optimization import OptimizationAgent
-from reclab_agent.research.reporting import write_user_report
+from reclab_agent.domain.configuration import read_json_strict
+from reclab_agent.domain.research import EvidenceRef, PlanReview
+from reclab_agent.experiments.adapters import TaskAdapterRegistry
+from reclab_agent.application.launch import (
+    LaunchError,
+    _backend,
+    _configuration,
+    _probe,
+    _public_error,
+    _scored_record,
+    prepare_launch,
+)
+from reclab_agent.application.environment import build_remote_tools, load_agent_environment
+from reclab_agent.agents.optimization import OptimizationAgent
+from reclab_agent.reporting import write_user_report
 
 
 def _write(root, name, value):
@@ -220,7 +225,7 @@ def run_comparison(configuration, *, approve_plan=False, env_file=None, windows_
                   "candidate_limit_per_strategy": config.comparison.candidates_per_strategy,
                   "test_evaluated": False, "source_inheritance": "within-strategy only; every training starts from scratch",
                   "limitations": ["One training seed and one search per strategy; no statistical superiority claim.",
-                                  "Only independent validation scores select best sources; no final-test evaluation.",
+                                  "Only independent validation-set scores select best sources; one fixed training seed per strategy.",
                                   "Provider and AutoDL billing are not automatically enforced."]}
         report_context = {
             "task_question": effective.task.question, "task_id": effective.task.task_id,

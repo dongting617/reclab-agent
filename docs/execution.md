@@ -4,7 +4,7 @@
 
 日常启动只需在项目目录运行 `.\start.cmd`，查看范围使用 `.\start.cmd -Plan`。启动器从 `reclab.json` 读取任务和本地 API 配置路径，自动选择原生 Python 或 WSL，并复用或准备 SDK 环境；用户无需填写运行时路径、WSL 或 SSH 桥接参数。此入口复用下述真实实验流程，启动即授权执行当前配置范围。`-Plan` 不加载密钥、不安装依赖、不调用 API 或训练。下面的 `research_cli` 参数和 Python 接口用于开发集成。
 
-2026-11-19 已在实际 RTX 4090 上验收七个工具及两次三轮短训：独立验证集 NDCG@20 从 0.061478 到 0.065730，Recall@20 从 0.123118 到 0.131992。完整运行身份、评分哈希、日志和 checkpoint 位置见[实测报告](../reports/autodl-ssh-tmux-20261119.json)。本次由 Codex 会话控制，没有调用独立 Agent 的大模型 API；短训结果不代表充分训练后的最终提升。
+2026-11-19 已在实际 RTX 4090 上验收七个工具及两次三轮训练：独立验证集 NDCG@20 从 0.061478 到 0.065730，Recall@20 从 0.123118 到 0.131992。完整运行身份、评分哈希、日志和 checkpoint 位置见[实测报告](../reports/autodl-ssh-tmux-20261119.json)。本次由 Codex 会话控制，没有调用独立 Agent 的大模型 API；该次训练使用 3 epochs，结果仅代表记录配置和种子下的验证集评估。
 
 ## AutoDL：SSH 工具与持久化训练
 
@@ -26,7 +26,7 @@
 在项目根目录启动本地控制器，注册允许上传的模型目录和 `public` 数据目录：
 
 ```python
-from reclab_agent.remote import RemoteTools, SSHConnection
+from reclab_agent.execution.ssh import RemoteTools, SSHConnection
 
 connection = SSHConnection.from_json("configs/autodl-ssh.json")
 remote = RemoteTools(
@@ -71,11 +71,11 @@ status = remote.job_status(job["job_id"])
 
 独立运行 `create_task_agent()` 需要在本地控制端配置 `OPENAI_API_KEY`、`RECLAB_MODEL` 及可选的 SDK 服务地址；SSH 工具、人工控制的实验和 GPU 本身不需要这些凭据。原生模式通过运行前后的哈希检查发现输入修改，适用于用户自己审阅的模型代码；它没有 Docker 的只读挂载、禁网及资源隔离。费用上限仍需结合 AutoDL 计费与实例关机策略管理，代码没有自动核验账单或关闭实例。
 
-命令行启动使用 `python -B -m reclab_agent.research_cli run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan`。环境文件仅解析白名单的字面赋值，不执行 shell；密钥不写入报告。可先运行 `plan` 查看预算和范围，或运行 `api-check` 验证 Responses API 与工具调用。真实运行将原配置基线和后续候选计入同一个 `ResearchToolbox` 的训练/时间预算，每次使用新的会话目录。WSL 可添加 `--windows-ssh`，通过 Windows 原有 OpenSSH 使用 Windows 路径的身份文件。
+命令行启动使用 `python -B -m reclab_agent.cli.research run --config configs/beauty-sasrec-task.json --env-file .reclab/agent.env --approve-plan`。环境文件仅解析白名单的字面赋值，不执行 shell；密钥不写入报告。可先运行 `plan` 查看预算和范围，或运行 `api-check` 验证 Responses API 与工具调用。真实运行将原配置基线和后续候选计入同一个 `OptimizationToolbox` 的训练/时间预算，每次使用新的会话目录。WSL 可添加 `--windows-ssh`，通过 Windows 原有 OpenSSH 使用 Windows 路径的身份文件。
 
 真实实验结束后，默认终端输出中文摘要和 `report.html` 位置，同目录还有 `report.md` 和机器可读的 `report.json`。用户报告从已记录的实测指标、冻结源码和作业证据生成；Agent 的文字回答不构成模型提升证据。候选失败、没有有效评分或用户中断时仍生成报告，保留此前已核验的基线数据。开发集成需要原 JSON 输出时，为 `run` 添加 `--json`。
 
-使用 `python -B -m reclab_agent.research_cli report --input path/to/session/report.json` 可在本地离线重建用户报告；默认写到 JSON 所在目录，也可用 `--output-directory path/to/readable` 单独指定。离线报告命令不加载 API 配置或启动训练。若会话还未开始，例如输入检查或 API 预检失败，则直接返回启动错误。
+使用 `python -B -m reclab_agent.cli.research report --input path/to/session/report.json` 可在本地离线重建用户报告；默认写到 JSON 所在目录，也可用 `--output-directory path/to/readable` 单独指定。离线报告命令不加载 API 配置或启动训练。若会话还未开始，例如输入检查或 API 预检失败，则直接返回启动错误。
 
 每个长作业由独立 tmux 会话中的远端监督进程管理。SSH 断开后，训练、日志和超时监督继续；实例关机、重启或被回收后，tmux 不能保证恢复训练。远端超时监督和 `stop_job` 停止作业进程组，先请求退出，再强制终止；停止未确认时返回错误，须继续查询。监督进程无退出记录便消失时标记 `lost`，不当成完成。仅关闭 SSH 连接不会取消训练。
 
@@ -88,7 +88,7 @@ status = remote.job_status(job["job_id"])
 - SSH 公钥登录已验证，远端 GPU 为 NVIDIA GeForce RTX 4090，显存 24564 MiB。
 - RecLab Agent、原始 SASRec 源码及 Beauty 公开训练/验证数据已上传至 `/root/autodl-tmp/reclab-agent-runs/20261119-1127`，上传包 SHA256 已在远端核对一致；未上传私有测试标签。
 - PyTorch `2.8.0+cu128`、CUDA `12.8` 可用，真实 CUDA 张量计算通过。可信 Popularity 验证基线已评分；它不代表神经模型训练或 Agent 优化。
-- 该次早期检查时尚未启动候选训练。环境、数据身份和评分见 [GPU 检查报告](../reports/gpu-preflight-20261119.json)；后续实际短训见本文顶部的实测报告。
+- 该次早期检查时尚未启动候选训练。环境、数据身份和评分见 [GPU 检查报告](../reports/gpu-preflight-20261119.json)；后续实际训练见本文顶部的实测报告。
 - 当时已新增模型/训练统一配置、任务配置和只读检查入口。真实 Beauty 输入检查通过；`inputs_valid=true`、`ready_to_run=false`，见 [任务检查报告](../reports/task-config-check-20261119.json)。该报告反映当时数值验收和绑定尚待完成的状态。
 - 当时通用 `run_experiment` 的源码权限、固定评分器及脚本 Agent 控制流使用合成数据和假 Worker 验证，见 [工具控制流验证](../reports/experiment-tool-verification-20261119.json)；该次验证没有启动真实 GPU 训练。
 - [ ] 云端 Docker/GPU Worker：**按用户 2026-11-19 的要求暂缓，之后单独处理**。当前实例未发现 Docker CLI 或 daemon socket；本轮未安装或配置 Docker。
@@ -105,7 +105,7 @@ status = remote.job_status(job["job_id"])
 ## 已实现接口
 
 ```python
-from reclab_agent.execution import DockerWorker, InputTree, JobSpec, WorkerPolicy
+from reclab_agent.execution.worker import DockerWorker, InputTree, JobSpec, WorkerPolicy
 
 source = InputTree.freeze("/srv/reclab/snapshots/approved-v1", "source")
 public = InputTree.freeze("/srv/reclab/datasets/beauty/public", "public_data")
@@ -171,15 +171,15 @@ Docker CPU/内存/PID 支持任一缺失就失败，不把 daemon 警告后的�
 
 ## 独立 watchdog：Worker 暂停持锁时仍能停
 
-`python -m reclab_agent.watchdog` 仅开放 `once` 和 `serve`。它读取既有私有 Worker SQLite 与同一份已审核 Policy，不接受候选命令、任意容器名或 Docker 参数；不会创建、启动、删除容器，也不会在宿主执行候选。代码没有自动安装 systemd、计划任务或后台服务，进程守护由管理员显式配置。
+`python -m reclab_agent.execution.watchdog` 仅开放 `once` 和 `serve`。它读取既有私有 Worker SQLite 与同一份已审核 Policy，不接受候选命令、任意容器名或 Docker 参数；不会创建、启动、删除容器，也不会在宿主执行候选。代码没有自动安装 systemd、计划任务或后台服务，进程守护由管理员显式配置。
 
 ```bash
 # 两个独立终端/服务；使用同一真实私有状态目录与同一 Policy。
-python -m reclab_agent.worker --state /srv/reclab/worker-state --policy /srv/reclab/policy.json serve --interval 1
-python -m reclab_agent.watchdog --state /srv/reclab/worker-state --policy /srv/reclab/policy.json serve --interval 1
+python -m reclab_agent.cli.worker --state /srv/reclab/worker-state --policy /srv/reclab/policy.json serve --interval 1
+python -m reclab_agent.execution.watchdog --state /srv/reclab/worker-state --policy /srv/reclab/policy.json serve --interval 1
 
 # 只做一轮检查，不创建或启动任何作业。
-python -m reclab_agent.watchdog --state /srv/reclab/worker-state --policy /srv/reclab/policy.json once
+python -m reclab_agent.execution.watchdog --state /srv/reclab/worker-state --policy /srv/reclab/policy.json once
 ```
 
 首次过期观察先 inspect 确定名称，检查 worker/job/spec 三个精确 label，并区分“现在已过期”和“进程确实运行超过截止时间”。若容器已退出且 `FinishedAt<=deadline`，不写超时意图，交 Worker 核验产物后决定 completed/failed；缺失完成时间时同样交 Worker 核验，不凭本轮观察时间覆盖已完成结果。首次 inspect 断连时不提前判定超时。
@@ -198,7 +198,7 @@ python -m reclab_agent.watchdog --state /srv/reclab/worker-state --policy /srv/r
 
 ## 管理员 CLI 与镜像准备
 
-`python -m reclab_agent.worker --state <私有状态目录> --policy <已审核policy.json>` 后接：
+`python -m reclab_agent.cli.worker --state <私有状态目录> --policy <已审核policy.json>` 后接：
 
 | 命令 | 行为 |
 |---|---|
@@ -232,3 +232,9 @@ Watchdog 的 `once/serve` 输出每个停止意图的 `stop_confirmed`、`contai
 第二周 CPU 工程已通过；原完成标准中的真实云端容器仍未勾选，GPU 与 Beauty/B1 容器内新训练闭环未验收，个人学习待自测。第一周真实 Beauty 冻结基线是否复现另见其独立报告，不能由本次合成 CPU 结果推导。输出仅有收集预算、没有实时磁盘 quota，监督进程/daemon 故障仍需如实报告。
 
 学习练习：create 返回超时后立刻创建一个随机名新容器，会有什么后果？原 create 可能已成功，随机名绕过去重会重复训练。应查询确定名称和 ownership，并保留不确定状态直到核验。另一个问题：文件清单 SHA256 一致，能否证明模型有效？不能；它只绑定产物，质量还要由冻结数据协议和外部 grader 评价。
+
+## 四阶段恢复与归档
+
+标准启动已接入四阶段协调器及项目账本。历史基线复用、共享预算、同会话恢复、过程指标和知识检索的命令见[研究使用说明](research-usage.md)。恢复使用 `research_cli resume --config ... --session ... --approve-plan`，预算与截止时间不重置。
+
+2026-11-23 新实现的真实验收已保存失败报告：当前 SSH 连接被拒绝，未进入训练；恢复同一会话没有新增实验预留。完整工具 schema 已通过真实模型接口检查，Tavily 缺少本地 Key，尚未联网实测。详情见[验收记录](../reports/implementation-20261123.json)。

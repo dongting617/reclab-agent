@@ -4,17 +4,15 @@ Strategies share a session so planning and criticism cannot reset the budget.
 The default strategy preserves existing result and trace formats.
 """
 from __future__ import annotations
-
 import copy
 import json
 import time
 from typing import Any
 import uuid
-
-from ..tools.base import Toolbox
-from .config import AgentConfig
-from .llm import ModelBackend, ModelTurn
-from .trace import TraceWriter, evidence_paths
+from reclab_agent.tools.base import Toolbox
+from reclab_agent.core.config import AgentConfig
+from reclab_agent.core.llm import ModelBackend, ModelTurn
+from reclab_agent.core.trace import TraceWriter, evidence_paths
 
 
 SYSTEM_INSTRUCTIONS = """You are RecLab Agent, a recommendation experiment analyst.
@@ -144,6 +142,13 @@ class RunSession:
                        elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
             self.inputs.append({"type": "function_call_output", "call_id": call_id,
                                 "output": json.dumps(envelope, ensure_ascii=False)})
+        self.checkpoint_conversation()
+
+    def checkpoint_conversation(self):
+        from reclab_agent.infrastructure.files import atomic_write
+        path = getattr(self, "conversation_path", None)
+        if path is not None:
+            atomic_write(path, json.dumps(self.inputs, ensure_ascii=False, allow_nan=False).encode("utf-8"))
 
     def run_tools(self, instructions: str | None = None, *,
                   phase: str | None = None) -> tuple[str, str]:
@@ -158,6 +163,7 @@ class RunSession:
     def finish(self, status: str, answer: str, **extra: Any) -> dict[str, Any]:
         self._ensure_active()
         self._finished = True
+        self.checkpoint_conversation()
         result = {**extra, "run_id": self.run_id, "task_id": self.task_id, "status": status,
                   "answer": answer, "steps": self.steps, "tool_calls": self.tool_calls,
                   "evidence_paths": sorted(self.evidence),

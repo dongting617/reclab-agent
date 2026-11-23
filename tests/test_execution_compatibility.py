@@ -6,10 +6,14 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
-
-from reclab_agent import execution, files, storage, worker
-from reclab_agent._execution import config, docker, models
-from reclab_agent.contracts import canonical_json
+import reclab_agent.execution as execution
+import reclab_agent.infrastructure.files as files
+import reclab_agent.memory.storage as storage
+import reclab_agent.cli.worker as worker
+import reclab_agent.execution.config as config
+import reclab_agent.execution.docker as docker
+import reclab_agent.execution.models as models
+from reclab_agent.domain.contracts import canonical_json
 from tests.support.docker import FakeDocker, IMAGE
 
 

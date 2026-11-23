@@ -1,11 +1,9 @@
 """Small tool interfaces shared by evidence and experiment integrations."""
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import copy
 from typing import Any, Callable, Protocol
-
-from .contracts import ToolSpec
+from reclab_agent.tools.contracts import ToolSpec
 
 
 class Toolbox(Protocol):

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-23",
+  "change": "project-layout-and-tool-capability-refactor",
+  "status": "offline_validation_passed",
+  "package_root_files": [
+    "__init__.py",
+    "__main__.py",
+    "start.py",
+    "research_cli.py"
+  ],
+  "removed_packages": [
+    "reclab_agent/research",
+    "reclab_agent/_execution"
+  ],
+  "renamed_classes": {
+    "ResearchToolbox": "OptimizationToolbox",
+    "ResearchService": "StudyContext",
+    "ResearchCoordinator": "StudyCoordinator"
+  },
+  "tests": {
+    "command": "python -B -m unittest discover -s tests -q",
+    "run": 468,
+    "passed": 460,
+    "skipped": 8,
+    "failures": 0,
+    "errors": 0,
+    "environment": "WSL temporary repository copy",
+    "seconds": 6.562
+  },
+  "entry_checks": {
+    "count": 10,
+    "failed": 0,
+    "default_evidence_tools": 6,
+    "commands": [
+      "python -B -m reclab_agent --list-tools",
+      "python -B -m reclab_agent.cli.diagnostics --list-tools",
+      "python -B -m reclab_agent",
+      "python -B -m reclab_agent.research_cli --help",
+      "python -B -m reclab_agent.cli.research --help",
+      "python -B -m reclab_agent.start --help",
+      "python -B -m reclab_agent.application.start --help",
+      "python -B -m reclab_agent.cli.worker --help",
+      "python -B -m reclab_agent.execution.watchdog --help",
+      "python -B -m experiments.strategy_comparison.run --help"
+    ]
+  },
+  "packaging": {
+    "wheel_build": "passed",
+    "build_dependency": "local setuptools-78.1.1-py3-none-any.whl",
+    "package_python_files": 97,
+    "missing_modules": [],
+    "legacy_packages": [],
+    "syntax": "all package Python files compiled"
+  },
+  "gpu_jobs": 0,
+  "network_requests": 0,
+  "scope": "Module organization, tool capability extraction, imports, CLI entries, packaging and documentation; no model quality conclusion.",
+  "compatibility": {
+    "legacy_cli_entries_preserved": true,
+    "legacy_internal_imports_preserved": false,
+    "worker_identity_and_artifact_contracts": "existing compatibility tests passed"
+  },
+  "existing_external_validation_limitations": [
+    "Real GPU acceptance from the previous implementation remains blocked by SSH connection refused.",
+    "Tavily live validation remains pending local API key configuration."
+  ],
+  "local_details": [
+    ".reclab/layout-refactor/entry-package-checks.json",
+    ".reclab/layout-refactor/wheel-check.json"
+  ]
+}

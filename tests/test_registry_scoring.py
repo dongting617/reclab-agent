@@ -1,6 +1,5 @@
 """Trusted scorer dispatch contracts; no model code, worker or test-set access."""
 from __future__ import annotations
-
 import copy
 from dataclasses import replace
 import json
@@ -8,11 +7,11 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.contracts import TaskSpec
-from reclab_agent.datasets import create_synthetic_bundle
-from reclab_agent.research.configuration import TaskConfiguration
-from reclab_agent.research.inspection import EvaluatorDescription, TaskAdapterRegistry, inspect_task
+from reclab_agent.domain.contracts import TaskSpec
+from reclab_agent.data.datasets import create_synthetic_bundle
+from reclab_agent.domain.configuration import TaskConfiguration
+from reclab_agent.experiments.adapters import EvaluatorDescription, TaskAdapterRegistry
+from reclab_agent.application.inspection import inspect_task
 
 
 class RegistryScoringTests(unittest.TestCase):

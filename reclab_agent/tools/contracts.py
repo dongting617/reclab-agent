@@ -1,6 +1,5 @@
 """Provider-independent tool descriptions and stable failures."""
 from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

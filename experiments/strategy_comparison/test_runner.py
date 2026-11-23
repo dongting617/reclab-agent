@@ -1,6 +1,5 @@
 """Suspended-controller recovery contracts; fixtures never use SSH or model code."""
 from __future__ import annotations
-
 import copy
 from dataclasses import replace
 import json
@@ -8,12 +7,11 @@ import shutil
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-
 from experiments.strategy_comparison import runner as experiment
-from reclab_agent.contracts import content_hash
-from reclab_agent.research.contracts import PlanReview
-from reclab_agent.research.launch import LaunchError
-from reclab_agent.research.remote_runner import RemoteExperimentRunner
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.domain.research import PlanReview
+from reclab_agent.application.launch import LaunchError
+from reclab_agent.experiments.remote_runner import RemoteExperimentRunner
 from tests import test_remote_runner as fixtures
 
 

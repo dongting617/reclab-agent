@@ -15,7 +15,7 @@ RunSession：消息、模型轮次、权限、工具调用、Trace
                  |
 ToolRegistry：组合已有工具箱或注册新 Tool / 函数
           /                        \
-RecLabToolbox                  ResearchToolbox（显式配置）
+RecLabToolbox                  OptimizationToolbox（显式配置）
 只读历史证据                  Workspace + 可信实验 runner
                                       |
                      SSH+tmux / Docker → 预测 → 独立评分
@@ -23,7 +23,7 @@ RecLabToolbox                  ResearchToolbox（显式配置）
 
 `core/` 不知道 SASRec、Semantic ID、Docker 参数或推荐指标；策略只决定何时规划、执行或评价。`Toolbox` 只要求 `specs` 和 `invoke()`，因此旧 `RecLabToolbox` 无需改写即可使用。
 
-公开 API 按职责从 `reclab_agent.core`、`reclab_agent.agents`、`reclab_agent.tools` 和 `reclab_agent.research` 导入。工具实现集中在 `tools/` 包中；旧 `AgentRuntime` 名称和 `reclab_agent.runtime` 入口已移除，使用方改用具体策略或 `create_agent()`。
+代码职责、工具位置和迁移路径见[项目架构与代码导航](architecture.md)。通用接口从 `core`、策略从 `agents`、工具从 `tools`、流程从 `workflow` 导入；任务契约在 `domain`，装配入口在 `application`。
 
 `RunSession` 集中管理同一次 run 的身份、消息历史、白名单、模型轮次和工具结果，所有阶段共用限制。模型请求失败可按配置重试；重试次数与成功模型回合数分别计量。API 请求重试耗尽仍保留原来的抛异常行为，不伪造正常终态。
 
@@ -56,7 +56,7 @@ agent = create_agent(
 result = agent.run("比较已有证据中的模型差距，区分观察和待检验假设")
 ```
 
-以上在线调用需要安装 OpenAI 可选依赖并配置模型凭据。测试中的脚本后端遵循同一个 `ModelBackend.respond()` 接口，不发送在线请求。每次 `run()` 创建新历史；`get_history()` 返回深拷贝，不提供跨任务记忆。
+以上在线调用需要安装 OpenAI 可选依赖并配置模型凭据。测试中的脚本后端遵循同一个 `ModelBackend.respond()` 接口，不发送在线请求。普通 Agent 每次 `run()` 创建新历史；`get_history()` 返回深拷贝。研究协调器显式提供同会话的阶段检查点及项目级账本和知识检索，不直接拼接全部历史对话。
 
 ## 扩展工具和策略
 
@@ -83,7 +83,7 @@ tools.register_function(
 
 ## 模型优化的接入方式
 
-`ResearchToolbox` 组合现有 `Workspace` 与研究契约，实际提供：
+`OptimizationToolbox` 通过 `StudyContext` 组合 `Workspace` 与研究契约，基本能力包括（完整工具集见研究使用说明）：
 
 1. `read_source`：返回登记文件文本和哈希。
 2. `apply_patch`：检查匹配的人工审阅记录、允许路径、补丁预算和旧哈希，再执行精确替换。
@@ -94,7 +94,7 @@ tools.register_function(
 推荐通过任务配置绑定内置通用工具，模型作者只提供标准训练、预测入口、数据与模型配置。Agent 自主选择候选、修改代码并调用 `run_experiment(candidate_id, seed)`；工具内部的 `ExperimentRunner` 固定执行训练→预测→独立评分，无需为每个模型另外编写 runner。
 
 ```python
-from reclab_agent.research import create_task_agent
+from reclab_agent.application.binding import create_task_agent
 
 agent = create_task_agent(
     "configs/beauty-sasrec-task.json",
@@ -116,15 +116,16 @@ result = agent.run()
 runner(snapshot, *, candidate_id, seed, max_seconds) -> ExperimentRecord
 ```
 
-`snapshot` 是 `Workspace.snapshot()` 的真实返回值。标准绑定按配置选择 `ExperimentRunner`（Docker）或 `RemoteExperimentRunner`（SSH+tmux），复用数据适配器和固定评分器完成训练→预测→评分；新模型无需实现 runner。完成记录要求训练/预测作业身份与独立评分引用；候选自报指标不能替代评分。runner 只允许开发集反馈，最终测试仍走可信冻结流程。独立大模型 Agent 的 API Key 留在控制端；SSH 工具不依赖大模型 API。
+`snapshot` 是 `Workspace.snapshot()` 的真实返回值。标准绑定按配置选择 `ExperimentRunner`（Docker）或 `RemoteExperimentRunner`（SSH+tmux），复用数据适配器和固定评分器完成训练→预测→评分；新模型无需实现 runner。完成记录要求训练/预测作业身份与独立评分引用；候选自报指标不能替代评分。runner 只使用验证集反馈；基线与候选默认使用同一个固定随机种子训练和评估，每个方案一次，不要求另行测试集评估。独立大模型 Agent 的 API Key 留在控制端；SSH 工具不依赖大模型 API。
 
 接入代码示意，变量由宿主提供的任务、工作区、审阅和实验配置产生：
 
 ```python
 from reclab_agent.tools import RecLabToolbox
-from reclab_agent.research import ResearchToolbox, OptimizationAgent
+from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.agents.optimization import OptimizationAgent
 
-research = ResearchToolbox(
+research = OptimizationToolbox(
     workspace,
     task=task,
     plan=plan,
@@ -150,7 +151,7 @@ result = agent.run()
 
 适配层检查任务/计划身份、审阅版本、文件/候选/种子范围、补丁与实验尝试次数、候选数量、保守预留的训练秒数。模型轮次上限取调用方、任务和计划三者最小值；runner 报错也扣实验尝试次数。同实例内，相同快照/候选/种子的已记录请求复用结果。
 
-通用 `ExperimentRunner` 已连接固定训练/预测/独立评分步骤，`bind_task_tools()` 和 `create_task_agent()` 负责按配置绑定。当前仍没有完整研究阶段状态机或实际模型费用账本，工具预算为单实例计数；实验目录与稳定作业参数可供同一实验重放，但不能据此宣称全局调度或跨进程预算保证。实际容器隔离依赖已配置 Worker，硬超时与停止确认依赖外部 supervisor/watchdog。真实 GPU/隔离数值验收仍待完成；当前测试中的假 Worker 不证明模型效果提高。
+通用 `ExperimentRunner` 保留训练→预测→独立评分协议。标准启动入口现由 `StudyCoordinator` 按四阶段组织，`OptimizationToolbox` 是服务的薄工具适配器；背景阶段复用或建立基线，候选须先登记假设。研究状态、预算预留和阶段会话检查点保存在原会话，项目 SQLite 保存实验、事件与知识引用。人民币实际账单仍未核验；这不是跨机器的全局调度系统。隔离和硬超时继续依赖 Worker/supervisor。2026-11-23 的离线测试及真实模型工具 schema 验证已执行，真实 GPU 验收被当前 SSH 连接拒绝阻断。使用方式见[研究使用说明](research-usage.md)。
 
 当前新增测试验证了多种策略、共享权限与轮次、真实源码补丁/快照和可信 runner fixture 的往返。fixture 不是真实推荐训练；尚不能声称本次重构已经提高 SASRec/Semantic ID 的效果。后续验收需要真实模型的有效改进、有效负结果、失败修复和同预算策略对照。
 
@@ -179,4 +180,4 @@ $env:TMP = $testTempRoot
 python -B -m unittest discover -s tests -v
 ```
 
-2026-11-19 早期结构验证：短临时目录下全量回归运行 246 项，结果成功，11 项按平台或显式验收条件跳过；原开发任务 15/15。清理旧构建缓存后重建 wheel，检查包内没有已删除的 `runtime.py`、`tools.py`、`_tools/`，隔离导入和 ReAct 冒烟测试通过；该次结构验证没有启动真实推荐训练。同日后续已完成 SSH+tmux 的实际 GPU 短训，见[实测报告](../reports/autodl-ssh-tmux-20261119.json)，仍未调用独立 Agent 的大模型 API。
+2026-11-19 早期结构验证：短临时目录下全量回归运行 246 项，结果成功，11 项按平台或显式验收条件跳过；原开发任务 15/15。清理旧构建缓存后重建 wheel，检查包内没有已删除的 `runtime.py`、`tools.py`、`_tools/`，隔离导入和 ReAct 冒烟测试通过；该次结构验证没有启动真实推荐训练。同日后续已完成 SSH+tmux 的实际 GPU 训练，见[实测报告](../reports/autodl-ssh-tmux-20261119.json)，仍未调用独立 Agent 的大模型 API。

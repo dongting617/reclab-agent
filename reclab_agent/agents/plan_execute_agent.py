@@ -1,10 +1,8 @@
 """Explicit planning followed by bounded tool-using execution."""
 from __future__ import annotations
-
 import json
-
-from ..core.agent import Agent
-from ..core.session import StepLimitExceeded
+from reclab_agent.core.agent import Agent
+from reclab_agent.core.session import StepLimitExceeded
 
 
 class PlanExecuteAgent(Agent):

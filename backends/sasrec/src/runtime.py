@@ -21,7 +21,7 @@ def digest(value):
 def implementation_hash():
     source = Path(__file__).resolve().parent
     return digest({path.relative_to(source).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
-                   for path in sorted(source.rglob("*.py"))})
+                   for path in sorted(source.rglob("*.py")) if "diagnostics" not in path.relative_to(source).parts})
 
 
 def model_config(config, num_items):
@@ -114,6 +114,28 @@ def validation_ndcg20(predictions, valid):
         values.append(1.0 / math.log2(ranked.index(row["target"]) + 2)
                       if row["target"] in ranked else 0.0)
     return math.fsum(values) / len(values)
+
+
+def collect_diagnostics(context):
+    """Run registered diagnostic extensions only inside the prediction Worker."""
+    source = Path(__file__).resolve().parent
+    paths = sorted((source / "diagnostics").rglob("*.py")) if (source / "diagnostics").exists() else []
+    definitions = {p.relative_to(source).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+    values = {"selection_valid_ndcg@20": float(context["selected"]["selection_valid_ndcg@20"])}
+    for index, path in enumerate(paths):
+        spec = importlib.util.spec_from_file_location(f"reclab_diagnostic_{index}", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        result = module.evaluate(context)
+        if not isinstance(result, dict) or len(result) > 128:
+            raise ValueError("diagnostic evaluate(context) must return a bounded metric mapping")
+        for name, value in result.items():
+            if (not isinstance(name, str) or not name or name in values
+                    or type(value) not in (float, int) or not math.isfinite(value)):
+                raise ValueError("diagnostic names must be unique and values finite")
+            values[name] = value
+    return {"schema_version": 1, "definition_hash": digest(definitions), "metrics": values,
+            "provenance": "Worker diagnostic output; not an independent final ranking score"}
 
 
 def write_json(path, value):

@@ -3,13 +3,17 @@ from dataclasses import replace
 import json
 import tempfile
 import unittest
-
-from reclab_agent.contracts import Budget, TaskSpec
-from reclab_agent.research import (
-    EvidenceRef, ExperimentRecord, PlanReview, ResearchClaim, ResearchConclusion,
-    ResearchPlan, ResearchStage, require_plan_approval, stage_tool_names,
+from reclab_agent.domain.contracts import Budget, TaskSpec
+from reclab_agent.domain.research import (
+    EvidenceRef,
+    ExperimentRecord,
+    PlanReview,
+    ResearchClaim,
+    ResearchConclusion,
+    ResearchPlan,
 )
-from reclab_agent.storage import ArtifactStore
+from reclab_agent.domain.authorization import require_plan_approval
+from reclab_agent.memory.storage import ArtifactStore
 from reclab_agent.tools import tool_catalog
 
 
@@ -76,9 +80,6 @@ class ResearchContractTests(unittest.TestCase):
         ):
             with self.subTest(candidate=candidate, paths=paths, seed=seed), self.assertRaises(ValueError):
                 self.plan.check_scope(candidate, paths, seed)
-        with self.assertRaises(ValueError):
-            self.plan.check_scope("candidate-1", (), 42, confirmation=True)
-        replace(self.plan, confirmation_included=True).check_scope("candidate-1", (), 42, confirmation=True)
 
     def test_plan_cannot_expand_task_budget_or_change_registered_task(self):
         task = TaskSpec("task-1", "improve rare items", "beauty", "b1")
@@ -143,15 +144,6 @@ class ResearchContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             replace(self.plan, seeds=(True,))
 
-    def test_stage_contract_keeps_mutation_and_submission_out_of_analysis(self):
-        self.assertEqual(len(ResearchStage), 8)
-        catalog_names = {capability.name for capability in tool_catalog()}
-        for stage in ResearchStage:
-            self.assertLessEqual(stage_tool_names(stage), catalog_names)
-        for stage in (ResearchStage.CONTEXT, ResearchStage.INVESTIGATE, ResearchStage.REVIEW,
-                      ResearchStage.ANALYZE, ResearchStage.REPORT):
-            self.assertFalse({"apply_patch", "submit_experiment"} & stage_tool_names(stage))
-        self.assertIn("apply_patch", stage_tool_names("implement"))
-        self.assertIn("submit_experiment", stage_tool_names("experiment"))
-        self.assertIn("submit_experiment", stage_tool_names("confirm"))
-        self.assertNotIn("apply_patch", stage_tool_names("confirm"))
+    def test_business_stages_are_exactly_the_requirement_flow(self):
+        from reclab_agent.workflow.stages import StudyStage
+        self.assertEqual([x.value for x in StudyStage], ["background", "hypothesis", "experiment", "analysis"])

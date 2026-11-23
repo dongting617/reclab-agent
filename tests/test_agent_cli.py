@@ -6,10 +6,9 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-
-from reclab_agent.__main__ import main
+from reclab_agent.cli.diagnostics import main
 from reclab_agent.core import ModelTurn
-from reclab_agent.evaluation import replay_trace
+from reclab_agent.evaluation.traces import replay_trace
 
 
 class Replies:
@@ -40,7 +39,7 @@ class AgentCliTests(unittest.TestCase):
                     arguments += ["--agent", kind]
                 output = io.StringIO()
                 with patch("sys.argv", arguments), contextlib.redirect_stdout(output), \
-                        patch("reclab_agent.__main__.OpenAIResponsesBackend", return_value=Replies(replies)):
+                        patch("reclab_agent.cli.diagnostics.OpenAIResponsesBackend", return_value=Replies(replies)):
                     main()
                 result = json.loads(output.getvalue())
                 self.assertEqual((result["status"], result["answer"], result["steps"]),
@@ -50,7 +49,7 @@ class AgentCliTests(unittest.TestCase):
     def test_invalid_strategy_is_rejected_before_creating_backend(self):
         with patch("sys.argv", ["reclab", "--agent", "unknown"]), \
                 contextlib.redirect_stderr(io.StringIO()), \
-                patch("reclab_agent.__main__.OpenAIResponsesBackend") as backend:
+                patch("reclab_agent.cli.diagnostics.OpenAIResponsesBackend") as backend:
             with self.assertRaises(SystemExit) as raised:
                 main()
             self.assertEqual(raised.exception.code, 2)

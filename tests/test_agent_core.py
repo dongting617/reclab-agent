@@ -1,19 +1,17 @@
 """Provider adaptation and shared run behavior use the current core API."""
 from __future__ import annotations
-
 import copy
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
 import unittest
-
 import reclab_agent
 from reclab_agent.agents import ReActAgent
 from reclab_agent.core import Agent, AgentConfig
 from reclab_agent.core.llm import ModelBackend, ModelTurn, OpenAIResponsesBackend
 from reclab_agent.core.session import RunSession, StepLimitExceeded, function_tools
 from reclab_agent.core.trace import TraceWriter
-from reclab_agent.evaluation import load_trace, replay_trace
+from reclab_agent.evaluation.traces import load_trace, replay_trace
 from reclab_agent.tools import ToolRegistry, ToolSpec
 
 

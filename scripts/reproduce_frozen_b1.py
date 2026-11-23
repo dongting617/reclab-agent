@@ -5,7 +5,6 @@ All three source pins and the public bundle identity are hardcoded. It does not
 read private test files, select a checkpoint, run shell commands, or train.
 """
 from __future__ import annotations
-
 import argparse
 import hashlib
 import io
@@ -16,10 +15,9 @@ import sys
 import time
 import types
 from typing import Any
-
-from reclab_agent.contracts import canonical_json
-from reclab_agent.datasets import DatasetBundle
-from reclab_agent.storage import atomic_write, confined_path
+from reclab_agent.domain.contracts import canonical_json
+from reclab_agent.data.datasets import DatasetBundle
+from reclab_agent.memory.storage import atomic_write, confined_path
 
 
 FROZEN_DATA_SHA256 = "7a2dae80bf7053c91d4eda79f33ff997df45c07c1fd968f36d77b591ed828efb"

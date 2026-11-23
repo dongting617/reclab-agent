@@ -124,7 +124,7 @@ data: {"job_id":"j09","status":"running"}
 
 ## 资料与关联
 
-- 仓库：reclab_agent/service.py（以实际落盘与测试状态为准）
+- 仓库：reclab_agent/web/app.py（以实际落盘与测试状态为准）
 
 总计划与其他周文档见项目导航。更新日期：2026-10-19。
 

@@ -1,18 +1,19 @@
 """Strategy behavior with deterministic model replies and real tool dispatch."""
 from __future__ import annotations
-
 import copy
 import json
 from pathlib import Path
 import tempfile
 import unittest
-
 from reclab_agent.agents import (
-    PlanExecuteAgent, ReActAgent, ReflectionAgent, SimpleAgent,
+    PlanExecuteAgent,
+    ReActAgent,
+    ReflectionAgent,
+    SimpleAgent,
     create_agent,
 )
 from reclab_agent.core.llm import ModelTurn
-from reclab_agent.evaluation import load_trace, replay_trace
+from reclab_agent.evaluation.traces import load_trace, replay_trace
 from reclab_agent.tools import ToolSpec
 
 

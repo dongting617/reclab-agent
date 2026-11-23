@@ -2,10 +2,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.contracts import Budget, TaskSpec, content_hash
-from reclab_agent.storage import ArtifactStore, RunStore, confined_path
-from reclab_agent.workspace import Workspace, create_workspace
+from reclab_agent.domain.contracts import Budget, TaskSpec, content_hash
+from reclab_agent.memory.storage import ArtifactStore, RunStore, confined_path
+from reclab_agent.experiments.workspace import Workspace, create_workspace
 
 
 class FoundationTests(unittest.TestCase):

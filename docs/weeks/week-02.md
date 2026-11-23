@@ -128,7 +128,7 @@ CPU 工程已通过，原计划的云端容器、GPU/PyTorch 与真实 Beauty �
 
 ### 2026-10-20：第二周已启动，Worker与故障恢复基础落地
 
-已实现`reclab_agent/execution.py`与`worker.py`，支持登记的源码/公开数据、固定摘要镜像、幂等作业身份、SQLite状态、提交/查询/取消/恢复和有界JSON产物收集。候选训练与推理分容器，推理把成功训练产物只读挂到/model，控制器不反序列化候选权重。SourceBackend参数合同已与Worker一致；RECLAB_SEED必须由入口主动读取并设置随机源，设置环境变量本身不保证可复现。
+已实现`reclab_agent/execution/worker.py`与`worker.py`，支持登记的源码/公开数据、固定摘要镜像、幂等作业身份、SQLite状态、提交/查询/取消/恢复和有界JSON产物收集。候选训练与推理分容器，推理把成功训练产物只读挂到/model，控制器不反序列化候选权重。SourceBackend参数合同已与Worker一致；RECLAB_SEED必须由入口主动读取并设置随机源，设置环境变量本身不保证可复现。
 
 本地完整回归140项，138通过、2跳过；执行层41项中40通过、真实Docker1项跳过。模拟故障覆盖create/start后断线、重复提交、租约恢复、取消竞态、超时、OOM、未知容器ownership和输出篡改。它们验证控制逻辑，没有运行真实候选容器。当前AutoDL缺少Docker CLI/socket，用户namespace也不允许；不能通过安装CLI或改用普通subprocess宣称隔离就绪。
 

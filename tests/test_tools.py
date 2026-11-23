@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 import unittest
-
 from reclab_agent import RecLabToolbox, load_tasks, run_reference_suite
 from reclab_agent.tools import json_pointer
 

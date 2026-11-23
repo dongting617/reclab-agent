@@ -1,6 +1,5 @@
 """Standalone SSH helper protocol, transfer, and process-supervision checks."""
 from __future__ import annotations
-
 import hashlib
 import json
 import os
@@ -11,8 +10,7 @@ import tempfile
 import time
 import unittest
 from unittest.mock import patch
-
-from reclab_agent import remote_agent as remote
+import reclab_agent.execution.remote_agent as remote
 
 
 class RemoteAgentTests(unittest.TestCase):

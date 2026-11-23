@@ -1,15 +1,13 @@
 """Native SSH runtime records and task configuration, without remote execution."""
 from __future__ import annotations
-
 import copy
 import json
 from pathlib import Path
 import tempfile
 import unittest
-
-from reclab_agent.contracts import content_hash
-from reclab_agent.research.configuration import load_task_configuration
-from reclab_agent.research.contracts import EvidenceRef, ExperimentRecord
+from reclab_agent.domain.contracts import content_hash
+from reclab_agent.domain.configuration import load_task_configuration
+from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
 from tests.test_task_configuration import task_configuration_value
 
 

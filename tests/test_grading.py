@@ -1,8 +1,7 @@
 import copy
 import math
 import unittest
-
-from reclab_agent.grading import RankingProtocol, compare_reports, grade_rankings
+from reclab_agent.evaluation.ranking import RankingProtocol, compare_reports, grade_rankings
 
 
 class RankingGradingTests(unittest.TestCase):

@@ -5,13 +5,12 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-
 from reclab_agent import ModelTurn
-from reclab_agent.contracts import Budget, TaskSpec
-from reclab_agent.research.contracts import EvidenceRef, ExperimentRecord, PlanReview, ResearchPlan
-from reclab_agent.research.optimization import OptimizationAgent
-from reclab_agent.research.toolbox import ResearchToolbox
-from reclab_agent.workspace import create_workspace
+from reclab_agent.domain.contracts import Budget, TaskSpec
+from reclab_agent.domain.research import EvidenceRef, ExperimentRecord, PlanReview, ResearchPlan
+from reclab_agent.agents.optimization import OptimizationAgent
+from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.experiments.workspace import create_workspace
 from reclab_agent.tools import RecLabToolbox
 
 
@@ -55,7 +54,7 @@ class OptimizationTests(unittest.TestCase):
         )
 
     def toolbox(self, *, review=True, runner=True, **kwargs):
-        return ResearchToolbox(self.workspace, task=self.task, plan=self.plan,
+        return OptimizationToolbox(self.workspace, task=self.task, plan=self.plan,
                                review=self.review if review is True else review,
                                snapshots_root=self.root / "snapshots",
                                run_experiment=self.fixture_runner if runner is True else runner, **kwargs)
@@ -306,7 +305,7 @@ class OptimizationTests(unittest.TestCase):
     def test_runner_capabilities_are_absent_when_not_configured(self):
         toolbox = self.toolbox(runner=None)
         self.assertEqual({spec.name for spec in toolbox.specs},
-                         {"read_source", "apply_patch", "validate_candidate"})
+                         {"read_source", "apply_patch", "validate_candidate", "record_hypothesis", "read_log", "write_diagnostic", "run_diagnostics", "resolve_baseline", "analyze_experiment"})
         self.assertEqual(toolbox.invoke("run_experiment")["error"]["code"], "UNKNOWN_TOOL")
 
 

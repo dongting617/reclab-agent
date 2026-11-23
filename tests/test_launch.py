@@ -1,19 +1,17 @@
 """Real launch control flow with synthetic data; no API or GPU calls."""
 from __future__ import annotations
-
 from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
-
-from reclab_agent.contracts import canonical_json, content_hash
+from reclab_agent.domain.contracts import canonical_json, content_hash
 from reclab_agent.core import ModelTurn
-from reclab_agent.research import launch
-from reclab_agent.research.contracts import EvidenceRef, ExperimentRecord
-from reclab_agent.research.toolbox import ResearchToolbox
-from reclab_agent.workspace import create_workspace
+import reclab_agent.application.launch as launch
+from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
+from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.experiments.workspace import create_workspace
 from tests import test_experiment_runner as fixtures
 
 
@@ -35,6 +33,12 @@ class ScriptedLaunchBackend:
             if self.invalid_probe:
                 return ModelTurn([], "Text completion without compatible tool output")
             return self.call("startup_check", {}, "probe")
+        if "record_hypothesis" in names:
+            if self.no_candidate or any(x.get("type") == "function_call_output" for x in input_items):
+                return ModelTurn([], "Hypothesis phase finished")
+            return self.call("record_hypothesis", {"statement": "Increase model capacity",
+                "changes": "Increase width", "expected": "Better validation ranking",
+                "risks": "Overfitting", "evidence": [], "process_metrics": []}, "hypothesis")
         if self.no_candidate:
             return ModelTurn([], "completed: candidate quality is excellent")
         self.steps += 1
@@ -84,8 +88,9 @@ class LaunchTests(unittest.TestCase):
 
     def binder(self, config, *, plan, review, registry, remote_tools=None):
         self.bound_configurations.append(config)
-        files = {name: text for name, text in self.files.items()}
-        workspace = create_workspace(config.output_directory / "workspaces", "fixture-candidate",
+        files = {path.relative_to(config.source_directory).as_posix(): path.read_text(encoding="utf-8")
+                 for path in config.source_directory.rglob("*") if path.is_file()}
+        workspace = create_workspace(config.output_directory / "workspaces", "fixture-candidate-" + str(len(self.research_instances)),
                                      files, editable_paths=list(config.editable_files))
 
         def run(snapshot, *, candidate_id, seed, max_seconds):
@@ -117,7 +122,7 @@ class LaunchTests(unittest.TestCase):
             self.records.append(record)
             return record
 
-        research = ResearchToolbox(workspace, task=config.task, plan=plan, review=review,
+        research = OptimizationToolbox(workspace, task=config.task, plan=plan, review=review,
                                    snapshots_root=config.output_directory / "snapshots", run_experiment=run)
         self.research_instances.append(research)
         return research

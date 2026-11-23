@@ -2382,7 +2382,7 @@
     "让 Agent 能直接读取失败训练日志，并明确 train/runtime 实际调用的模型接口。",
     "为规划和 critique 输出增加格式约束或有限修复，并为反思阶段预留调用额度。",
     "检查新增参数是否进入实际前向和梯度路径，避免把随机初始化变化当成新分支的效果。",
-    "后续使用多个训练种子重复搜索，并保留最终测试集用于选定方案后的独立评估。"
+    "后续固定一个随机种子进行训练和验证集评估，保留基线与候选的配置、产物和独立评分证据。"
   ],
   "post_experiment_numerical_diagnostic": {
     "scope": "synthetic initialized models; no training or checkpoint loading",

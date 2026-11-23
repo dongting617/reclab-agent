@@ -6,8 +6,7 @@ from pathlib import Path
 import shutil
 from types import SimpleNamespace
 import unittest
-
-from reclab_agent.research.remote_runner import RemoteExperimentRunner
+from reclab_agent.experiments.remote_runner import RemoteExperimentRunner
 from reclab_agent.tools.contracts import ToolError
 from tests import test_experiment_runner as fixtures
 
