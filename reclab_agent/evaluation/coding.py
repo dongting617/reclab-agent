@@ -38,8 +38,8 @@ def run_coding_suite(manifest_path,output,*,executor,mode='reference',backend=No
     digest=content_hash(manifest)
     if frozen['manifest']!=path.name or frozen['sha256']!=digest:
         raise ValueError('coding manifest changed after freezing')
-    if mode not in {'reference','react','team'} or type(repetitions) is not int or not 1<=repetitions<=2:
-        raise ValueError('coding evaluation supports reference/react/team and one or two trials')
+    if mode not in {'reference','react','research_audit'} or type(repetitions) is not int or not 1<=repetitions<=2:
+        raise ValueError('coding evaluation supports reference/react/research_audit and one or two trials')
     if type(max_steps) is not int or not 1<=max_steps<=16 or type(max_requests) is not int or max_requests<1:
         raise ValueError('coding request limits must be positive and bounded')
     identity=content_hash({'manifest':digest,'mode':mode,'model':getattr(backend,'model',None),

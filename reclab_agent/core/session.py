@@ -24,6 +24,7 @@ metric, or experiment result."""
 
 class StepLimitExceeded(Exception):
     """The shared run has no model rounds remaining."""
+    request_not_sent = True
 
 
 def function_calls(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -101,14 +102,16 @@ class RunSession:
                 )
                 break
             except Exception as error:
+                not_sent = getattr(error, "request_not_sent", False) is True
                 self.event("model_error", step=step, attempt=attempt + 1,
-                           error_type=type(error).__name__, message=str(error))
-                if attempt >= self.config.model_retries:
+                           error_type=type(error).__name__, message=str(error), request_not_sent=not_sent)
+                if not_sent or attempt >= self.config.model_retries:
                     raise
         self.steps = step
         self.inputs.extend(turn.output)
         payload: dict[str, Any] = {"step": step, "response_id": turn.response_id,
-                                   "function_calls": len(function_calls(turn.output)), "usage": turn.usage}
+                                   "function_calls": len(function_calls(turn.output)), "usage": turn.usage,
+                                   "output_text": turn.output_text}
         if phase is not None:
             payload["phase"] = phase
         self.event("model_turn", **payload)

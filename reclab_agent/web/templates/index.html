@@ -1,110 +1,58 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RecLab · 研究工作台</title>
-    <link rel="stylesheet" href="/static/app.css" />
-    <script src="/static/app.js" defer></script>
-  </head>
-  <body>
-    <header>
-      <div>
-        <b class="brand">RecLab</b><span class="muted">推荐模型研究工作台</span>
-      </div>
-      <span id="connection">正在连接</span>
-    </header>
-    <main>
-      <aside>
-        <div class="section-title">
-          <h2>任务与研究会话</h2>
-          <button id="refresh" class="quiet">刷新</button>
-        </div>
-        <p class="hint">CLI 和工作台读取同一份状态。打开页面不会启动训练。</p>
-        <button id="demo">运行本地证据演示</button>
-        <p class="hint">无需 API Key 或 GPU，仅验证证据工具。</p>
-        <div id="runs" class="run-list"></div>
-        <details>
-          <summary>登记新任务</summary>
-          <form id="task-form">
-            <label
-              >任务名称<input
-                name="task_id"
-                required
-                value="local-task" /></label
-            ><label
-              >研究问题<textarea
-                name="question"
-                required
-                placeholder="描述目标、指标和约束"
-              ></textarea></label
-            ><label
-              >数据集 ID<input
-                name="dataset_id"
-                required
-                value="beauty" /></label
-            ><label
-              >基线 ID<input
-                name="baseline_id"
-                required
-                value="baseline" /></label
-            ><button type="submit">保存任务</button>
-            <p class="hint">未配置执行器时保存为等待配置。</p>
-          </form>
-        </details>
-      </aside>
-      <section class="workspace">
-        <div class="section-title">
-          <div>
-            <p class="eyebrow">RESEARCH OVERVIEW</p>
-            <h1 id="title">选择一个任务</h1>
-          </div>
-          <button id="cancel" class="quiet" disabled>取消等待任务</button>
-        </div>
-        <p id="notice" role="status">从左侧选择会话，或运行一次本地演示。</p>
-        <div class="tabs" role="tablist">
-          <button data-panel="overview" class="active">概览</button
-          ><button data-panel="changes">计划与改动</button
-          ><button data-panel="experiments">实验</button
-          ><button data-panel="report">报告</button
-          ><button data-panel="trace">Trace</button>
-        </div>
-        <section id="overview" class="panel">
-          <div id="summary" class="cards"></div>
-          <h2>阶段与状态</h2>
-          <pre id="state">暂无任务</pre>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RecLab · 研究工作台</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/workbench-charts.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body class="live-workbench">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="RecLab 工作台首页"><span class="brand-mark">R<span>↗</span></span>RecLab<span class="brand-divider"></span><span class="brand-subtitle">研究工作台</span></a>
+    <div class="topbar-right"><span class="connection-dot"></span><span id="connection-label">正在连接</span><span class="environment" id="execution-label">检查执行器</span><button class="icon-button sidebar-toggle" id="sidebar-toggle" aria-label="展开研究会话" aria-expanded="false" aria-controls="sidebar">☰</button></div>
+  </header>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-heading"><span class="overline">WORKSPACE</span><span class="version">LOCAL</span></div>
+      <div class="section-heading"><h2>研究会话</h2><button id="new-task" class="icon-button add-button" aria-label="登记新任务">＋</button></div>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索任务、模型或数据集" aria-label="搜索研究会话"><span class="search-key" aria-hidden="true">/</span></label>
+      <label class="filter-label">会话状态<select id="status-filter"><option value="all">全部状态</option><option value="running">运行中</option><option value="completed">已结束</option><option value="failed">执行失败</option><option value="incomplete">证据不足</option><option value="waiting_input">等待配置</option><option value="queued">等待执行</option><option value="cancelled">已取消</option></select></label>
+      <div id="run-list" class="run-list" aria-label="研究会话列表"></div>
+      <div class="sidebar-bottom"><div class="sidebar-note"><span class="connection-dot"></span>四阶段研究流程<p>背景 → 假设 → 实验 → 分析</p></div><button class="button secondary full-width" id="demo-button">运行本地证据演示</button><p class="fine-print">无需模型或 GPU · 不会启动训练</p></div>
+    </aside>
+    <main id="main-content" class="workspace">
+      <div id="welcome" class="surface empty-state">选择一个研究会话，或登记任务、运行本地证据演示。打开页面不会启动训练。</div>
+      <p id="notice" class="callout" role="status" hidden></p>
+      <div id="workspace-content" hidden>
+      <div class="breadcrumb">工作空间 <span>/</span> 研究会话 <span>/</span> <span id="breadcrumb-current"></span></div>
+      <div class="page-heading"><div><div class="title-line"><h1 id="run-title"></h1><span id="run-status"></span><span id="result-status"></span></div><p class="run-meta" id="run-meta"></p></div><div class="heading-actions"><button class="button secondary" id="cancel-task" hidden>取消等待任务</button><button class="button secondary" id="refresh-button">↻ <span>刷新视图</span></button></div></div>
+      <div class="stage-strip" id="stages" aria-label="研究阶段"></div>
+      <nav class="tabs" role="tablist" aria-label="研究详情">
+        <button id="tab-overview" role="tab" aria-selected="true" aria-controls="panel-overview" tabindex="0" data-tab="overview">研究概览</button>
+        <button id="tab-changes" role="tab" aria-selected="false" aria-controls="panel-changes" tabindex="-1" data-tab="changes">假设与改动</button>
+        <button id="tab-experiments" role="tab" aria-selected="false" aria-controls="panel-experiments" tabindex="-1" data-tab="experiments">实验对比 <span id="experiment-count" class="tab-count"></span></button>
+        <button id="tab-report" role="tab" aria-selected="false" aria-controls="panel-report" tabindex="-1" data-tab="report">研究报告</button>
+        <button id="tab-events" role="tab" aria-selected="false" aria-controls="panel-events" tabindex="-1" data-tab="events">运行事件</button>
+      </nav>
+      <section role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+        <div class="conclusion" id="conclusion"></div>
+        <div class="metric-grid" id="metric-cards"></div>
+        <section class="surface chart-surface"><div class="surface-heading"><div><div class="heading-with-label"><h2>核心目标提升</h2><span class="tag neutral" id="chart-metric"></span></div><p>每一次改动，都回到可核验的验证集结果。</p></div><label id="group-picker-label" class="subtle-label" hidden>实验组 <select id="group-picker"></select></label></div>
+          <div class="chart-layout"><div class="chart-column"><div class="chart-legend"><span><i class="legend-line baseline-line"></i>基线</span><span><i class="legend-line best-line"></i>最佳合格结果</span><span><i class="legend-hollow"></i>未满足接受条件</span></div><div id="metric-chart" class="chart-scroll"></div><div class="status-track" id="status-track"></div><p class="chart-footnote">单种子验证集结果 · 标签为相对基线的变化，不代表统计显著性</p></div><aside class="milestone-panel"><div class="milestone-heading"><h3>关键改进</h3><span id="milestone-count" class="tag positive"></span></div><p class="muted small">突出每次刷新最佳的合格候选</p><div id="milestones"></div></aside></div>
         </section>
-        <section id="changes" class="panel" hidden>
-          <h2>假设、范围与改动记录</h2>
-          <pre id="diff">暂无改动记录</pre>
-        </section>
-        <section id="experiments" class="panel" hidden>
-          <h2>实验与验证集独立评分</h2>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>候选</th>
-                  <th>状态</th>
-                  <th>指标</th>
-                </tr>
-              </thead>
-              <tbody id="experiment-rows"></tbody>
-            </table>
-          </div>
-        </section>
-        <section id="report" class="panel" hidden>
-          <h2>保存的报告</h2>
-          <p class="hint">实测指标与模型解释需结合证据核验。</p>
-          <pre id="report-body">报告尚未生成</pre>
-        </section>
-        <section id="trace" class="panel" hidden>
-          <h2>持久化事件</h2>
-          <p class="hint">重连按事件序号续读，重复事件不会重复显示。</p>
-          <pre id="trace-body">暂无事件</pre>
-        </section>
+        <div class="bottom-grid"><section class="surface"><div class="surface-heading"><div><h2>独立审计</h2><p>先检查证据，再核查研究结论</p></div><span id="audit-status"></span></div><div id="audit-content"></div></section><section class="surface"><div class="surface-heading"><div><h2>需要关注</h2><p>影响当前结论的事项</p></div><span id="issue-count" class="tag neutral"></span></div><div id="issues"></div></section></div>
       </section>
+      <section role="tabpanel" id="panel-changes" aria-labelledby="tab-changes" hidden><div id="hypothesis-content"></div></section>
+      <section role="tabpanel" id="panel-experiments" aria-labelledby="tab-experiments" hidden><section class="surface"><div class="surface-heading"><div><h2>实验与独立评分</h2><p>保留全部候选，包括负结果和未评分实验。点击一行查看证据。</p></div><span class="tag neutral">验证集独立评分</span></div><div class="table-scroll"><table><thead><tr id="experiment-head"></tr></thead><tbody id="experiment-rows"></tbody></table></div><p id="experiment-empty" class="empty-state">尚无实验记录</p></section></section>
+      <section role="tabpanel" id="panel-report" aria-labelledby="tab-report" hidden><div id="report-content"></div></section>
+      <section role="tabpanel" id="panel-events" aria-labelledby="tab-events" hidden><section class="surface"><div class="surface-heading"><div><h2>运行事件</h2><p>按角色、类型或工具定位问题，原始事件可展开。</p></div><span id="event-connection" class="tag neutral">等待连接</span></div><div class="event-filters"><label>角色<select id="event-role"><option value="all">全部角色</option><option value="researcher">主研究者</option><option value="auditor">独立审计</option><option value="host">宿主工具</option></select></label><label>类型<select id="event-type"><option value="all">全部事件</option><option value="tool_call">工具调用</option><option value="model_turn">模型响应</option><option value="error">错误</option></select></label><label class="event-search">查找<input id="event-search" type="search" placeholder="工具名或事件内容"></label></div><div id="event-list" class="event-list"></div></section></section>
+      </div>
+      <footer class="workspace-footer"><span>RecLab · 研究过程可追溯，结果以证据为准</span><span>验证集评估 · 固定单种子</span></footer>
     </main>
-    <footer>背景 → 假设 → 实验 → 分析 · 默认固定单种子、验证集评估</footer>
-  </body>
+  </div>
+  <dialog id="experiment-dialog" class="detail-dialog"><div class="dialog-header"><div><span class="overline">EXPERIMENT EVIDENCE</span><h2 id="detail-title"></h2></div><button class="icon-button" data-close="experiment-dialog" aria-label="关闭实验详情">✕</button></div><div id="detail-body" class="dialog-body"></div></dialog>
+  <dialog id="task-dialog"><form id="task-form"><div class="dialog-header"><div><span class="overline">NEW RESEARCH</span><h2>登记研究任务</h2></div><button type="button" class="icon-button" data-close="task-dialog" aria-label="关闭登记任务">✕</button></div><div class="dialog-body"><p class="callout">保存任务后，由已配置的执行器执行；未配置执行器时进入等待配置。</p><label>任务 ID<input name="task_id" required pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,95}" placeholder="例如 sasrec-beauty-02" maxlength="96"></label><label>研究问题<textarea name="question" required placeholder="描述研究目标、核心指标和约束" rows="3"></textarea></label><div class="form-grid"><label>数据集 ID<input name="dataset_id" value="beauty" required pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,95}"></label><label>基线 ID<input name="baseline_id" value="baseline" required pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,95}"></label></div><p id="task-error" role="alert" class="negative-text"></p></div><div class="dialog-actions"><button type="button" class="button secondary" data-close="task-dialog">取消</button><button id="task-submit" class="button primary" type="submit">保存任务</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
 </html>

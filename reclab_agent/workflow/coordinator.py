@@ -7,7 +7,7 @@ from reclab_agent.workflow.stages import StudyStage
 
 
 class RequestLimitExceeded(RuntimeError):
-    pass
+    request_not_sent = True
 
 
 class CountedBackend:
@@ -136,12 +136,23 @@ class StudyCoordinator:
                 "Do not use another candidate_id. Registered context:\n" + canonical_json({**context,
                     "hypothesis": self.research.hypothesis}),
                 {s.name for s in self.research.specs} - {"record_hypothesis"})
+                if self.config.task.mode == "research_audit":
+                    self.report.setdefault("audits", {})[candidate_id] = {
+                        key: self.report["agent_result"].get(key) for key in
+                        ("status", "audit", "audit_approved", "evidence_packet_hash")}
             self.stage(StudyStage.ANALYSIS, candidate_id=candidate_id)
             for value in self.research.experiments:
                 if value["candidate_id"] != candidate_id:
                     continue
                 analyzed = self.invoke("analyze_experiment", experiment_id=value["experiment_id"])
                 entry, comparison = analyzed["entry"], analyzed["comparison"]
+                if self.config.task.mode == "research_audit":
+                    audit = self.report.get("audits", {}).get(candidate_id, {})
+                    entry["audit"] = audit
+                    if audit.get("status") != "completed" or audit.get("audit_approved") is not True:
+                        entry["eligible"] = False
+                        if comparison is not None:
+                            comparison.update(improves=False, decision="inconclusive", audit_required=True)
                 if not any(x["record"]["experiment_id"] == value["experiment_id"] for x in self.report["experiments"]):
                     self.report["experiments"].append(entry)
                 if comparison is None:

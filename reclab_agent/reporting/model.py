@@ -11,12 +11,13 @@ from pathlib import Path
 import re
 from urllib.parse import quote
 from reclab_agent.infrastructure.files import atomic_write, confined_path, read_regular_file
+from reclab_agent.reporting.progress import prepare_entries, progress_view
 
 
 _STATUS = {"completed": "已结束", "incomplete": "已结束，结果不完整", "failed": "执行失败",
            "cancelled": "已取消", "running": "进行中"}
 _MODE = {"single": "ReAct", "react": "ReAct", "plan_execute": "Plan and Execute",
-         "team": "Planner–Executor–Reviewer",
+         "research_audit": "主研究者 + 独立审计",
          "reviewer": "Reflection", "reflection": "Reflection", "strategy_comparison": "模式对比实验"}
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -132,6 +133,8 @@ def _entry(value, root, destination, metrics):
     result = {"id": _text(record.get("candidate_id"), 160),
               "experiment_id": _text(record.get("experiment_id"), 160),
               "record": record, "metrics": None, "verified": False, "eligible": row.get("eligible", True),
+              "eligibility_recorded": "eligible" in row, "process_metrics": row.get("process_metrics"),
+              "audit": row.get("audit"), "evaluation_hash": None,
               "warnings": [], "changes": [], "links": []}
     supplied = row.get("metrics")
     # Record-only entries intentionally have no scores, including after an
@@ -151,10 +154,12 @@ def _entry(value, root, destination, metrics):
                 grade = json.loads(raw)
                 valid = (hashlib.sha256(raw).hexdigest() == score.get("sha256")
                          and all(grade["metrics"].get(name) == result["metrics"][name] for name in metrics)
-                         and (not record.get("protocol_hash") or grade.get("protocol_hash") == record["protocol_hash"]))
+                         and (not record.get("protocol_hash") or grade.get("protocol_hash") == record["protocol_hash"])
+                         and ("seed" not in grade or grade["seed"] == record.get("seed")))
                 if not valid:
                     raise ValueError("score evidence differs")
                 result["verified"] = True
+                result["evaluation_hash"] = grade.get("evaluation_hash")
             except (ValueError, KeyError, TypeError, UnicodeError):
                 result["metrics"] = None
                 result["warnings"].append("评分证据校验失败（文件哈希、协议或指标不一致），未用于比较。")
@@ -181,37 +186,58 @@ def _entry(value, root, destination, metrics):
 
 def _compatible(entry, baseline):
     a, b = entry["record"], baseline["record"]
-    return all(a.get(key) is None or b.get(key) is None or a[key] == b[key]
-               for key in ("seed", "protocol_hash", "dataset_id"))
+    return (type(a.get("seed")) is int and type(b.get("seed")) is int
+            and bool(a.get("dataset_id")) and bool(b.get("dataset_id"))
+            and bool(a.get("image") or a.get("runtime")) and bool(b.get("image") or b.get("runtime"))
+            and bool(_HASH.fullmatch(str(a.get("protocol_hash"))))
+            and bool(_HASH.fullmatch(str(b.get("protocol_hash"))))
+            and all(a.get(key) == b.get(key) for key in ("seed", "protocol_hash", "dataset_id", "image", "runtime"))
+            and entry.get("evaluation_hash") == baseline.get("evaluation_hash"))
 
 
 def _group(name, entries, baseline, primary, guards, rounds, usage, calls, tokens):
     base_metrics = baseline.get("metrics")
     best = baseline
     for entry in entries:
-        entry.update(deltas={}, relative={}, guardrail=None, decision="无有效评分")
+        entry.update(deltas={}, relative={}, guardrail=None, decision="无有效评分", comparable=False,
+                     comparison_eligible=False, milestone=False, previous_delta=None, plot_value=None,
+                     best_value=best["metrics"][primary] if best["verified"] and best["metrics"] else None)
         if entry["metrics"] is None:
             continue
         if base_metrics is None:
             entry["decision"] = "基线无有效评分，无法比较"
             continue
+        if not (entry["verified"] and baseline["verified"]):
+            entry["decision"] = "评分证据尚未核验，不能确认提升"
+            continue
         if not _compatible(entry, baseline):
-            entry["decision"] = "种子、数据或协议不一致，不能直接比较"
+            entry["decision"] = "种子、数据、协议或环境缺失或不一致，不能直接比较"
             entry["warnings"].append(entry["decision"])
             continue
+        entry["comparable"] = True
+        entry["plot_value"] = entry["metrics"][primary]
         entry["deltas"] = {key: entry["metrics"][key] - base_metrics[key] for key in entry["metrics"]}
         entry["relative"] = {key: _relative(entry["metrics"][key], base_metrics[key]) for key in entry["metrics"]}
         entry["guardrail"] = all(entry["metrics"][key] >= base_metrics[key] for key in guards)
-        if not entry.get("eligible", True):
+        if not entry.get("audit_pass"):
+            entry["decision"] = "独立审计未通过或未记录，证据不足"
+        elif not entry.get("process_pass"):
             entry["decision"] = "必需过程指标缺失、未达标或定义不可比，证据不足"
             entry["warnings"].append(entry["decision"])
         elif not entry["guardrail"]:
             entry["decision"] = "保护指标未达标"
-        elif entry["metrics"][primary] > best["metrics"][primary]:
-            best = entry
-            entry["decision"] = "优于基线且保护指标达标" if guards else "主指标提高，未配置保护指标"
+        elif not entry.get("stop_confirmed"):
+            entry["decision"] = "远端作业停止尚未确认，需先核验"
         else:
-            entry["decision"] = "未超过已记录最佳主指标"
+            entry["comparison_eligible"] = True
+            if entry["metrics"][primary] > best["metrics"][primary]:
+                entry["previous_delta"] = entry["metrics"][primary] - best["metrics"][primary]
+                entry["milestone"] = True
+                best = entry
+                entry["decision"] = "优于基线且保护指标达标" if guards else "主指标提高，未配置保护指标"
+            else:
+                entry["decision"] = "未超过已记录最佳主指标"
+        entry["best_value"] = best["metrics"][primary]
     failures = [entry for entry in entries if entry["metrics"] is None]
     scored = sum(entry["metrics"] is not None for entry in entries)
     skips = []
@@ -344,6 +370,7 @@ def build_report_view(report, *, output_directory=None, context=None):
                                               "truncated": bool(change.get("truncated")), "evidence": "实验控制器记录的源码差异"}
                                              for change in item.get("source_changes", []) if isinstance(change, dict)]
                     entries.append(entry)
+            prepare_entries(entries, report, name)
             groups.append(_group(name, entries, baseline, primary, guards, rounds,
                 state.get("budget_usage", {}), state.get("model_calls"), state.get("model_usage", {})))
     else:
@@ -355,6 +382,7 @@ def build_report_view(report, *, output_directory=None, context=None):
         agent = report.get("agent_result", {}) or {}
         usage = report.get("budget_usage", {})
         candidate_usage = {**usage, "experiment_attempts": max(len(entries), usage.get("experiment_attempts", len(entries)) - bool(baseline["record"]))}
+        prepare_entries(entries, report, mode)
         groups.append(_group(mode, entries, baseline, primary, guards, [], candidate_usage,
                              report.get("model_calls", usage.get("model_calls", agent.get("steps"))),
                              report.get("model_usage", {})))
@@ -390,7 +418,7 @@ def build_report_view(report, *, output_directory=None, context=None):
         if not (best["verified"] and baseline["verified"]):
             summary += "评分证据尚未完整复核，结论待核验。"
     else:
-        summary = "本轮没有找到主指标提高且保护指标达标的候选，保留基线。"
+        summary = "本轮没有找到评分已核验且满足全部接受条件的提升候选，保留基线。"
     if comparison and status != "completed":
         summary += " 各模式有效候选数量不完整，不宣布模式胜者。"
     if status in {"failed", "cancelled"}:
@@ -435,6 +463,7 @@ def build_report_view(report, *, output_directory=None, context=None):
             "metrics": metrics, "metadata": [(key, _text(value)) for key, value in metadata if value is not None],
             "baseline": baseline, "groups": groups, "best": best, "improved": improved,
             "comparison": comparison, "entries": entries, "limitations": limitations,
+            "progress": progress_view(groups, baseline, primary),
             "error": _text(report.get("error"), 600) if report.get("error") else None,
             "json_href": json_href, "audit_notes": audit_notes,
             "guard_note": "保护指标要求不低于基线。" if guards else "本次未配置保护指标，仅按主指标比较。",

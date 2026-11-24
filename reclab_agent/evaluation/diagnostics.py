@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import tempfile
+import time
 
 from reclab_agent.agents import create_agent
 from reclab_agent.core.llm import parse_json_response
@@ -26,6 +27,24 @@ recall@20 is no worse; reject all other scored candidates.
 Return only JSON: {"decision": "...", "reason": "...",
 "citations": [{"path": "evidence/case.json", "pointer": "/relevant/field"}]}.
 Distinguish observations from inferred mechanisms. Do not invent measurements."""
+
+FAILURE_POLICY = "typed_failures_and_raw_answers_v2"
+
+
+class EvaluationRequestLimit(ValueError):
+    request_not_sent = True
+
+
+def validate_answer(answer):
+    """Validate the response shape separately from correctness and citations."""
+    if (not isinstance(answer, dict) or answer.get("decision") not in
+            ("retain", "reject", "inconclusive", "stop") or
+            not isinstance(answer.get("reason"), str) or not answer["reason"].strip() or
+            not isinstance(answer.get("citations"), list) or not answer["citations"]):
+        raise ValueError("invalid diagnostic answer schema")
+    if any(not isinstance(ref, dict) or not isinstance(ref.get("path"), str) or
+           not isinstance(ref.get("pointer"), str) for ref in answer["citations"]):
+        raise ValueError("invalid diagnostic citation schema")
 
 
 def reference_decision(evidence):
@@ -85,10 +104,10 @@ def run_diagnostic_suite(manifest_path, output, *, mode="reference", backend=Non
         raise ValueError("agent evaluation requires an explicit model backend")
     output = Path(output).absolute()
     trace_root = output.parent / (output.stem + "-traces")
-    identity = content_hash({"manifest": digest, "prompt": content_hash(PROMPT), "response_format": "json_or_single_fence_v1", "success_policy": "completed_agent_and_valid_answer_v1", "mode": mode, "model": getattr(backend, "model", None),
+    identity = content_hash({"manifest": digest, "prompt": content_hash(PROMPT), "response_format": "json_or_single_fence_v1", "success_policy": "completed_agent_and_valid_answer_v1", "failure_policy": FAILURE_POLICY, "mode": mode, "model": getattr(backend, "model", None),
                              "max_steps": max_steps, "max_requests": max_requests, "prices": prices})
     report = {"kind": "reference_contract" if mode == "reference" else "synthetic_agent_diagnostics",
-              "identity": identity, "manifest_hash": digest, "prompt_hash": content_hash(PROMPT), "split": manifest["split"], "mode": mode,
+              "identity": identity, "manifest_hash": digest, "prompt_hash": content_hash(PROMPT), "failure_policy": FAILURE_POLICY, "split": manifest["split"], "mode": mode,
               "model": getattr(backend, "model", None), "model_requests": 0, "results": [],
               "scope": manifest["origin"], "gpu_jobs": 0, "status": "running",
               "limitations": ["Synthetic task success is not real coding or recommendation quality.",
@@ -104,7 +123,7 @@ def run_diagnostic_suite(manifest_path, output, *, mode="reference", backend=Non
         model = getattr(backend, "model", None)
         def respond(self, **kwargs):
             if report["model_requests"] >= max_requests:
-                raise ValueError("shared evaluation model request limit exhausted")
+                raise EvaluationRequestLimit("shared evaluation model request limit exhausted")
             report["model_requests"] += 1
             save()
             return backend.respond(**kwargs)
@@ -125,6 +144,9 @@ def run_diagnostic_suite(manifest_path, output, *, mode="reference", backend=Non
             root = Path(directory)
             atomic_write(root / "evidence/case.json", canonical_json(task["evidence"]).encode("utf-8"))
             tools = RecLabToolbox(root)
+            started = time.perf_counter()
+            phase = "agent"
+            agent = None
             try:
                 if mode == "reference":
                     measured = tools.invoke("read_json_values", {"path": "evidence/case.json", "pointers": [""]})
@@ -133,27 +155,60 @@ def run_diagnostic_suite(manifest_path, output, *, mode="reference", backend=Non
                               "citations": [{"path": "evidence/case.json", "pointer": task["required_pointer"]}]}
                 else:
                     trace = trace_root / (task["id"] + ".jsonl")
+                    row["trace"] = str(trace)
                     # Each task is a separate immutable run; labels never enter this toolbox.
                     agent = create_agent(mode, tools, limited, max_steps=max_steps, model_retries=0, trace_path=trace)
                     result = agent.run(PROMPT, task_id=task["id"],
                                        allowed_tools={"read_json_values", "compare_numeric_values", "inspect_artifact"})
                     row["agent_status"] = result["status"]
-                    row["trace"] = str(trace)
                     row["elapsed_ms"] = result["elapsed_ms"]
+                    row["raw_answer"] = result["answer"]
+                    if result["status"] != "completed":
+                        row["failure"] = {"category": "agent_termination", "code": result["status"]}
+                        if not result["answer"].strip():
+                            raise ValueError("agent terminated before producing an answer")
+                    phase = "json"
                     answer = parse_json_response(result["answer"])
+                phase = "schema"
+                validate_answer(answer)
+                phase = "grading"
                 graded = grade_answer(answer, task)
                 finished = mode == "reference" or row.get("agent_status") == "completed"
                 graded["passed"] = graded["passed"] and finished
                 row.update(graded, answer=answer, status="completed" if finished else "failed")
+                if not graded["passed"]:
+                    row.setdefault("failure", {"category": "grading", "code":
+                        "INCORRECT_DECISION" if not graded["decision_correct"] else "CITATION_NOT_LOCATED"})
                 provider_failures = 0
             except Exception as error:
                 row["error_type"] = type(error).__name__
-                if type(error).__module__.split(".")[0] == "openai":
+                provider_error = type(error).__module__.split(".")[0] == "openai"
+                if provider_error:
                     provider_failures += 1
                 else:
                     provider_failures = 0
-                if report["model_requests"] >= max_requests:
+                if isinstance(error, EvaluationRequestLimit):
                     row["status"] = "budget_exceeded"
+                    failure = {"category": "budget", "code": "REQUEST_LIMIT"}
+                elif provider_error:
+                    failure = {"category": "provider", "code":
+                        "PROVIDER_TIMEOUT" if "Timeout" in type(error).__name__ else "PROVIDER_ERROR"}
+                elif phase in {"json", "schema"}:
+                    failure = {"category": "response_format", "code":
+                        "INVALID_JSON_RESPONSE" if phase == "json" else "INVALID_ANSWER_SCHEMA"}
+                else:
+                    failure = {"category": "runtime", "code": type(error).__name__}
+                row.setdefault("failure", failure)
+                if "failure" in row and phase == "json":
+                    row["failure"]["parse_error_type"] = type(error).__name__
+                checkpoint = getattr(agent, "checkpoint_path", None)
+                if checkpoint and Path(checkpoint).exists():
+                    try:
+                        saved = read_json_strict(checkpoint, max_bytes=20_000_000)
+                        row["failure"]["role_phase"] = saved.get("phase")
+                    except (ValueError, OSError):
+                        pass  # Optional metadata must never replace the original failure.
+            row.setdefault("elapsed_ms", round((time.perf_counter() - started) * 1000, 3))
         report["results"].append(row)
         save()
     rows = report["results"]

@@ -7,6 +7,8 @@ def summarize_usage(events, prices=None):
     requests = missing = failures = 0
     for event in events:
         if event.get("event") == "model_error":
+            if event.get("request_not_sent") is True:
+                continue
             requests += 1
             failures += 1
             missing += 1

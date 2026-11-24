@@ -108,3 +108,32 @@ class TeamTests(unittest.TestCase):
         result = TeamAgent(self.tools, backend, max_steps=2, model_retries=0).run("inspect")
         self.assertEqual(result["status"], "step_limit_exceeded")
         self.assertEqual(result["model_requests"], 2)
+
+    def test_reviewer_missing_feedback_is_a_terminal_format_failure(self):
+        backend = ScriptedBackend(text_turn('{"steps":["inspect"]}'), text_turn("draft"),
+                                  text_turn('{"approved":true}'))
+        result = self.agent(backend).run("inspect")
+        self.assertEqual(result['status'], 'invalid_review')
+        self.assertEqual(result['model_requests'], 3)
+        saved = json.loads(self.checkpoint.read_text())
+        self.assertEqual(saved['result']['status'], 'invalid_review')
+        self.assertFalse(result['review_approved'])
+
+    def test_actual_malformed_plan_and_prose_responses_remain_rejected(self):
+        fixture=Path(__file__).parent/'fixtures/team-output-failures-20261124.json'
+        cases=json.loads(fixture.read_text(encoding='utf-8'))['cases']
+        for case in cases:
+            text=case['last_model_text'] if case['agent_status']=='invalid_plan' else case['raw_answer']
+            with self.subTest(case=case['id']), self.assertRaises(ValueError):
+                parse_json_response(text)
+        plan=next(case for case in cases if case['agent_status']=='invalid_plan')
+        result=self.agent(ScriptedBackend(text_turn(plan['last_model_text']))).run('inspect')
+        self.assertEqual(result['status'],'invalid_plan')
+        self.assertEqual(result['model_requests'],1)
+
+    def test_role_call_missing_arguments_is_rejected_without_execution(self):
+        from reclab_agent.core import ModelTurn
+        turn=ModelTurn([{'type':'function_call','name':'role_plan','call_id':'plan'}], '')
+        result=self.agent(ScriptedBackend(turn)).run('inspect')
+        self.assertEqual(result['status'],'invalid_plan')
+        self.assertEqual(self.tools.calls,[])

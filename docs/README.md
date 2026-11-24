@@ -1,6 +1,9 @@
 # RecLab Agent 文档导航
 
+- [新版研究工作台、指标图与验收](workbench-design.md)
+
 - [项目架构与代码导航](architecture.md)
+- [四天面试准备与代码走读](interview-preparation.md)
 - [本地功能、评测与验收](non-gpu-work.md)
 - [对照 DeepResearch Harness 的功能差距](deepresearch-harness-gap-analysis.md)
 - [功能需求](plan.md)

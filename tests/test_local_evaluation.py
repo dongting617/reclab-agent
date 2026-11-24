@@ -111,6 +111,71 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(sum(r["status"] == "not_run" for r in report["results"]), 27)
         self.assertEqual(report["status"], "partial")
 
+    def test_invalid_plan_is_not_misclassified_as_a_final_answer_parse_failure(self):
+        from tests.test_agent_strategies import ScriptedBackend, text_turn
+        fixture=json.loads((ROOT/'tests/fixtures/team-output-failures-20261124.json').read_text(encoding='utf-8'))
+        plan=next(row for row in fixture['cases'] if row['agent_status']=='invalid_plan')
+        backend=ScriptedBackend(text_turn(plan['last_model_text']))
+        output=self.root/'invalid-plan.json'
+        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',output,mode='team',backend=backend,max_requests=1)
+        row=report['results'][0]
+        self.assertEqual(row['failure']['category'],'agent_termination')
+        self.assertEqual(row['failure']['code'],'invalid_plan')
+        self.assertEqual(row['raw_answer'],'')
+        trace=[json.loads(line) for line in Path(row['trace']).read_text().splitlines()]
+        self.assertEqual(next(e for e in trace if e['event']=='model_turn')['output_text'],plan['last_model_text'])
+        run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',output,mode='team',backend=backend,max_requests=1)
+        self.assertEqual(len(backend.requests),1)
+
+    def test_prose_plus_json_is_saved_but_not_accepted_as_valid_output(self):
+        from tests.test_agent_strategies import ScriptedBackend, text_turn
+        fixture=json.loads((ROOT/'tests/fixtures/team-output-failures-20261124.json').read_text(encoding='utf-8'))
+        raw=fixture['cases'][0]['raw_answer']
+        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',self.root/'prose.json',mode='react',
+            backend=ScriptedBackend(text_turn(raw)),max_requests=1)
+        row=report['results'][0]
+        self.assertEqual(row['failure']['code'],'INVALID_JSON_RESPONSE')
+        self.assertEqual(row['raw_answer'],raw)
+        self.assertFalse(row['passed'])
+
+    def test_valid_json_with_invalid_answer_shape_has_its_own_failure(self):
+        from tests.test_agent_strategies import ScriptedBackend, text_turn
+        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',self.root/'schema.json',mode='react',
+            backend=ScriptedBackend(text_turn('{"decision":"retain"}')),max_requests=1)
+        self.assertEqual(report['results'][0]['failure']['code'],'INVALID_ANSWER_SCHEMA')
+
+    def test_local_budget_rejection_is_not_counted_as_a_provider_request(self):
+        from tests.test_agent_strategies import ScriptedBackend
+        backend=ScriptedBackend(ModelTurn([{'type':'function_call','name':'read_json_values','call_id':'read',
+            'arguments':json.dumps({'path':'evidence/case.json','pointers':['']})}],''))
+        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',self.root/'limit.json',mode='react',
+            backend=backend,max_requests=1,max_steps=3)
+        self.assertEqual(report['results'][0]['failure']['category'],'budget')
+        self.assertEqual(report['model_requests'],1)
+        self.assertEqual(report['resource_usage']['model_requests'],1)
+        self.assertEqual(len(backend.requests),1)
+
+    def test_provider_timeout_is_recorded_with_trace_and_elapsed_time(self):
+        Timeout=type('APITimeoutError',(Exception,),{'__module__':'openai'})
+        class Backend:
+            model='offline-timeout'
+            def respond(self,**kwargs):raise Timeout('controlled failure')
+        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',self.root/'timeout.json',mode='react',
+            backend=Backend(),max_requests=1)
+        row=report['results'][0]
+        self.assertEqual(row['failure']['code'],'PROVIDER_TIMEOUT')
+        self.assertEqual(row['status'],'failed')
+        self.assertTrue(Path(row['trace']).exists())
+        self.assertGreaterEqual(row['elapsed_ms'],0)
+        self.assertFalse(report['resource_usage']['usage_complete'])
+
+    def test_previous_reporting_identity_cannot_be_overwritten_on_resume(self):
+        output=self.root/'legacy.json'
+        output.write_text(json.dumps({'identity':'previous-failure-policy','model_requests':3,'results':[]}))
+        with self.assertRaisesRegex(ValueError,'another evaluation'):
+            run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',output)
+        self.assertEqual(json.loads(output.read_text())['model_requests'],3)
+
     def test_bm25_paragraph_report_and_modified_corpus_rejection(self):
         report = evaluate_retrieval(ROOT / "tasks/retrieval.json")
         run = report["runs"][0]

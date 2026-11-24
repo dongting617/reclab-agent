@@ -89,6 +89,9 @@ class WebTests(unittest.TestCase):
         self.assertIn("RecLab", self.client.get("/").text)
         self.assertEqual(self.client.get("/static/app.js").status_code, 200)
         self.assertEqual(self.client.get("/static/app.css").status_code, 200)
+        self.assertEqual(self.client.get("/static/workbench-charts.js").status_code, 200)
+        self.assertEqual(self.client.get("/static/workbench.css").status_code, 200)
+        self.assertNotIn("workbench-prototype.js", self.client.get("/").text)
         self.assertEqual(self.client.get("/health").json()["execution_mode"], "offline")
 
     def test_same_submission_is_stored_once_and_can_be_cancelled(self):
@@ -121,3 +124,26 @@ class WebTests(unittest.TestCase):
         self.assertEqual(calls, [row["run_id"]])
         self.assertEqual(saved["status"], "failed")
         self.assertNotIn("private provider details", json.dumps(saved))
+
+    def test_real_report_endpoint_returns_verified_progress_without_rewriting_report(self):
+        from tests import test_user_report as fixtures
+        fixture = fixtures.UserReportTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        session = self.root / "sessions" / "fixture"
+        session.mkdir(parents=True)
+        baseline = fixture.entry("baseline", .08, .15, output=session)
+        improved = fixture.entry("improved", .10, .16, output=session)
+        report = fixture.report()
+        report.update(context=fixture.context, experiments=[baseline, improved])
+        path = session / "report.json"
+        original = json.dumps(report).encode("utf-8")
+        path.write_bytes(original)
+        catalog = RunCatalog(self.root, session_roots=[session.parent])
+        client = TestClient(create_app(self.root, catalog=catalog))
+        payload = client.get("/api/runs/study-fixture/report").json()
+        point = payload["view"]["progress"]["groups"][0]["points"][0]
+        self.assertTrue(point["milestone"])
+        self.assertTrue(payload["view"]["improved"])
+        self.assertAlmostEqual(point["relative"], 25)
+        self.assertEqual(path.read_bytes(), original)

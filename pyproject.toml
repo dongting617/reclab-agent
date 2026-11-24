@@ -24,7 +24,7 @@ reclab-eval = "reclab_agent.cli.evaluate:main"
 reclab-web = "reclab_agent.cli.web:main"
 
 [tool.setuptools.package-data]
-"reclab_agent.web" = ["templates/*.html", "static/*.js", "static/*.css"]
+"reclab_agent.web" = ["templates/*.html", "static/*.html", "static/*.js", "static/*.css"]
 
 [tool.setuptools.packages.find]
 include = ["reclab_agent", "reclab_agent.*"]
