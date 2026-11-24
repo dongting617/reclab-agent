@@ -62,4 +62,4 @@ SQLite 写事务也可能被暂停，因此停止意图另写入私有、fsync �
 
 **推演题三。** Mock 通过、真实容器无训练输出，历史 completed 又遇到容器重启，应信哪个？**答案：**首次先查 daemon/日志配置；当前停止看 fresh ownership/ID/退出检查，不能信历史终态。结果注明观察时点并保持独立监督。
 
-完整教材、checkpoint 与作业恢复的区别、137/OOM 的判断、代码阅读路径见 [Worker 运行时实战课](learning/week-02-worker-runtime.md)。可运行入口教程见 [受控 CLI 示例](../week02-demo.md)。练习完成前，不替你勾选“已掌握”。
+完整教材、checkpoint 与作业恢复的区别、137/OOM 的判断、代码阅读路径见 [Worker 运行时实战课](week-02-worker-runtime.md)。可运行入口教程见 [受控 CLI 示例](../../week02-demo.md)。练习完成前，不替你勾选“已掌握”。

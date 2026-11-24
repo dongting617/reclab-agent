@@ -10,10 +10,10 @@ from reclab_agent.agents import (
     ReflectionAgent,
     create_agent,
 )
-from reclab_agent.tools import RecLabToolbox, Tool, ToolRegistry, ToolSpec, Toolbox
+from reclab_agent.tools import EvidenceToolbox, Tool, ToolRegistry, ToolSpec, Toolbox
 
 __all__ = [
-    "ModelTurn", "OpenAIResponsesBackend", "RecLabToolbox",
+    "ModelTurn", "OpenAIResponsesBackend", "EvidenceToolbox",
     "load_tasks", "run_reference_suite", "load_trace", "replay_trace",
     "Agent", "AgentConfig", "ModelBackend", "ReActAgent", "SimpleAgent",
     "PlanExecuteAgent", "ReflectionAgent", "create_agent",

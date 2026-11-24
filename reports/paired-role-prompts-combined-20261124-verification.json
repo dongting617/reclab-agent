@@ -1,0 +1,32 @@
+{
+  "status": "verified",
+  "snapshot_files_verified": 119,
+  "protocol": {
+    "manifest_hash": "9481024326538704696e652aa6546611d9f56bf01eb2573d4967f88ba12ddc1e",
+    "prompt_hash": "1cef4b1b23e81b2e630f4255fe9a5596d901900dc899f023330a977b1640805a",
+    "role_prompt_hash": "6a52a644337bd93c55de91143726ab4ffa4c1cf6dcc2f9fe2874bb314ce1a4f7"
+  },
+  "preserved_source_sha256": {
+    "paired-role-prompts-20261124-dev-research_audit.json": "502289cd7c366612d60d2005b7ebb48de0c9004f14b713a903ff81b36b0d5d61",
+    "paired-role-prompts-continuation-20261124-dev-research_audit.json": "d69a67af9cab60f4912f2a17c1b3fb4910c7f1b3b12a5ef886ada4273c617a74"
+  },
+  "new_cases_attempted": 27,
+  "new_cases_passed": 25,
+  "new_api_attempts": 114,
+  "new_request_cap": 216,
+  "single_agent_rerun": false,
+  "failed_cases_rerun": false,
+  "combined_multi_agent": {
+    "attempted": 30,
+    "passed": 27,
+    "api_attempts": 124
+  },
+  "single_agent": {
+    "attempted": 30,
+    "passed": 28,
+    "api_attempts": 64
+  },
+  "total_api_attempts": 188,
+  "gpu_used": false,
+  "note": "Derived evidence from preserved original and two continuation windows; not an additional API run."
+}

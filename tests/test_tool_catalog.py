@@ -1,7 +1,7 @@
 """Keep documented readiness aligned with actual Agent tool exposure."""
 from pathlib import Path
 import unittest
-from reclab_agent.tools import RecLabToolbox, tool_catalog
+from reclab_agent.tools import EvidenceToolbox, tool_catalog
 from reclab_agent.core.session import function_tools
 
 
@@ -10,7 +10,7 @@ ROOT = Path(__file__).absolute().parents[1]
 
 class ToolCatalogTests(unittest.TestCase):
     def setUp(self):
-        self.toolbox = RecLabToolbox(ROOT)
+        self.toolbox = EvidenceToolbox(ROOT)
 
     def test_available_inventory_matches_callable_specs(self):
         available = {entry.name for entry in tool_catalog(availability="available")}

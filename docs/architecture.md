@@ -4,7 +4,7 @@
 
 ## 从哪里开始读
 
-先读 `workflow/coordinator.py` 了解“背景 → 假设 → 实验 → 分析”的完整流程，再读 `tools/toolbox.py` 了解可用能力，需要深入训练、评分或历史经验时再进入对应模块。
+先读 `workflow/coordinator.py` 了解“背景 → 假设 → 实验 → 分析”的完整流程，再读 `tools/optimization_toolbox.py` 了解可用能力，需要深入训练、评分或历史经验时再进入对应模块。
 
 主要调用关系：
 
@@ -36,9 +36,10 @@
 | `cli/` | `diagnostics.py`、`research.py`、`projects.py`、`worker.py`、`web.py`、`evaluate.py` | 参数解析、命令分发、工作台与本地评测入口 |
 | `application/` | `start.py`、`launch.py`、`binding.py`、`inspection.py`、`environment.py`、`history.py`、`runs.py` | 应用装配、启动检查、归档及 CLI/Web 共用的会话查询 |
 | `workflow/` | `stages.py`、`coordinator.py`、`resources.py` | 四阶段顺序、阶段权限、停止条件、共享模型和联网预算 |
-| `agents/` | `optimization.py`、`team_agent.py`、各策略和 `factory.py` | 原有策略与可恢复的 Planner–Executor–Reviewer 协作 |
 | `core/` | `agent.py`、`config.py`、`llm.py`、`session.py`、`trace.py` | 通用 Agent 接口、模型协议、对话运行、工具调度和审计轨迹 |
-| `tools/` | 能力组、`context.py`、`toolbox.py`、`registry.py` | Agent 工具定义、处理函数及注册组合 |
+| `agents/` | `research_audit_agent.py`、`optimization.py`、各单 Agent 策略和 `factory.py` | 主研究者与独立审计分别持有会话与工具权限，复用通用运行核心 |
+| `agents/research_audit_prompts.py` | 研究者、审计者、盲审与纠正交接的英文 Prompt | 集中维护提示词内容，使用独立哈希与评测任务说明区分 |
+| `tools/` | 能力组、`study_context.py`、`optimization_toolbox.py`、`registry.py` | Agent 工具定义、处理函数及注册组合 |
 | `domain/` | `contracts.py`、`research.py`、`configuration.py`、`authorization.py` | 任务、计划、实验、结论契约；配置校验和范围授权 |
 | `experiments/` | `adapters.py`、`backend.py`、`workspace.py`、`runner.py`、`remote_runner.py`、`baselines.py`、`diagnostics.py`、`outcomes.py` | 数据/评分适配器、工作区、快照、训练→预测→独立评分、基线验证与指标比较 |
 | `execution/` | `worker.py`、`models.py`、`config.py`、`docker.py`、`coding.py`、`locking.py`、`ssh.py`、`remote_agent.py`、`watchdog.py` | 执行类型、Worker、SSH 传输、远端监督、Docker、编码容器和锁 |
@@ -71,24 +72,27 @@
 | `tools/literature.py` | `search_literature`、`fetch_literature` |
 | `tools/remote.py` | `upload`、`download`、`run_remote`、`job_status`、`tail_log`、`gpu_status`、`stop_job` |
 | `tools/connectivity.py` | 启动兼容性探针 `startup_check`，不作为实验能力开放 |
-| `tools/role_results.py` | `role_plan`、`role_review` 的数据输出 schema，不派发业务操作 |
+| `tools/audit.py` | 审计者专用只读证据快照和 `submit_audit` 数据协议，不持有研究工具 |
 
 工具支持层：
 
 - `contracts.py`、`base.py`：工具契约、结构化错误、函数适配器。
 - `registry.py`：工具注册、组合及调用。
 - `catalog.py`：能力目录，以实际工具箱的 `specs` 判断本次可调用能力。
-- `group.py`：能力组注册及共享上下文访问。
-- `context.py`：`StudyContext` 保存阶段、计划、预算计数、实验记录和恢复状态。
-- `toolbox.py`：`OptimizationToolbox` 组合能力组，不再集中实现所有业务方法。
+- `citation_validation.py`：宿主校验已观测 JSON 的结构化引用，不是模型可调用工具。
+- `tool_group.py`：能力组注册及共享上下文访问。
+- `study_context.py`：`StudyContext` 保存阶段、计划、预算计数、实验记录和恢复状态。
+- `optimization_toolbox.py`：`OptimizationToolbox` 组合能力组，不再集中实现所有业务方法。
 
-默认 `RecLabToolbox` 仍只开放六个证据工具。`OptimizationToolbox` 在配置可信 runner 后注册训练工具，挂载知识和文献服务后注册对应工具；协调器按阶段继续限制范围。SSH 工具由宿主配置，与 `execution/ssh.py` 的传输实现分开。
+默认 `EvidenceToolbox` 仍只开放六个证据工具。`OptimizationToolbox` 在配置可信 runner 后注册训练工具，挂载知识和文献服务后注册对应工具；协调器按阶段继续限制范围。SSH 工具由宿主配置，与 `execution/ssh.py` 的传输实现分开。
+
+完整分类与命名约定见 [tools 目录说明](../reclab_agent/tools/README.md)。
 
 编码对照沿用现有层级：`cli/evaluate.py → evaluation/coding.py → tools/coding.py → execution/coding.py`。任务和冻结记录在 `tasks/coding*.json`；执行层只运行固定 CPU 容器驱动，独立评分器保留隐藏答案，候选只能编辑工作区的 `src/solution.py`。它不增加另一套研究流程。
 
 ## 调整代码时应放在哪里
 
-- 新增 Agent 能力：在 `tools/` 对应能力组添加 schema 和处理函数，再由 `toolbox.py` 注册；阶段权限调整放在 `workflow/`。
+- 新增 Agent 能力：在 `tools/` 对应能力组添加 schema 和处理函数，再由 `optimization_toolbox.py` 注册；阶段权限调整放在 `workflow/`。
 - 更改研究顺序或停止规则：修改 `workflow/`；启动装配修改 `application/`。
 - 更改训练、预测、快照或指标比较：修改 `experiments/`；远程通信与进程管理修改 `execution/`。
 - 新增推荐模型：放在 `backends/`，通过任务配置和可信适配器接入。
@@ -100,8 +104,8 @@
 ## Python 导入与命令迁移
 
 ```python
-from reclab_agent.tools.toolbox import OptimizationToolbox
-from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
+from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.workflow.coordinator import StudyCoordinator
 from reclab_agent.domain.research import ResearchPlan, ExperimentRecord
 from reclab_agent.experiments.adapters import TaskAdapterRegistry
@@ -113,3 +117,5 @@ from reclab_agent.memory.project import Project
 原内部 `reclab_agent.research.*` 和平铺业务模块导入需要更新为分层路径，不保留重复实现。原命令 `python -m reclab_agent`、`python -m reclab_agent.start`、`python -m reclab_agent.research_cli` 保留；规范入口分别是 `cli.diagnostics`、`application.start`、`cli.research`。安装后的 `reclab` 和 `reclab-research` 直接指向规范入口。
 
 Worker 与监督脚本入口改为 `python -m reclab_agent.cli.worker`、`python -m reclab_agent.execution.watchdog`，源码和脚本中的模块调用已同步调整。
+
+研究协调器与子 Agent 共享 `core/trace.py` 写入器，事件通过研究会话、父运行、角色、阶段和实验标识关联。模型调用记录耗时与内容哈希；工作台事件视图兼容旧 Trace。具体字段和故障验收边界见[持久化与可观测说明](observability.md)。

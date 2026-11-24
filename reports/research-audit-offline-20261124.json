@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-24",
+  "kind": "research_audit_offline_acceptance",
+  "mode": "research_audit",
+  "status": "passed",
+  "environment": "Existing WSL Python environment, fresh temporary source copy",
+  "main_tests": {"total": 527, "passed": 519, "skipped": 8, "failed": 0},
+  "strategy_tests": {"total": 37, "passed": 37, "failed": 0},
+  "package": {"syntax_compiled": 109, "missing_package_files": [], "web_assets_in_wheel": true},
+  "checks": [
+    "Researcher and auditor have separate model inputs and run IDs under one task ID",
+    "Auditor sees frozen host observations before receiving the research claim",
+    "Audit tools cannot edit, train or read arbitrary filesystem paths",
+    "Submission is parsed as data, never dispatched as a business action",
+    "Failed provider attempts remain reserved across resume",
+    "Completed checkpoints are idempotent and reject changed scope or evidence",
+    "Ambiguous tool mutation requires reconciliation without automatic replay",
+    "Rejected or invalid audit cannot pass diagnostic grading or retain a research candidate",
+    "Audit rejection is visible in user reports",
+    "README and documentation have no broken local links",
+    "Frozen diagnostic and coding manifests remain byte-identical to HEAD"
+  ],
+  "retrieval_protocol": "research_audit_v1; updated role document and hashes only; historical retrieval scores do not describe this corpus",
+  "model_api_requests": 0,
+  "gpu_jobs": 0,
+  "limitations": [
+    "Offline scripted models verify contracts and isolation, not real-model audit accuracy",
+    "Auditor checks captured observations and cannot independently inspect omitted artifacts",
+    "Context and tool capability isolation share one host process",
+    "No claim of improvement over a single agent or of complete prompt-injection resistance"
+  ]
+}

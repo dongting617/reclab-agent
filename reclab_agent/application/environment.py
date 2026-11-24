@@ -7,7 +7,7 @@ import re
 import subprocess
 import sys
 from reclab_agent.infrastructure.files import read_regular_file
-from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.execution.ssh import SSHConnection
 from reclab_agent.domain.configuration import read_json_strict
 
@@ -91,7 +91,7 @@ def _windows_command_runner(argv, **kwargs):
     return subprocess.run(argv, **kwargs)
 
 
-def build_remote_tools(config, *, windows_ssh=False) -> RemoteTools | None:
+def build_remote_tools(config, *, windows_ssh=False) -> RemoteToolbox | None:
     """Bind trusted transfer roots without connecting to SSH or reading keys."""
     if config.execution_backend == "docker":
         return None
@@ -117,7 +117,7 @@ def build_remote_tools(config, *, windows_ssh=False) -> RemoteTools | None:
         runner = _windows_command_runner
     else:
         connection = SSHConnection.from_json(config.execution_connection_path)
-    return RemoteTools(connection, upload_roots={
+    return RemoteToolbox(connection, upload_roots={
         "source": config.output_directory / "snapshots",
         "public": config.dataset_directory / "public",
     }, download_root=config.output_directory, command_runner=runner,

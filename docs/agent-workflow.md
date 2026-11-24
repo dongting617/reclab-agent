@@ -34,7 +34,7 @@
 
 ## 三、工具目录
 
-能力目录由 `reclab_agent.tools.tool_catalog()` 提供，条目包含 `name`、`group`、`availability` 和 `responsibility`。`available` 表示当前已注册，`planned` 表示待接入。目录不是执行注册表，只有 `RecLabToolbox.specs` 中的工具会被转换成模型函数定义。
+能力目录由 `reclab_agent.tools.tool_catalog()` 提供，条目包含 `name`、`group`、`availability` 和 `responsibility`。`available` 表示当前已注册，`planned` 表示待接入。目录不是执行注册表，只有 `EvidenceToolbox.specs` 中的工具会被转换成模型函数定义。
 
 | 分组 | 工具 | 状态与职责 |
 |---|---|---|

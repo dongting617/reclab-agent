@@ -16,7 +16,7 @@ from reclab_agent.infrastructure.files import atomic_write, confined_path, read_
 _STATUS = {"completed": "已结束", "incomplete": "已结束，结果不完整", "failed": "执行失败",
            "cancelled": "已取消", "running": "进行中"}
 _MODE = {"single": "ReAct", "react": "ReAct", "plan_execute": "Plan and Execute",
-         "team": "Planner–Executor–Reviewer",
+         "research_audit": "主研究者 + 独立审计",
          "reviewer": "Reflection", "reflection": "Reflection", "strategy_comparison": "模式对比实验"}
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -132,6 +132,7 @@ def _entry(value, root, destination, metrics):
     result = {"id": _text(record.get("candidate_id"), 160),
               "experiment_id": _text(record.get("experiment_id"), 160),
               "record": record, "metrics": None, "verified": False, "eligible": row.get("eligible", True),
+              "audit_blocked": row.get("audit_blocked", False),
               "warnings": [], "changes": [], "links": []}
     supplied = row.get("metrics")
     # Record-only entries intentionally have no scores, including after an
@@ -203,7 +204,7 @@ def _group(name, entries, baseline, primary, guards, rounds, usage, calls, token
         entry["relative"] = {key: _relative(entry["metrics"][key], base_metrics[key]) for key in entry["metrics"]}
         entry["guardrail"] = all(entry["metrics"][key] >= base_metrics[key] for key in guards)
         if not entry.get("eligible", True):
-            entry["decision"] = "必需过程指标缺失、未达标或定义不可比，证据不足"
+            entry["decision"] = "独立审计未通过或未完成" if entry.get("audit_blocked") else "必需过程指标缺失、未达标或定义不可比，证据不足"
             entry["warnings"].append(entry["decision"])
         elif not entry["guardrail"]:
             entry["decision"] = "保护指标未达标"
@@ -422,6 +423,8 @@ def build_report_view(report, *, output_directory=None, context=None):
     audit_notes = [_text(item.get("finding"), 2000) for item in report.get("model_implementation_audit_zh", [])
                    if isinstance(item, dict) and item.get("finding")]
     audit_notes += ["假设与风险：" + json.dumps(h, ensure_ascii=False)[:2000] for h in report.get("hypotheses", [])]
+    audit_notes += ["独立审计 " + _text(candidate, 128) + "：" + json.dumps(value, ensure_ascii=False)[:4000]
+                    for candidate, value in report.get("audits", {}).items()]
     audit_notes += ["过程指标：" + json.dumps(e["process_metrics"], ensure_ascii=False)[:2000]
                     for e in report.get("experiments", []) if e.get("process_metrics")]
     diagnostic = report.get("post_experiment_numerical_diagnostic") or {}

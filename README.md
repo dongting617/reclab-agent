@@ -36,6 +36,8 @@ python -m reclab_agent.cli.web
 - 登记任务并查看等待配置状态；用幂等键避免重复提交。
 - 按事件序号重连，取消尚未执行的等待任务。
 
+新运行的 Trace 包含 UTC 时间、递增序号、研究会话／父运行、阶段、角色和可用的实验 ID；Agent 会话内模型请求记录请求 ID、耗时、错误类别、模型名称及 Prompt 内容哈希。已通过子进程强制退出后的额度保留与工具不重放检查，详见[可观测与恢复边界](docs/observability.md)。
+
 打开页面不会启动训练。当前 Web 默认不装配真实执行器；实际优化从 CLI 启动，工作台读取相同会话。运行中的远程作业需要执行端确认停止，不能仅在页面上标成已取消。
 
 命令行查看同一份状态：
@@ -63,9 +65,11 @@ Linux/WSL 可用 `python -m reclab_agent.start --help` 查看启动参数。默�
 | `configs/beauty-sasrec-task.json` | 模型、数据、验证指标、可修改文件和总预算 |
 | `.reclab/agent.env` | 模型 API 配置，仅保存在本地 |
 | `configs/autodl-ssh.json` | SSH 连接，参考同目录 example 文件 |
-| 任务配置的 `task.mode` | `single`、`plan_execute`、`reviewer` 或 `team` |
+| 任务配置的 `task.mode` | `single`、`plan_execute`、`reviewer` 或 `research_audit` |
 
-`team` 是 Planner–Executor–Reviewer 协作：规划和复核只能提交结构化数据，不能执行业务工具；执行角色沿用批准范围，三者共享预算，最多修订一次。角色进度可持久恢复；工具操作结果不明时先要求核验，不自动重放。
+`research_audit` 为“主研究者 + 独立审计”：两者隔离会话与工具权限，审计者只读冻结证据，先独立分析再核查研究结论。请求预算共享且可恢复；未通过审计的候选不能接受。默认仍用 `single`，详见[独立审计说明](docs/research-audit.md)。
+
+`reviewer` 是原有单 Agent 自评策略的配置名，不是独立审计模式。切换协作模式需显式设置 `research_audit`。
 
 每次研究保存源码快照、实验记录和 `report.json`、`report.md`、`report.html`。失败和证据不足也保留报告。恢复、基线复用与项目管理详见[使用说明](docs/research-usage.md)。
 
@@ -101,7 +105,7 @@ python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/d
 python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-frozen.json --output reports/diagnostic-frozen-v2-reference.json
 ```
 
-显式选择 `--mode react` 或 `--mode team` 并配置 `--model`、API Key 后，才运行真实 Agent 评测并产生 API 费用。`--max-requests` 约束整批请求次数，重试和失败请求同样占额度；相同输出文件用于恢复，不重跑已记录的任务。
+显式选择 `--mode react` 或 `--mode research_audit` 并配置 `--model`、API Key 后，才运行真实 Agent 评测并产生 API 费用。`--max-requests` 约束整批请求次数，重试和失败请求同样占额度；相同输出文件用于恢复，不重跑已记录的任务。
 
 ```bash
 python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
@@ -109,11 +113,10 @@ python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
 
 费用只有在显式提供价格表后才估算；缺失 usage 不算免费，估算不等于服务商账单。详细命令见[本地功能与验收](docs/non-gpu-work.md)。
 
-编码对照入口为 `python -m reclab_agent.cli.evaluate coding --help`，需要 Linux/WSL 的本地 Docker 和已核验镜像；默认 `reference` 不调用模型。选择 `react` 或 `team` 才会产生 API 请求，候选代码始终在容器中执行。
+编码对照入口为 `python -m reclab_agent.cli.evaluate coding --help`，需要 Linux/WSL 的本地 Docker 和已核验镜像；默认 `reference` 不调用模型。选择 `react` 或 `research_audit` 才会产生 API 请求，候选代码始终在容器中执行。
 
 ## 5. 测试与当前进度
 
-2026-11-24：GPU 阶段已归档并推送（`73e1b76`），非 GPU 正式对照也已结束。SASRec 四阶段已实际运行，dropout 候选的两项验证指标均下降，保留原基线；GRU 已完成共享接口的基线训练和独立评分，两份未通过 Smoke Test 的模型候选也保留失败记录。详见 [GPU 验收报告](reports/gpu-acceptance-20261123.md)与[非 GPU 对照报告](reports/non-gpu-acceptance-20261124.md)。
 
 ```bash
 python -m unittest discover -s tests -q
@@ -126,23 +129,24 @@ python -m reclab_agent
 | 本轮工作 | 实际状态 |
 |---|---|
 | Web 页面、CLI 共用状态、报告和事件 | 已实现，HTTP 与浏览器交互验收通过 |
-| 多角色协作、共享预算与角色恢复 | 已实现并通过离线测试 |
 | CPU 文本模型适配、四种检索模式和评测 | 真实 CPU 模型已运行；本次小语料重排变差，默认保留 BM25 |
-| 30+30 场景、冻结校验、诊断评测与成本统计 | 开发集：单 Agent 28/30、多角色 27/30；冻结集：26/30、23/30，多角色未达 80% 目标 |
-| 四类真实编码对照 | 已冻结任务、补丁工具和 CPU Docker 检查；参考配方 8/8，单 Agent 3/8，多角色 6/8，保留失败 |
 | Tavily 文献搜索与正文提取 | 真实搜索、提取与缓存复用通过，共 2 次网络请求 |
+| 主研究者与独立审计 | 固定快照开发集均覆盖 30 例：单 Agent 28/30（64 次请求），多 Agent 27/30（124 次请求）。补测保持数据、Prompt、评分不变，未重跑单 Agent 或已尝试案例；失败均为服务错误或超时，不能据此证明审计收益。见[完整报告](reports/paired-role-prompts-combined-20261124.md)；默认保持单 Agent |
 | 真实 GPU 训练、验证集评分与 GRU 迁移 | 基线和 dropout 候选均有真实分数；候选未改善，保留基线 |
 | 远程作业恢复 | 训练进程保留、同一作业复用已实测；首次恢复需人工核验，相关路径已修复并保留失败记录 |
-| 完整回归 | 512 项主测试（504 通过、8 项环境跳过）及 37 项策略测试通过；109 个 Python 文件和 Web 资源已验证打包 |
+| 回归验证 | 538 项主测试（530 通过、8 项环境跳过）、37 项策略测试通过；语法、CLI 和打包检查通过，见[角色 Prompt 离线验收](reports/role-prompts-offline-20261124.json) |
 
-本轮合计预留 478/640 次模型请求，4 次缺少 usage，未核实账单；保留单 Agent 与 BM25 默认。[工作台演示视频](reports/workbench-demo-20261124.mp4)使用实际界面截图合成，展示真实会话，不是连续录屏。编码候选只在本地 CPU Docker 中执行，这四类合成小任务不代表生产仓库修复能力，部分输入字段说明也有歧义。仍待验证云端 Docker/GPU 隔离、所有中断点自动恢复和连续录屏；单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
+本次真实 API 评测不使用远程 GPU，保留单 Agent 与 BM25 默认。[工作台演示视频](reports/workbench-demo-20261124.mp4)由实际界面截图合成，不是连续录屏。编码候选只在本地 CPU Docker 中执行，合成小任务不代表生产仓库修复能力。仍待验证云端 Docker/GPU 隔离、所有中断点自动恢复和连续录屏；单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
 
 ## 代码与文档
 
 主调用关系：`cli → application → workflow → tools → experiments / execution / memory`。通用模型交互位于 `core/`，策略位于 `agents/`；数据、评分、报告和外部服务各自独立。所有 Agent 工具的参数定义与处理函数按能力放在 `tools/`。
 
 - [项目架构与逐文件导航](docs/architecture.md)
+- [工具目录：业务工具、工具箱与支持代码](reclab_agent/tools/README.md)
+- [四天面试准备与代码走读](docs/interview-preparation.md)
 - [功能需求](docs/plan.md)与[实施方案](docs/implementation-plan.md)
 - [本地功能与验收](docs/non-gpu-work.md)
 - [持续优化记录](docs/optimization-log.md)
+- [2026-11-24 版本修改说明](docs/change-summary-20261124.md)
 - [最初八周计划](docs/eight-week-plan.md)

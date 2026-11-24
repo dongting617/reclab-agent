@@ -6,12 +6,14 @@ import math
 from pathlib import Path
 import time
 from reclab_agent.agents import create_agent
+from reclab_agent.agents.research_audit_prompts import ROLE_PROMPT_HASH
 from reclab_agent.domain.configuration import read_json_strict
 from reclab_agent.domain.contracts import canonical_json,content_hash,identifier
 from reclab_agent.experiments.workspace import Workspace
 from reclab_agent.infrastructure.files import atomic_write,confined_path
 from reclab_agent.tools.coding import CodingToolbox
 from reclab_agent.evaluation.costs import summarize_usage
+from reclab_agent.tools.audit import AUDIT_PROTOCOL_VERSION
 
 PROMPT='Read src/solution.py, implement solve(case) for the specification, validate syntax and use the public container checks. Only this source file is editable. Return a concise conclusion; hidden cases and reference solutions are unavailable. '
 
@@ -38,11 +40,11 @@ def run_coding_suite(manifest_path,output,*,executor,mode='reference',backend=No
     digest=content_hash(manifest)
     if frozen['manifest']!=path.name or frozen['sha256']!=digest:
         raise ValueError('coding manifest changed after freezing')
-    if mode not in {'reference','react','team'} or type(repetitions) is not int or not 1<=repetitions<=2:
-        raise ValueError('coding evaluation supports reference/react/team and one or two trials')
+    if mode not in {'reference','react','research_audit'} or type(repetitions) is not int or not 1<=repetitions<=2:
+        raise ValueError('coding evaluation supports reference/react/research_audit and one or two trials')
     if type(max_steps) is not int or not 1<=max_steps<=16 or type(max_requests) is not int or max_requests<1:
         raise ValueError('coding request limits must be positive and bounded')
-    identity=content_hash({'manifest':digest,'mode':mode,'model':getattr(backend,'model',None),
+    identity=content_hash({'manifest':digest,'mode':mode,'role_prompt_hash':ROLE_PROMPT_HASH if mode=='research_audit' else None,'agent_protocol':AUDIT_PROTOCOL_VERSION if mode=='research_audit' else None,'model':getattr(backend,'model',None),
         'image':executor.image,'repetitions':repetitions,'max_steps':max_steps,'max_requests':max_requests,
         'prompt':PROMPT,'policy':'completed_changed_source_and_hidden_checks_v1'})
     report={'kind':'isolated_functional_coding','identity':identity,'manifest_hash':digest,'mode':mode,

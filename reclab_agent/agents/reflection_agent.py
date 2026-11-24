@@ -26,7 +26,7 @@ class ReflectionAgent(Agent):
                                   review_approved=approved,
                                   reflection_limit_reached=limit_reached)
 
-        status, draft = session.run_tools(phase="draft")
+        status, draft = session.run_loop(phase="draft")
         if status != "completed":
             return finish(status, draft)
 
@@ -67,7 +67,7 @@ class ReflectionAgent(Agent):
                 "Use tools when new evidence is needed. Keep the same task and permissions. "
                 "Provide a complete revised answer, retaining supported evidence and uncertainty."
             )})
-            status, revised = session.run_tools(phase=f"refine:{iteration}")
+            status, revised = session.run_loop(phase=f"refine:{iteration}")
             if status != "completed":
                 return finish(status, draft)
             draft = revised

@@ -7,9 +7,9 @@ from reclab_agent.execution.config import load_policy
 from reclab_agent.core import OpenAIResponsesBackend
 from reclab_agent.execution.worker import DockerWorker, WorkerPolicy
 from reclab_agent.infrastructure.files import read_regular_file
-from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.execution.ssh import SSHConnection
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 from reclab_agent.experiments.workspace import create_workspace
 from reclab_agent.domain.configuration import (
     TaskConfiguration,
@@ -22,7 +22,7 @@ from reclab_agent.application.inspection import inspect_task
 from reclab_agent.agents.optimization import OptimizationAgent
 from reclab_agent.experiments.runner import ExperimentRunner
 from reclab_agent.experiments.remote_runner import RemoteExperimentRunner
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 
 
 def bind_task_tools(configuration: TaskConfiguration | str | Path, *, plan: ResearchPlan,
@@ -48,7 +48,7 @@ def bind_task_tools(configuration: TaskConfiguration | str | Path, *, plan: Rese
             if config.execution_connection_path is None:
                 raise ValueError("configure an SSH connection before binding the experiment tool")
             connection = SSHConnection.from_json(config.execution_connection_path)
-            remote_tools = RemoteTools(connection, upload_roots={
+            remote_tools = RemoteToolbox(connection, upload_roots={
                 "source": config.output_directory / "snapshots", "public": config.dataset_directory / "public",
             }, download_root=config.output_directory)
         runner = RemoteExperimentRunner(config, plan, remote_tools, registry=registry)
@@ -93,7 +93,7 @@ def create_task_agent(configuration: TaskConfiguration | str | Path, *, plan: Re
     selected = read_json_strict(config.model_config_path, max_bytes=1_000_000)["model"]
     return OptimizationAgent(
         research, backend, target_model=selected["class"],
-        evidence=RecLabToolbox(config.output_directory),
+        evidence=EvidenceToolbox(config.output_directory),
         max_steps=config.task.budget.max_model_turns,
         trace_path=config.output_directory / "traces" / f"agent-{uuid.uuid4().hex}.jsonl",
     )

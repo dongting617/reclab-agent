@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.execution.ssh import SSHConnection
 
 
@@ -122,7 +122,7 @@ class RemoteToolsTests(unittest.TestCase):
         self.connection = SSHConnection("gpu.example.com", 42052, "root", self.key,
                                         "/gpu/task", "/gpu/bin/python", self.known)
         self.runner = FakeSSH()
-        self.tools = RemoteTools(self.connection, upload_roots={"source": self.source},
+        self.tools = RemoteToolbox(self.connection, upload_roots={"source": self.source},
                                  download_root=self.root / "downloads", command_runner=self.runner,
                                  max_transfer_bytes=4096, max_timeout_seconds=600)
 
@@ -297,7 +297,7 @@ class RemoteToolsTests(unittest.TestCase):
 
     def test_registration_accepts_future_snapshot_root_but_rejects_symlink_components(self):
         future = self.root / "future/snapshots"
-        tools = RemoteTools(self.connection, upload_roots={"source": future},
+        tools = RemoteToolbox(self.connection, upload_roots={"source": future},
                             download_root=self.root / "downloads", command_runner=self.runner)
         self.assertEqual(tools.upload_roots["source"], future)
         self.assertTrue(future.is_dir())
@@ -385,7 +385,7 @@ class BootstrapFilesystemTests(unittest.TestCase):
         self.runner = LocalBootstrapSSH()
         connection = SSHConnection("gpu.example.com", 42052, "root", self.root / "unused-key",
                                    self.remote.as_posix(), "/registered/python")
-        self.tools = RemoteTools(connection, upload_roots={}, download_root=self.root / "download",
+        self.tools = RemoteToolbox(connection, upload_roots={}, download_root=self.root / "download",
                                  command_runner=self.runner)
 
     def test_bootstrap_checks_and_atomically_installs_exact_bytes(self):

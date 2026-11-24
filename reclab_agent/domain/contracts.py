@@ -61,7 +61,7 @@ class TaskSpec:
             identifier(value)
         if not isinstance(self.question, str) or not self.question.strip():
             raise ValueError("question cannot be empty")
-        if self.mode not in {"single", "plan_execute", "reviewer", "team"}:
+        if self.mode not in {"single", "plan_execute", "reviewer", "research_audit"}:
             raise ValueError("unsupported agent mode")
         if self.schema_version != 1:
             raise ValueError("unsupported task schema_version")

@@ -7,7 +7,7 @@ import time
 from reclab_agent.execution.locking import job_lock
 from reclab_agent.domain.contracts import content_hash
 from reclab_agent.infrastructure.files import confined_path
-from reclab_agent.tools.remote import RemoteTools
+from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.tools.contracts import ToolError
 from reclab_agent.domain.configuration import read_json_strict
 from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
@@ -22,7 +22,7 @@ class RemoteExperimentRunner(ExperimentRunner):
     The server helper enforces each phase's timeout even if this client exits.
     """
 
-    def __init__(self, configuration, plan, tools: RemoteTools, *, registry=None,
+    def __init__(self, configuration, plan, tools: RemoteToolbox, *, registry=None,
                  clock=time.monotonic, sleep=time.sleep, poll_interval=2):
         self._initialize(configuration, plan, registry, clock, sleep, poll_interval)
         if configuration.execution_backend != "ssh_tmux":

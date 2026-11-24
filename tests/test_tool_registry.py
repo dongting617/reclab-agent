@@ -2,7 +2,7 @@
 from pathlib import Path
 import unittest
 from reclab_agent.core.session import function_tools
-from reclab_agent.tools import FunctionTool, RecLabToolbox, Tool, ToolError, ToolRegistry, ToolSpec
+from reclab_agent.tools import FunctionTool, EvidenceToolbox, Tool, ToolError, ToolRegistry, ToolSpec
 
 
 ROOT = Path(__file__).absolute().parents[1]
@@ -17,7 +17,7 @@ def spec(name="increment"):
 
 class ToolRegistryTests(unittest.TestCase):
     def test_combines_existing_evidence_and_new_function(self):
-        evidence = RecLabToolbox(ROOT)
+        evidence = EvidenceToolbox(ROOT)
         registry = ToolRegistry().include(evidence)
         registry.register_function(spec(), lambda value: {"value": value + 1})
         self.assertEqual(len(registry.specs), 7)
@@ -50,7 +50,7 @@ class ToolRegistryTests(unittest.TestCase):
     def test_include_conflict_is_atomic_and_keeps_original_envelopes(self):
         registry = ToolRegistry().register_function(spec("inspect_artifact"), lambda value: {})
         with self.assertRaises(ValueError):
-            registry.include(RecLabToolbox(ROOT))
+            registry.include(EvidenceToolbox(ROOT))
         self.assertEqual([item.name for item in registry.specs], ["inspect_artifact"])
 
         class ExistingToolbox:

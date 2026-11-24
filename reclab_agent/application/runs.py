@@ -8,6 +8,7 @@ from reclab_agent.domain.configuration import load_task_configuration, read_json
 from reclab_agent.domain.contracts import identifier
 from reclab_agent.infrastructure.files import confined_path, read_regular_file
 from reclab_agent.memory.storage import RunStore
+from reclab_agent.core.trace import event_record
 
 
 class RunCatalog:
@@ -81,6 +82,7 @@ class RunCatalog:
                 if seq == len(lines) and not line.endswith("\n"):
                     break  # A writer may still be appending the final event.
                 raise ValueError("invalid saved trace event") from None
+            payload = event_record({"study_id": path.name, **payload}, seq, payload.get("timestamp"))
             rows.append({"seq": seq, "run_id": run_id, "event": payload.get("event", "trace"), "payload": payload})
         return rows
 
@@ -107,14 +109,14 @@ def run_evidence_demo(root):
     """Exercise local evidence tools and persistence, explicitly without an LLM."""
     from reclab_agent.domain.contracts import TaskSpec
     from reclab_agent.evaluation.benchmark import load_tasks, run_reference_suite
-    from reclab_agent.tools import RecLabToolbox
+    from reclab_agent.tools import EvidenceToolbox
     root = Path(root).absolute()
     catalog = RunCatalog(root)
     task = TaskSpec("evidence-demo", "本地证据工具演示", "bundled-evidence", "reference")
     run_id = catalog.store.create(task)
     catalog.store.update(run_id, "running", {"kind": "evidence_reference", "llm_connected": False})
     try:
-        report = run_reference_suite(RecLabToolbox(root), load_tasks(root / "tasks/dev.json"))
+        report = run_reference_suite(EvidenceToolbox(root), load_tasks(root / "tasks/dev.json"))
         report.update(kind="evidence_reference", llm_connected=False, gpu_jobs=0,
                       quality_claim="工具参考调用检查，不代表端到端 Agent 或模型收益。")
         for row in report["results"]:

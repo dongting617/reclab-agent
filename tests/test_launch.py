@@ -10,7 +10,7 @@ from reclab_agent.domain.contracts import canonical_json, content_hash
 from reclab_agent.core import ModelTurn
 import reclab_agent.application.launch as launch
 from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 from reclab_agent.experiments.workspace import create_workspace
 from tests import test_experiment_runner as fixtures
 

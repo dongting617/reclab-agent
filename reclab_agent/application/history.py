@@ -21,6 +21,8 @@ def archive_run(project, scope, config, plan, inspection, research, report):
             entry = scored_record(output, value, plan)
         except (OSError, ValueError, KeyError):
             entry = {"record": value, "verification": "unverified"}
+        if config.task.mode == "research_audit" and value["candidate_id"] != plan.baseline_id:
+            entry["audit"] = report.get("audits", {}).get(value["candidate_id"], {"status": "not_completed"})
         entry["git_commit"] = research.git_commits.get(value["experiment_id"])
         manifest = checkpoint_manifest(output, entry)
         verified = "metrics" in entry and bool(manifest) and any(p.endswith((".pt", ".pth")) for p in manifest)

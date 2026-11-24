@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 from typing import Any, Callable
 from reclab_agent.tools.contracts import ToolError, ToolSpec
@@ -18,6 +19,8 @@ def _sha256(path: Path) -> str:
 
 
 def _decode_pointer_token(token: str) -> str:
+    if re.search(r"~(?![01])", token):
+        raise ToolError("INVALID_POINTER", "JSON pointer escapes must be '~0' or '~1'")
     return token.replace("~1", "/").replace("~0", "~")
 
 
@@ -35,10 +38,9 @@ def json_pointer(document: Any, pointer: str) -> Any:
                 raise ToolError("POINTER_NOT_FOUND", f"Object key not found: {token}")
             current = current[token]
         elif isinstance(current, list):
-            try:
-                index = int(token)
-            except ValueError as error:
-                raise ToolError("INVALID_POINTER", f"List index is not an integer: {token}") from error
+            if not re.fullmatch(r"0|[1-9][0-9]*", token):
+                raise ToolError("INVALID_POINTER", f"Invalid array index: {token}")
+            index = int(token)
             if index < 0 or index >= len(current):
                 raise ToolError("POINTER_NOT_FOUND", f"List index out of range: {index}")
             current = current[index]
@@ -47,8 +49,8 @@ def json_pointer(document: Any, pointer: str) -> Any:
     return current
 
 
-class RecLabToolbox:
-    """A path-confined collection of tools for the RecLab benchmark."""
+class EvidenceToolbox:
+    """Read and compare confined evidence artifacts, including bundled diagnostics."""
 
     GAP_REPORT = "evidence/g2-h128-gap-vs-b1-full-valid-20261007.json"
     FREQUENCY_AUDIT = "evidence/frequency-ce-completion-audit-20261008.json"

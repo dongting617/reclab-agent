@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-24",
+  "kind": "audit_protocol_and_citation_repair_offline",
+  "audit_protocol_version": 2,
+  "diagnostic_failure_policy": "separate_decision_and_citation_validation_v3",
+  "status": "passed",
+  "main_tests": {"total": 538, "passed": 530, "skipped": 8, "failed": 0},
+  "strategy_tests": {"total": 37, "passed": 37, "failed": 0},
+  "package": {"syntax_compiled": 110, "missing_package_files": [], "web_assets_in_wheel": true},
+  "checks": [
+    "Replay two real malformed v1 submit_audit argument strings without silently rewriting them",
+    "One audit correction round at most, within the same durable request allowance",
+    "Function-call corrections receive matching call_id error outputs and never execute business tools",
+    "Validate JSON citations only against observed JSON values or subtrees, without filesystem access",
+    "Distinguish JSON Pointer root, empty object keys, escaped tokens and strict array indexes",
+    "Reject unknown paths, unavailable pointers and conflicting observation values",
+    "Citation correction has no tools and cannot change other claim fields",
+    "Keep citation check results out of the independent blind assessment context",
+    "Preserve request and correction counts across both correction timeout recovery paths",
+    "Keep decision correctness independent from citation validity and coverage"
+  ],
+  "historical_report_pass_counts_preserved": true,
+  "historical_report_replay": [
+    {"split": "dev", "mode": "react", "original_passed": 29, "replayed_passed": 29},
+    {"split": "dev", "mode": "research_audit", "original_passed": 20, "replayed_passed": 20},
+    {"split": "frozen", "mode": "react", "original_passed": 12, "replayed_passed": 12},
+    {"split": "frozen", "mode": "research_audit", "original_passed": 0, "replayed_passed": 0}
+  ],
+  "historical_replay_note": "Checks original end-to-end pass flags only, without modifying any historical report. Frozen audit had no API attempts; its zero is not a model score.",
+  "model_api_requests": 0,
+  "gpu_jobs": 0,
+  "limitations": [
+    "Scripted resubmission tests validate the mechanism, not future model correction success",
+    "Citation location does not establish scientific support or correct experimental reasoning",
+    "Plain-text answers are outside the structured JSON citation contract",
+    "Real-model v2 performance still requires a separate bounded evaluation with new report names"
+  ]
+}

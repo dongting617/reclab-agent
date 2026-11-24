@@ -2,12 +2,10 @@
 
 更新日期：2026-11-23。
 
-RecLab 已具备推荐模型研究的四阶段流程、工具权限控制、独立评分、实验账本、多角色协作、任务恢复、经验检索和本地 Web 工作台。对照 DeepResearch Harness，主要缺口集中在完成质量门禁、证据上下文工程、统一运行控制、长会话记忆和受控 Skill 学习。现阶段更值得优先补齐这些运行能力；GraphRAG 和通用深度研究产品形态可以按实际需求引入。
 
 ## 对照范围与判断口径
 
 - 参考仓库：[SichengLong26/deepresearch_agent_harness](https://github.com/SichengLong26/deepresearch_agent_harness)，本次读取的提交为 [`4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0`](https://github.com/SichengLong26/deepresearch_agent_harness/tree/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0)。以下远端链接均固定到该提交。
-- 当前仓库：`reclab-agent`，HEAD 为 `1d01779655d6573e7f6a218a92dbb0e9d3b04d3f`，**判断包含当前工作区已修改及未跟踪的源码**，尤其是 `team_agent.py`、`application/runs.py`、Web 静态资源和新增评测代码，不能只用 HEAD 或旧计划判断状态。
 - “未实现”：在本次检查的源码、依赖、入口及测试中未找到对应能力；“部分实现”：有相关机制，但未形成参考仓库的完整运行闭环；“待验收”：已有实现，仍缺真实环境结果。
 - 这是源码层面的能力对照。本次没有运行两套系统的模型、Tavily、Neo4j 或 GPU 任务；参考实现有代码和测试不代表其所有能力已在当前环境验证。文档中的优先级和验收条件是面向 RecLab 的建议。
 
@@ -18,8 +16,7 @@ RecLab 已具备推荐模型研究的四阶段流程、工具权限控制、独�
 | 能力 | 当前代码依据 | 仍需区分的边界 |
 |---|---|---|
 | 四阶段研究与实验闭环 | [StudyCoordinator](../reclab_agent/workflow/coordinator.py)、[业务工具](../reclab_agent/tools/) | 推荐实验流程已经存在，通用研究 DAG 另见差距 7 |
-| 多角色协作 | [TeamAgent](../reclab_agent/agents/team_agent.py) | Planner、Executor、Reviewer 串行协作，共享上下文和预算，支持角色恢复与一次修订 |
-| 实验及控制器恢复 | [StudyContext](../reclab_agent/tools/context.py)、[启动与恢复](../reclab_agent/application/launch.py)、[进程锁](../reclab_agent/execution/locking.py) | 已有待确认副作用、恢复时核验、预算保留和单控制器限制 |
+| 实验及控制器恢复 | [StudyContext](../reclab_agent/tools/study_context.py)、[启动与恢复](../reclab_agent/application/launch.py)、[进程锁](../reclab_agent/execution/locking.py) | 已有待确认副作用、恢复时核验、预算保留和单控制器限制 |
 | Worker 租约及停止机制 | [Worker](../reclab_agent/execution/worker.py)、[Watchdog](../reclab_agent/execution/watchdog.py)、[远端执行器](../reclab_agent/execution/remote_agent.py) | 不能把“整个项目没有租约或取消”当作缺口；缺的是统一 Run 层控制 |
 | SQLite 与可追溯产物 | [RunStore 与 ArtifactStore](../reclab_agent/memory/storage.py)、[项目账本](../reclab_agent/memory/project.py) | 已有实验身份、哈希、Git 快照、事件和项目经验 |
 | 多种检索及文献工具 | [KnowledgeIndex](../reclab_agent/memory/retrieval.py)、[文本模型](../reclab_agent/integrations/text_models.py)、[Tavily](../reclab_agent/integrations/tavily.py) | BM25、dense、hybrid、reranked 和联网接口均已存在；GraphRAG 不等同于普通向量检索 |
@@ -34,11 +31,11 @@ RecLab 已具备推荐模型研究的四阶段流程、工具权限控制、独�
 
 参考仓库的 [ContractEvaluator](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/harness/contracts.py) 和 [确定性检查器](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/harness/verifiers/deterministic.py) 会在结束前检查来源匹配、最少证据、引用完整性、必需章节、主张支持、报告一致性和来源多样性；提供证据卡覆盖信息时再加入覆盖检查。因此源码中第八项是条件启用，不能把 README 的“8 项”理解为每种工作流都无条件执行八项。
 
-RecLab 已有独立评分、比较资格检查和报告中的评分复核。但 [StudyCoordinator.run](../reclab_agent/workflow/coordinator.py) 最终根据是否有 `comparison` 设置 `completed`；[RunSession](../reclab_agent/core/session.py) 可以在模型返回非空文本后结束；TeamAgent 最后一次复核未通过时也可能返回 `completed`，另用 `review_approved` 表示复核结果。尚未发现统一、持久化、强制执行的完成合同。
+RecLab 已有独立评分、比较资格检查和报告评分复核。研究与审计模式将审计失败候选设为不可接受；但会话完成与研究完成仍是不同概念，尚无覆盖所有任务的统一完成合同。
 
 **需要补齐：** 将“流程执行完毕”和“结论通过验证”分开，保存每项检查的期望值、观察值、原因及证据引用。针对 RecLab，优先检查独立评分完整性、比较条件一致性、保护指标、必要诊断、数值引用及结论一致性，无需照搬来源多样性规则。
 
-**建议验收：** 构造缺评分、引用不存在、诊断缺失及 Reviewer 拒绝的案例，均不能显示为已验证完成，且能查询失败检查。
+**建议验收：** 构造缺评分、引用不存在、诊断缺失及 独立审计拒绝的案例，均不能显示为已验证完成，且能查询失败检查。
 
 ### 2 验证驱动的局部修复与动态重规划
 
@@ -46,7 +43,7 @@ RecLab 已有独立评分、比较资格检查和报告中的评分复核。但 
 
 参考的 [Runtime](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/harness/runtime.py)、[恢复决策](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/harness/recovery.py) 和 [工作流驱动器](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/harness/workflow.py) 区分错误重试、报告修补和证据不足后的 Replan。
 
-RecLab 有模型重试、Reflection、TeamAgent 一次修订和多个候选实验；但四阶段协调器按配置的 `candidate_ids` 顺序执行，没有依据统一验证失败项生成新计划版本、补证任务和受限重规划的通用闭环。
+RecLab 有模型重试、单 Agent 反思及候选实验；独立审计暂不自动触发修改或重训。四阶段协调器按配置候选执行，尚无通用重规划闭环。
 
 **需要补齐：** 报告缺陷只修报告；缺诊断时先尝试从现有产物重算；确需新增实验时检查剩余预算和原授权范围；不可修复时保存明确终止原因。所有修复继续使用原预算。
 
@@ -82,7 +79,7 @@ RecLab 有检索分块、经验笔记和确定性 Markdown/HTML 报告，但未�
 
 参考的 [ContextBuilder](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/context/builder.py) 将输入组织为有预算的上下文块；[ContextCompactor](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/context/compactor.py) 管理长历史摘要。
 
-RecLab 的 [RunSession.inputs](../reclab_agent/core/session.py) 持续追加模型输出和完整工具结果，TeamAgent 共享此历史。工具权限、研究阶段和笔记的未核验标记已存在，但缺少模型调用前统一执行的 token 打包、压缩和上下文来源分类。
+RecLab 的通用会话持续记录模型输出和工具结果；研究者与审计者持有独立会话，通过冻结证据包交接。仍缺少统一 token 打包、压缩和更细的上下文来源管理。
 
 **需要补齐：** 区分系统规则、原任务、已核验测量、外部文献、历史解释和角色建议；为阶段设置输入上限；对旧工具结果保留摘要及原文引用；避免外部材料中的指令改变原任务范围。
 
@@ -106,7 +103,7 @@ RecLab 已有控制器文件锁、Worker 租约与 Watchdog、原子 JSON 状态
 
 参考的 [计划结构](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/agents/multi_agent/core/plan_spec.py) 和 [WorkerCoordinator](https://github.com/SichengLong26/deepresearch_agent_harness/blob/4c98d6e144fde5bc28c821e6ee2c3b980eecc9a0/src/deepresearch_agent/agents/multi_agent/executor/worker_coordinator.py) 支持任务依赖、串并行执行、隔离状态与确定性结果合并；源码支持 sequential/parallel，不能据此声称已支持完整自适应调度。
 
-RecLab 的 [PlanExecuteAgent](../reclab_agent/agents/plan_execute_agent.py) 使用字符串步骤列表，TeamAgent 为串行角色交接；均没有通用任务节点、依赖边、就绪队列与隔离并行合并。
+现有计划执行策略使用字符串步骤列表；研究与审计使用串行独立会话。尚未实现通用依赖图、就绪队列及并行合并。
 
 **需要补齐：** 先将文献检索、源码分析等无写副作用的任务做成依赖图；需要修改模型源码的任务继续串行或使用独立工作区。共享预算下原子预留并发资源。
 

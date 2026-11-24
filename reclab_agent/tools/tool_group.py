@@ -1,4 +1,4 @@
-"""A capability group shares one study context with other groups."""
+"""Tool-group registration and access to shared study context."""
 from reclab_agent.tools.contracts import ToolSpec
 
 class ToolGroup:

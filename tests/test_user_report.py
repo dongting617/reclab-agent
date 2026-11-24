@@ -97,6 +97,17 @@ class UserReportTests(unittest.TestCase):
         return render_markdown(build_report_view(
             report, output_directory=output or self.root, context=context or self.context))
 
+    def test_audit_rejection_is_visible_and_cannot_be_shown_as_improvement(self):
+        self.candidate.update(eligible=False, audit_blocked=True)
+        report = self.report()
+        report["audits"] = {"candidate-safe": {"status": "audit_rejected", "audit_approved": False,
+            "audit": {"verdict": "rejected", "summary": "Missing experimental control"}}}
+        view = build_report_view(report, output_directory=self.root, context=self.context)
+        self.assertFalse(view["improved"])
+        text = render_markdown(view)
+        self.assertIn("独立审计未通过或未完成", text)
+        self.assertIn("Missing experimental control", text)
+
     def write(self, report, *, context=None):
         return write_user_report(self.root, report, context=context or self.context)
 

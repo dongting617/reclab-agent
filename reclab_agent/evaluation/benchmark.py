@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 from reclab_agent.tools.contracts import ToolError
-from reclab_agent.tools.evidence import RecLabToolbox, json_pointer
+from reclab_agent.tools.evidence import EvidenceToolbox, json_pointer
 
 
 def load_tasks(path: str | Path) -> list[dict[str, Any]]:
@@ -47,7 +47,7 @@ def _assert_result(envelope: dict[str, Any], assertion: dict[str, Any]) -> tuple
     return passed, actual
 
 
-def run_reference_suite(toolbox: RecLabToolbox, tasks: list[dict[str, Any]]) -> dict[str, Any]:
+def run_reference_suite(toolbox: EvidenceToolbox, tasks: list[dict[str, Any]]) -> dict[str, Any]:
     results = []
     for task in tasks:
         call = task["reference_call"]

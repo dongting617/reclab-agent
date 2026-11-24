@@ -8,7 +8,7 @@ from reclab_agent.evaluation.traces import replay_trace
 from reclab_agent.agents import create_agent
 from reclab_agent.agents.factory import AGENT_TYPES
 from reclab_agent.core.llm import OpenAIResponsesBackend
-from reclab_agent.tools.evidence import RecLabToolbox
+from reclab_agent.tools.evidence import EvidenceToolbox
 
 
 def main() -> None:
@@ -34,7 +34,7 @@ def main() -> None:
     args = parser.parse_args()
 
     root = Path(os.path.abspath(os.fspath(args.root)))
-    toolbox = RecLabToolbox(root)
+    toolbox = EvidenceToolbox(root)
     if args.ask and args.replay:
         parser.error("--ask and --replay are mutually exclusive")
     if args.ask:
