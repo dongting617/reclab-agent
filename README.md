@@ -1,151 +1,117 @@
 # RecLab Agent
 
-在预算和时间限制内，辅助推荐模型研究：**理解背景 → 提出假设 → 模型实验 → 分析并得出结论**。Agent 选择动作，工具修改登记源码和执行实验，固定评分器从验证集预测重算指标。
+一个面向推荐模型优化的研究 Agent：在固定数据、评估协议与资源预算下，读取源码、提出可检验假设、修改代码、运行实验，并根据独立验证集评分决定保留、否定或补充证据。
 
-默认基线与候选使用同一个随机种子，每个方案训练一次。历史基线可核验时复用，不强制重跑。
+**研究流程：背景 → 假设 → 实验 → 分析。** 默认使用一个固定随机种子；历史基线通过身份与评分核验后可以复用，无需每次重新训练。
 
-**新版研究工作台已接入真实数据：** 首屏展示核心指标提升图和每次刷新最佳的改进，支持实验对比、证据详情、代码差异和事件筛选。评分未核验、条件不可比较或门禁未通过的高分候选不会获得提升标记。见[工作台说明与验收截图](docs/workbench-design.md)；保留的[静态原型](reclab_agent/web/static/prototype.html)全部为示例数据。
+## 核心能力
 
-## 选择使用入口
+- **工具化研究闭环**：源码读写、语法检查、Smoke Test、训练、预测、日志与独立评分由宿主工具执行，模型只能使用当前阶段授权的工具。
+- **主研究者 + 独立审计**：两个会话隔离上下文与权限。审计者只读冻结证据，先独立判断再核查研究结论；审计通过不能替代独立评分。默认仍为单 Agent。
+- **可追溯实验与经验记忆**：源码快照、本地 Git、SQLite 实验账本和 Markdown 经验摘要；默认用 BM25 检索历史经验，数值结论回读原始评分。
+- **研究工作台**：查看真实会话、指标提升图、关键改进、代码差异、评分证据、审计结果和事件流；CLI 与 Web 共用状态。
+- **有界执行与恢复**：记录请求、补丁与训练用量；失败请求保留额度消耗；工具副作用不明时要求核验，不盲目重放。Trace 关联研究、阶段、角色、请求与实验身份。
 
-| 想做什么 | 入口 | 需要远程 GPU |
-|---|---|---|
-| 查看任务、报告、代码改动和事件 | 本地 Web 工作台 | 不需要 |
-| 体验证据工具、运行自动化测试 | 本地演示与测试 | 不需要 |
-| 检索历史经验、查看实验账本 | 项目 CLI | 不需要 |
-| 对比检索、评测诊断决策、统计 token 成本 | 评测 CLI | 不需要；真实文本模型需要本地 CPU 和模型文件 |
-| 自主修改推荐模型并训练评估 | `start.cmd` | 当前 SASRec 任务需要远程训练环境 |
+![研究工作台界面验收示例](reports/workbench-ui-20261124-desktop.jpg)
 
-## 1. 本地工作台
+*截图使用隔离的界面验收示例，不代表真实模型收益。图中只有已核验、可比较且满足全部门禁的候选才进入最佳曲线；失败不填零分。*
 
-Windows 在仓库根目录执行，启动器会复用或准备本地 Web 环境，不读取 API Key、不启动训练：
+## 快速开始：无需 GPU
+
+需要 **Python 3.10+**。在仓库根目录执行：
+
+```bash
+python -m pip install -e ".[service,test]"
+python -m reclab_agent.cli.web --root . --port 8000
+```
+
+访问 **http://127.0.0.1:8000**。Windows 也可使用启动器准备或复用 Web 环境：
 
 ```powershell
 .\start.cmd -Web
 ```
 
-需要 Python 3.10+。已准备 Python 环境时，也可以手动启动：
+打开页面不会启动训练。可以先点击“运行本地证据演示”，检查工具、报告和事件是否正常；默认 Web 未装配训练执行器，登记任务会等待配置。真实研究从 CLI 启动，工作台读取相同的本地会话。只允许取消尚未执行的等待任务。
+
+命令行也可以进行零模型调用的检查：
 
 ```bash
-pip install -e ".[service]"
-python -m reclab_agent.cli.web
-```
-
-浏览器打开 **http://127.0.0.1:8000**。工作台可以：
-
-- 查看 CLI 已保存的研究会话、假设、实际 Diff、独立评分、报告与 Trace。
-- 运行无需 API Key 或 GPU 的本地证据演示。
-- 登记任务并查看等待配置状态；用幂等键避免重复提交。
-- 按事件序号重连，取消尚未执行的等待任务。
-
-打开页面不会启动训练。当前 Web 默认不装配真实执行器；实际优化从 CLI 启动，工作台读取相同会话。运行中的远程作业需要执行端确认停止，不能仅在页面上标成已取消。
-
-命令行查看同一份状态：
-
-```bash
-python -m reclab_agent.cli.research runs demo
+python -m reclab_agent
 python -m reclab_agent.cli.research runs list
-python -m reclab_agent.cli.research runs show --run-id RUN_ID
-python -m reclab_agent.cli.research runs events --run-id RUN_ID --after 0
+python -m reclab_agent.cli.evaluate retrieval --modes bm25
+python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-dev.json --output reports/local-diagnostic-reference.json
 ```
 
-## 2. 运行推荐模型优化
+第一条执行 15 项证据工具参考调用；诊断命令默认使用确定性参考规则。它们都不是端到端 Agent 成功率。
 
-PowerShell 中先查看任务范围，再启动：
+## 运行真实研究
+
+默认任务由 [reclab.json](reclab.json) 指定。先配置并审阅任务，再启动：
+
+| 配置 | 用途 |
+|---|---|
+| [任务配置](configs/beauty-sasrec-task.json) | 模型、数据、指标、允许修改的文件、执行环境与预算 |
+| `.reclab/agent.env` | 本地模型 API 配置；不进入 Git |
+| `configs/autodl-ssh.json` | 本地 SSH 连接配置，参考 [example](configs/autodl-ssh.example.json)；不进入 Git |
+| `task.mode` | 默认 `single`；独立审计设为 `research_audit`；另有 `plan_execute` 和单 Agent 自评 `reviewer` |
 
 ```powershell
 .\start.cmd -Plan
 .\start.cmd
 ```
 
-Linux/WSL 可用 `python -m reclab_agent.start --help` 查看启动参数。默认任务由 [reclab.json](reclab.json) 指定。
+真实 Agent 需要模型 API，当前 SASRec 任务还需要已配置的远程训练环境。API、文献搜索和 GPU 可能产生费用，应先检查任务预算。Linux/WSL 的启动参数见 `python -m reclab_agent.start --help`。
 
-| 配置位置 | 内容 |
-|---|---|
-| `configs/beauty-sasrec-task.json` | 模型、数据、验证指标、可修改文件和总预算 |
-| `.reclab/agent.env` | 模型 API 配置，仅保存在本地 |
-| `configs/autodl-ssh.json` | SSH 连接，参考同目录 example 文件 |
-| 任务配置的 `task.mode` | 默认 `single`；另有 `plan_execute`、`reviewer`，以及迁移中的 `research_audit` |
+`reviewer` 是单 Agent 自评，不能当作独立审计；旧 `team` 模式已移除。独立审计共享请求预算，使用结构化提交与有界格式纠正。其原理、权限和恢复边界见[独立审计说明](docs/research-audit.md)。
 
-原 `team` 模式已在未完成的重构中移除，正在迁移为主研究者 + 独立审计。当前默认继续使用 `single`；`research_audit` 的上下文、权限与恢复仍需完成专项验收。本轮工作台仅展示已记录的审计数据，不代表该 Agent 已验收。
+每次研究保存源码快照、实验与作业记录，以及 `report.json`、`report.md`、`report.html`。失败、负结果和证据不足都会保留。新工作树不会自动带入原目录中被忽略的权重、数据或本地会话；评分文件缺失时，界面不会补造“已核验提升”。
 
-每次研究保存源码快照、实验记录和 `report.json`、`report.md`、`report.html`。失败和证据不足也保留报告。恢复、基线复用与项目管理详见[使用说明](docs/research-usage.md)。
+## 评测体系与已验证结果
 
-## 3. 经验记忆与检索
+| 层次 | 评测方法 | 当前证据与边界 |
+|---|---|---|
+| 推荐模型效果 | 固定协议下独立计算验证集 NDCG / Recall，比较兼容基线与候选 | SASRec dropout 候选两项指标下降，保留基线；GRURec 完成迁移基线，见 [GPU 验收](reports/gpu-acceptance-20261123.md) |
+| Agent 决策与引用 | 冻结合成证据任务，检查完成状态、JSON、决策与引用 | 最新同快照开发集：单 Agent **28/30、64 次请求**；独立审计 **27/30、124 次请求**，见 [完整对照](reports/paired-role-prompts-combined-20261124.md) |
+| 编码能力 | 冻结小型任务、真实补丁、公开与隐藏 CPU Docker 检查 | 衡量限定范围内的功能修复，不代表真实推荐收益或一般仓库修复能力 |
+| 检索质量 | 标注段落的 Recall@K、MRR 与延迟 | 支持 BM25、dense、hybrid、reranked；小语料实验没有证明重排一定改善效果 |
+| 工程与成本 | 离线回归、HTTP/SSE、恢复测试、请求与 Token 统计 | 费用仅按显式价格表和已报告用量估算，不等同于服务商账单 |
 
-项目使用 SQLite 实验账本、本地 Git、Markdown Wiki 和按比较范围过滤的经验检索。默认 **BM25，无额外依赖**；数值结论仍应回读原始评分。
+最新单／多 Agent 对照仅包含 30 个开发诊断任务，未包含完整研究流程、真实训练、编码或最新冻结集。未通过案例为 API 连接错误或超时；不同时间窗口的服务状态会影响结果，不能据此声称独立审计优于单 Agent。审计模式的通用收益仍需更多错误决策样本与对照实验。
 
-```bash
-python -m reclab_agent.cli.research project search --config configs/beauty-sasrec-task.json --query "历史失败与诊断"
-```
+模型候选被接受还需要护栏不下降、必需过程诊断满足要求；启用独立审计时必须审计通过。当前验证集也参与 checkpoint 与候选选择，单种子结果不代表独立测试集收益或统计显著性。原生 SSH/tmux 验收不等同于云端 Docker/GPU 隔离，也未证明所有中断点均能自动恢复。
 
-可选 CPU 语义检索复用同一套索引，支持 dense、hybrid 和 reranked。先安装 CPU 版 PyTorch，再安装文本模型依赖：
-
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-pip install -e ".[retrieval]"
-python -m reclab_agent.cli.evaluate retrieval --modes bm25
-python -m reclab_agent.cli.evaluate retrieval --modes bm25 dense hybrid reranked --download-models
-```
-
-默认只读本地模型缓存；显式传入 `--download-models` 才允许下载。可用 `--embedding-model`、`--reranking-model` 和对应 revision 指定模型。默认 embedding 面向中文、默认 reranker 面向英文；评测报告记录所用模型、来源哈希、Recall@5、MRR 和延迟，不保证重排一定改善结果。
-
-研究任务可在 `research.retrieval` 中指定检索模式，示例与模型版本说明见[本地功能与验收](docs/non-gpu-work.md)。Tavily 文献搜索需另配 `TAVILY_API_KEY`；缺少 Key 时本地知识仍可用。
-
-## 4. 评测与成本
-
-已有 30 个开发场景、30 个冻结场景，按场景组分开；它们是**合成诊断决策任务**，不代表真实训练或端到端研究能力。答案不进入模型可读的证据目录或检索语料。
-
-默认使用匿名 ID 的 v2 冻结集。初稿的 dataset ID 含场景名称，因此旧分数仅保留为工程试跑记录，不当作 v2 成绩。以下参考检查不调用模型 API：
-
-```bash
-python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-dev.json --output reports/diagnostic-dev-v2-reference.json
-python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-frozen.json --output reports/diagnostic-frozen-v2-reference.json
-```
-
-显式选择 `--mode react` 并配置 `--model`、API Key 后，才运行真实 Agent 评测并产生 API 费用。新的 `research_audit` 入口仍在迁移，不作为已验收模式。`--max-requests` 约束整批请求次数，重试和失败请求同样占额度；相同输出文件用于恢复，不重跑已记录的任务。
-
-```bash
-python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
-```
-
-费用只有在显式提供价格表后才估算；缺失 usage 不算免费，估算不等于服务商账单。详细命令见[本地功能与验收](docs/non-gpu-work.md)。
-
-编码对照入口为 `python -m reclab_agent.cli.evaluate coding --help`，需要 Linux/WSL 的本地 Docker 和已核验镜像；默认 `reference` 不调用模型。选择 `react` 才运行真实模型调用；`research_audit` 仍需验收，候选代码始终在容器中执行。
-
-## 5. 测试与当前进度
-
-2026-11-24：GPU 阶段已归档并推送（`73e1b76`），非 GPU 对照已发布（`fbb9aed`）。当前按[四天面试准备](docs/interview-preparation.md)推进：前两天修复代码与完善评测，后两天完成演示和面试材料。[第一天失败审计](reports/day1-failure-audit-20261124.md)已完成离线复现及局部修复，原始模型成绩保留。SASRec 候选两项验证指标均下降，保留基线；GRU 完成共享接口的基线训练和独立评分，两份未通过 Smoke Test 的候选也保留失败记录。详见 [GPU 验收报告](reports/gpu-acceptance-20261123.md)与[非 GPU 对照报告](reports/non-gpu-acceptance-20261124.md)。
+## 测试与复现
 
 ```bash
 python -m unittest discover -s tests -q
 python -m unittest experiments.strategy_comparison.test_comparison experiments.strategy_comparison.test_runner experiments.strategy_comparison.test_tools -q
-python -m reclab_agent
+node --test tests/frontend/*.test.cjs
 ```
 
-基础工具与核心流程使用标准库；Web、在线模型和 CPU 文本模型分别安装可选依赖。最后一条命令执行原有 15 项证据参考调用，不能把它记为端到端成功率。
+前端逻辑测试需要 Node.js；核心工具使用标准库，Web 测试需要安装 `service,test` 可选依赖。可选文本模型另需 CPU PyTorch 与 `retrieval` 依赖，默认只读本地缓存，显式 `--download-models` 才允许下载。
 
-| 本轮工作 | 实际状态 |
-|---|---|
-| Web 页面、CLI 共用状态、报告和事件 | 已实现，HTTP 与浏览器交互验收通过 |
-| 主研究者 + 独立审计 | 迁移未完成；本轮前端只适配已记录的审计数据，不计为已验收能力 |
-| CPU 文本模型适配、四种检索模式和评测 | 真实 CPU 模型已运行；本次小语料重排变差，默认保留 BM25 |
-| 30+30 场景、冻结校验、诊断评测与成本统计 | 开发集：单 Agent 28/30、多角色 27/30；冻结集：26/30、23/30，多角色未达 80% 目标 |
-| 四类真实编码对照 | 已冻结任务、补丁工具和 CPU Docker 检查；参考配方 8/8，单 Agent 3/8，多角色 6/8，保留失败 |
-| Tavily 文献搜索与正文提取 | 真实搜索、提取与缓存复用通过，共 2 次网络请求 |
-| 真实 GPU 训练、验证集评分与 GRU 迁移 | 基线和 dropout 候选均有真实分数；候选未改善，保留基线 |
-| 远程作业恢复 | 训练进程保留、同一作业复用已实测；首次恢复需人工核验，相关路径已修复并保留失败记录 |
-| 本轮界面验收与回归 | 17 项前端逻辑、33 项报告及 HTTP 测试通过；全量 516 项中 505 通过、8 跳过，3 项旧多智能体迁移测试失败，见[验收记录](reports/workbench-acceptance-20261124.md) |
+整合验收记录见[工作台验收](reports/workbench-acceptance-20261124.md)。界面覆盖桌面与窄屏、图点详情、实验表、事件筛选、任务登记和取消；截图与使用方法见[工作台说明](docs/workbench-design.md)。
 
-本轮合计预留 478/640 次模型请求，4 次缺少 usage，未核实账单；保留单 Agent 与 BM25 默认。[工作台演示视频](reports/workbench-demo-20261124.mp4)使用实际界面截图合成，展示真实会话，不是连续录屏。编码候选只在本地 CPU Docker 中执行，这四类合成小任务不代表生产仓库修复能力，部分输入字段说明也有歧义。仍待验证云端 Docker/GPU 隔离、所有中断点自动恢复和连续录屏；单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
+2026-11-24 整合验收：**551 项主测试（543 通过、8 跳过）、37 项策略实验测试及 17 项前端逻辑测试通过**；112 个包内 Python 文件语法检查通过。
 
-## 代码与文档
+## 项目结构与文档
 
-主调用关系：`cli → application → workflow → tools → experiments / execution / memory`。通用模型交互位于 `core/`，策略位于 `agents/`；数据、评分、报告和外部服务各自独立。所有 Agent 工具的参数定义与处理函数按能力放在 `tools/`。
+```text
+reclab_agent/
+  application/    CLI / Web 共用的任务入口与状态视图
+  workflow/       四阶段研究协调与资源约束
+  agents/         单 Agent 策略、主研究者与独立审计
+  tools/          按能力组织的工具与工具箱
+  core/           模型交互、会话、权限与 Trace
+  experiments/    实验工作区、基线、诊断与结果比较
+  execution/      本地 / 远程执行器与作业管理
+  memory/         实验账本、经验摘要与检索
+  evaluation/     排序、诊断、编码、检索和成本评测
+  reporting/      独立证据核验、可读报告与提升序列
+  web/            研究工作台页面与静态资源
+```
 
-- [项目架构与逐文件导航](docs/architecture.md)
-- [四天面试准备与代码走读](docs/interview-preparation.md)
-- [功能需求](docs/plan.md)与[实施方案](docs/implementation-plan.md)
-- [本地功能与验收](docs/non-gpu-work.md)
-- [持续优化记录](docs/optimization-log.md)
-- [最初八周计划](docs/eight-week-plan.md)
+- [文档导航](docs/README.md) · [架构与代码导航](docs/architecture.md) · [工具职责](reclab_agent/tools/README.md)
+- [研究运行、基线复用与项目记忆](docs/research-usage.md) · [独立审计](docs/research-audit.md) · [可观测与恢复边界](docs/observability.md)
+- [本地功能与验收](docs/non-gpu-work.md) · [工作台使用](docs/workbench-design.md) · [仓库优化记录](docs/optimization-log.md)
+- [功能需求](docs/plan.md) · [实施方案](docs/implementation-plan.md) · [最初八周计划](docs/eight-week-plan.md)

@@ -1,0 +1,12 @@
+{
+  "only_multi_agent": true,
+  "request_ledger_verified": true,
+  "workspace_sources_match_started_hash": false,
+  "changed_workspace_files": [
+    "reclab_agent/agents/plan_execute_agent.py",
+    "reclab_agent/agents/react_agent.py",
+    "reclab_agent/agents/reflection_agent.py",
+    "reclab_agent/core/session.py"
+  ],
+  "note": "Source hashes in the original protocol are startup hashes. Current workspace differs; local edits were preserved. No hot reload is performed by this runner."
+}

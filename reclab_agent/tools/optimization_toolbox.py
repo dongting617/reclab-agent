@@ -1,6 +1,6 @@
-"""Compose optimization capabilities; business handlers live in their groups."""
+"""Optimization toolbox assembly; business handlers live in capability groups."""
 from __future__ import annotations
-from reclab_agent.tools.context import StudyContext
+from reclab_agent.tools.study_context import StudyContext
 from reclab_agent.tools.registry import ToolRegistry
 from reclab_agent.tools.workspace import WorkspaceTools
 from reclab_agent.tools.planning import PlanningTools

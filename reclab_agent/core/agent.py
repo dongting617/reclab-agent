@@ -15,7 +15,8 @@ class Agent(ABC):
     def __init__(self, toolbox: Toolbox, backend: ModelBackend, *,
                  max_steps: int | None = None, model_retries: int | None = None,
                  trace_path: str | Path | None = None, name: str | None = None,
-                 system_prompt: str = SYSTEM_INSTRUCTIONS, config: AgentConfig | None = None):
+                 system_prompt: str = SYSTEM_INSTRUCTIONS, config: AgentConfig | None = None,
+                 trace_writer: TraceWriter | None = None, trace_context: dict[str, Any] | None = None):
         config = config or AgentConfig()
         self.config = AgentConfig(config.max_steps if max_steps is None else max_steps,
                                   config.model_retries if model_retries is None else model_retries)
@@ -25,7 +26,8 @@ class Agent(ABC):
         self.toolbox, self.backend = toolbox, backend
         self.system_prompt = system_prompt
         self.max_steps, self.model_retries = self.config.max_steps, self.config.model_retries
-        self.trace = TraceWriter(trace_path)
+        self.trace = trace_writer if trace_writer is not None else TraceWriter(trace_path)
+        self.trace_context = dict(trace_context or {})
         self._history: list[dict[str, Any]] = []
 
     def _session(self, prompt: str, *, task_id: str | None = None,
@@ -33,7 +35,7 @@ class Agent(ABC):
                  resume_run_id: str | None = None) -> RunSession:
         session = RunSession(self.toolbox, self.backend, self.config, self.trace,
                              self.system_prompt, prompt, task_id=task_id, allowed_tools=allowed_tools,
-                             resume_run_id=resume_run_id)
+                             resume_run_id=resume_run_id, trace_context=self.trace_context)
         conversation = getattr(self.toolbox, "conversation_path", None)
         if conversation is not None:
             import json

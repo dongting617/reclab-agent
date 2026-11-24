@@ -7,7 +7,7 @@ from reclab_agent.agents import create_agent
 from reclab_agent.core import ModelBackend
 from reclab_agent.tools.base import Toolbox
 from reclab_agent.tools.registry import ToolRegistry
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 
 
 class OptimizationAgent:

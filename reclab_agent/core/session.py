@@ -1,7 +1,7 @@
 """One bounded run: history, permissions, tool dispatch and audit events.
 
-Strategies share a session so planning and criticism cannot reset the budget.
-The default strategy preserves existing result and trace formats.
+Single-agent strategies share a session; independent research/audit sessions
+use a host-owned shared request budget. Result and trace formats stay stable.
 """
 from __future__ import annotations
 import copy
@@ -12,7 +12,7 @@ import uuid
 from reclab_agent.tools.base import Toolbox
 from reclab_agent.core.config import AgentConfig
 from reclab_agent.core.llm import ModelBackend, ModelTurn
-from reclab_agent.core.trace import TraceWriter, evidence_paths
+from reclab_agent.core.trace import TraceWriter, evidence_paths, trace_hash, model_error_category
 
 
 SYSTEM_INSTRUCTIONS = """You are RecLab Agent, a recommendation experiment analyst.
@@ -28,12 +28,13 @@ class StepLimitExceeded(Exception):
 
 
 def function_calls(output: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """从模型输出中筛选工具调用请求。"""
     return [item for item in output if item.get("type") == "function_call"]
 
 
 def function_tools(toolbox: Toolbox,
                    allowed_tools: set[str] | frozenset[str] | None = None) -> list[dict[str, Any]]:
-    """Preserve the existing top-level strict schema conversion."""
+    """按允许列表生成模型可见的工具定义，并转换为严格参数格式。"""
     definitions = []
     for spec in toolbox.specs:
         if allowed_tools is not None and spec.name not in allowed_tools:
@@ -51,11 +52,19 @@ def function_tools(toolbox: Toolbox,
 
 
 class RunSession:
+    """管理一次运行的上下文、轮次、工具执行与记录。
+
+    主流程：初始化 → run_loop（turn → execute 循环）→ finish。
+    turn 保存模型输出，execute 追加工具结果，供下一轮模型读取。
+    """
+
     def __init__(self, toolbox: Toolbox, backend: ModelBackend, config: AgentConfig,
                  trace: TraceWriter, instructions: str, prompt: str, *,
                  task_id: str | None = None,
                  allowed_tools: set[str] | frozenset[str] | None = None,
-                 resume_run_id: str | None = None):
+                 resume_run_id: str | None = None,
+                 trace_context: dict[str, Any] | None = None):
+        """校验任务和工具范围，初始化对话、计数器及运行标识。"""
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("prompt must be a non-empty string")
         known_tools = {spec.name for spec in toolbox.specs}
@@ -73,6 +82,11 @@ class RunSession:
         self.inputs: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
         self.run_id = resume_run_id or uuid.uuid4().hex
         self.task_id = task_id or self.run_id
+        self.trace_context = {"study_id": self.run_id, "parent_run_id": None,
+                              "role": "agent", **(trace_context or {})}
+        self.experiment_id = self.trace_context.get("experiment_id")
+        self.model = getattr(backend, "model", None)
+        self.task_prompt_hash = trace_hash(prompt)
         self.started = time.perf_counter()
         self.steps = 0
         self.tool_calls = 0
@@ -82,42 +96,57 @@ class RunSession:
                    allowed_tools=sorted(allowed_tools) if allowed_tools is not None else None)
 
     def event(self, event: str, **payload: Any) -> None:
-        self.trace.write({**payload, "event": event, "run_id": self.run_id, "task_id": self.task_id})
+        """为事件附加运行标识并写入 Trace。"""
+        self.trace.write({**self.trace_context, "experiment_id": self.experiment_id,
+                          "model": self.model, "task_prompt_hash": self.task_prompt_hash,
+                          **payload, "event": event, "run_id": self.run_id, "task_id": self.task_id})
 
     def _ensure_active(self) -> None:
+        """拒绝继续操作已经结束的会话。"""
         if self._finished:
             raise RuntimeError("session already finished")
 
     def turn(self, instructions: str | None = None, *, use_tools: bool = True,
              phase: str | None = None) -> ModelTurn:
+        """检查轮次上限，调用模型（含重试），保存输出并记录用量。"""
         self._ensure_active()
         if self.steps >= self.config.max_steps:
             raise StepLimitExceeded
         step = self.steps + 1
+        request = {"instructions": self.instructions if instructions is None else instructions,
+                   "input_items": self.inputs, "tools": self.tools if use_tools else []}
+        identity = {"prompt_hash": trace_hash(request), "instructions_hash": trace_hash(request["instructions"]),
+                    "input_hash": trace_hash(self.inputs), "tool_schema_hash": trace_hash(request["tools"])}
+        if phase is not None:
+            identity["phase"] = phase
         for attempt in range(self.config.model_retries + 1):
+            started = time.perf_counter()
+            request_id = uuid.uuid4().hex
+            request_info = {**identity, "request_id": request_id, "step": step, "attempt": attempt + 1}
+            self.event("model_request_started", **request_info)
             try:
-                turn = self.backend.respond(
-                    instructions=self.instructions if instructions is None else instructions,
-                    input_items=self.inputs, tools=self.tools if use_tools else [],
-                )
+                turn = self.backend.respond(**request)
                 break
             except Exception as error:
                 not_sent = getattr(error, "request_not_sent", False) is True
-                self.event("model_error", step=step, attempt=attempt + 1,
-                           error_type=type(error).__name__, message=str(error), request_not_sent=not_sent)
+                self.event("model_error", **request_info,
+                           elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
+                           error_type=type(error).__name__, error_category=model_error_category(error),
+                           message=str(error), request_not_sent=not_sent)
                 if not_sent or attempt >= self.config.model_retries:
                     raise
         self.steps = step
         self.inputs.extend(turn.output)
-        payload: dict[str, Any] = {"step": step, "response_id": turn.response_id,
-                                   "function_calls": len(function_calls(turn.output)), "usage": turn.usage,
+        payload: dict[str, Any] = {**request_info, "response_id": turn.response_id,
+                                   "elapsed_ms": round((time.perf_counter() - started) * 1000, 3),
+                                   "function_calls": len(function_calls(turn.output)),
+                                   "usage": turn.usage,
                                    "output_text": turn.output_text}
-        if phase is not None:
-            payload["phase"] = phase
         self.event("model_turn", **payload)
         return turn
 
     def execute(self, turn: ModelTurn) -> None:
+        """解析参数、检查权限并执行工具，将结果追加到对话中。"""
         self._ensure_active()
         for call in function_calls(turn.output):
             call_id = call.get("call_id") or call.get("id")
@@ -142,32 +171,42 @@ class RunSession:
                 envelope = {"ok": False, "tool": name,
                             "error": {"code": "INVALID_JSON_ARGUMENTS", "message": str(error)}}
             self.tool_calls += 1
+            result = envelope.get("result")
+            if isinstance(result, dict) and result.get("experiment_id"):
+                self.experiment_id = result["experiment_id"]
+            experiment_id = (arguments or {}).get("experiment_id", self.experiment_id)
             paths = evidence_paths(envelope)
             self.evidence.update(paths)
             self.event("tool_call", step=self.steps, call_id=call_id, tool=name,
                        arguments=arguments, result=envelope, evidence_paths=paths,
+                       experiment_id=experiment_id,
                        elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
             self.inputs.append({"type": "function_call_output", "call_id": call_id,
                                 "output": json.dumps(envelope, ensure_ascii=False)})
         self.checkpoint_conversation()
 
     def checkpoint_conversation(self):
+        """配置保存路径时，原子写入当前对话历史。"""
         from reclab_agent.infrastructure.files import atomic_write
         path = getattr(self, "conversation_path", None)
         if path is not None:
             atomic_write(path, json.dumps(self.inputs, ensure_ascii=False, allow_nan=False).encode("utf-8"))
 
-    def run_tools(self, instructions: str | None = None, *,
-                  phase: str | None = None) -> tuple[str, str]:
+    def run_loop(self, instructions: str | None = None, *,
+                 phase: str | None = None) -> tuple[str, str]:
+        """循环调用模型和工具，直到模型不再请求工具或达到轮次上限。"""
         self._ensure_active()
         while self.steps < self.config.max_steps:
             turn = self.turn(instructions, phase=phase)
-            if not function_calls(turn.output):
-                return ("completed" if turn.output_text.strip() else "empty_response", turn.output_text)
+            calls = function_calls(turn.output)
+            if not calls:
+                return ("completed" if turn.output_text.strip() else "empty_response",
+                        turn.output_text)
             self.execute(turn)
         return "step_limit_exceeded", ""
 
     def finish(self, status: str, answer: str, **extra: Any) -> dict[str, Any]:
+        """结束会话、保存历史，返回答案、状态、证据路径及运行统计。"""
         self._ensure_active()
         self._finished = True
         self.checkpoint_conversation()

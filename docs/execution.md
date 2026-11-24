@@ -26,10 +26,11 @@
 在项目根目录启动本地控制器，注册允许上传的模型目录和 `public` 数据目录：
 
 ```python
-from reclab_agent.execution.ssh import RemoteTools, SSHConnection
+from reclab_agent.execution.ssh import SSHConnection
+from reclab_agent.tools.remote import RemoteToolbox
 
 connection = SSHConnection.from_json("configs/autodl-ssh.json")
-remote = RemoteTools(
+remote = RemoteToolbox(
     connection,
     upload_roots={"model": "backends/sasrec", "public": ".reclab/datasets/beauty-d1/public"},
     download_root=".reclab/native-artifacts",

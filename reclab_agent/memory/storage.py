@@ -8,6 +8,8 @@ import time
 from typing import Any
 import uuid
 from contextlib import contextmanager
+from datetime import datetime, timezone
+from reclab_agent.core.trace import event_record
 from reclab_agent.domain.contracts import ArtifactRef, TaskSpec, canonical_json, identifier
 from reclab_agent.infrastructure.files import atomic_write, confined_path
 
@@ -139,10 +141,14 @@ class RunStore:
                        (run_id, event, canonical_json(payload), time.time()))
 
     def events(self, run_id: str, after: int = 0) -> list[dict[str, Any]]:
-        self.get(run_id)
+        run = self.get(run_id)
         with self.connect() as db:
             rows = db.execute("SELECT * FROM events WHERE run_id=? AND seq>? ORDER BY seq", (run_id, after)).fetchall()
-        return [{**dict(row), "payload": json.loads(row["payload"])} for row in rows]
+        return [{**dict(row), "payload": event_record({
+                    **json.loads(row["payload"]), "event": row["event"],
+                    "study_id": run_id, "run_id": run_id, "task_id": run["task"]["task_id"], "role": "host"},
+                    row["seq"], datetime.fromtimestamp(row["created"], timezone.utc).isoformat())}
+                for row in rows]
 
     def list(self, limit: int = 50) -> list[dict[str, Any]]:
         if type(limit) is not int or not 1 <= limit <= 200:

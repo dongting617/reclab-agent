@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-24",
+  "kind": "structured_english_role_prompts_offline",
+  "status": "passed",
+  "prompt_file": "reclab_agent/agents/research_audit_prompts.py",
+  "scope": ["researcher", "auditor", "inspection", "judgment", "citation_repair", "audit_repair"],
+  "evaluation_task_prompt_modified_in_this_change": false,
+  "role_prompt_hash_bound_to": ["checkpoint_scope", "agent_result", "diagnostic_identity", "coding_identity", "research_report", "live_evaluation_protocol"],
+  "main_tests": {"total": 538, "passed": 530, "skipped": 8, "failed": 0},
+  "strategy_tests": {"total": 37, "passed": 37, "failed": 0},
+  "package": {"syntax_compiled": 111, "missing_package_files": [], "web_assets_in_wheel": true},
+  "model_api_requests": 0,
+  "gpu_jobs": 0,
+  "limitations": [
+    "Formatting and examples can affect model behavior; no real-model improvement has been measured for these prompts",
+    "Citation correction still resubmits a complete JSON answer under the existing one-round budget",
+    "Historical v1 and v2 task prompt hashes differ; their score differences are not a controlled estimate of agent-only changes"
+  ]
+}

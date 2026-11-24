@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from reclab_agent.agents import ReActAgent
 from reclab_agent.core import ModelTurn
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 from reclab_agent.evaluation.traces import evaluate_run, evaluate_tool_selection, replay_trace
 from reclab_agent.core.session import function_tools
 
@@ -38,7 +38,7 @@ class ReActAgentTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix="reclab-react-")
         self.addCleanup(temporary.cleanup)
         self.temporary_root = Path(temporary.name)
-        self.toolbox = RecLabToolbox(ROOT)
+        self.toolbox = EvidenceToolbox(ROOT)
 
     def test_strict_function_schemas_are_closed_and_required(self):
         for definition in function_tools(self.toolbox):
@@ -61,7 +61,8 @@ class ReActAgentTests(unittest.TestCase):
         self.assertIn(self.toolbox.GAP_REPORT, result["evidence_paths"])
         events = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines()]
         self.assertEqual([event["event"] for event in events],
-                         ["run_started", "model_turn", "tool_call", "model_turn", "run_finished"])
+                         ["run_started", "model_request_started", "model_turn", "tool_call",
+                          "model_request_started", "model_turn", "run_finished"])
         metrics = evaluate_run(result, events, ["diagnose_beam_gap"])
         self.assertEqual(metrics["tool_selection"]["f1"], 1.0)
         self.assertEqual(metrics["tool_error_rate"], 0.0)

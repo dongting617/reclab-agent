@@ -1,0 +1,13 @@
+{
+  "source": "research-audit-live-20261124",
+  "cases": [
+    {
+      "id": "positive_gain-1",
+      "arguments": "{\"findings\": [{\"message\": \"Retain decision confirmed: Candidate satisfies all retention conditions.\", \"evidence_ids\": [\"e1\"]}, {\"message\": \"Metric improvement verified: NDCG improved by +1.25% (0.08 to 0.081) and Recall improved by +6.67% (0.15 to 0.16) as stated.\", \"evidence_ids\": [\"e2\", \"e3\"]}, {\"message\": \"Process diagnostics passed: Status 'completed', stop_confirmed true, required_process_pass true per case payload.\", \"evidence_ids\": [\"e1\"]}]., \"summary\": \"The researcher's claim aligns perfectly with the independently inspected host observations. Retention is justified because baseline and candidate share identical scope parameters, all diagnostic checks passed, and both evaluation metrics show unambiguous improvement. No missing critical evidence affects the decision to retain within the allowed tool constraints.\", \"verdict\": \"approved\"}"
+    },
+    {
+      "id": "positive_gain-3",
+      "arguments": "{\"verdict\": \"approved\", \"findings\": [{\"message\": \"Candidate metrics (ndcg@20: 0.089 vs 0.086, recall@20: 0.16 vs 0.15) strictly improve over baseline, satisfying the primary retention criterion.\", \"evidence_ids\": [\"e1\"]}, {\"message\": \"All procedural and experimental scope conditions are met: duplicate_source is false, training status is completed, stop is confirmed, required process diagnostics passed, and dataset/protocol/seed are identical between baseline and candidate.\", \"evidence_ids\": [\"e1\"]}]\\n, \"summary\": \"The researcher's decision to retain and their supporting reasoning exactly match the host-recorded observations in artifact e1. Every cited field (/duplicate_source, /remaining_training_jobs, /stop_confirmed, /scope, /status, /metrics, /required_process_pass) aligns with the provided JSON values, confirming no missing evidence or inconclusive states. The claim is factually consistent with the frozen observations. Audit approval does not authorize a new experiment.\"}"
+    }
+  ]
+}

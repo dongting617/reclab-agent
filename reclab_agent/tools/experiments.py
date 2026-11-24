@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 from reclab_agent.domain.research import ExperimentRecord
 from reclab_agent.tools.contracts import ToolError
-from reclab_agent.tools.group import ToolGroup
+from reclab_agent.tools.tool_group import ToolGroup
 
 class ExperimentTools(ToolGroup):
     definitions = (('run_experiment',

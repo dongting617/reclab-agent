@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 from reclab_agent.tools.contracts import ToolSpec
 
+AUDIT_PROTOCOL_VERSION = 2
+
 
 class AuditToolbox:
     """Only host-recorded tool observations are visible; paths grant no file access."""
@@ -38,6 +40,7 @@ AUDIT_SCHEMA = {
 
 def validate_audit(value, evidence_ids):
     if (not isinstance(value, dict) or set(value) != {"verdict", "findings", "summary"}
+            or not isinstance(value["verdict"], str)
             or value["verdict"] not in {"approved", "rejected", "insufficient_evidence"}
             or not isinstance(value["summary"], str) or not value["summary"].strip()
             or not isinstance(value["findings"], list)):

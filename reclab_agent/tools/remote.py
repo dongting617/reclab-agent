@@ -5,7 +5,7 @@ from reclab_agent.execution.ssh import SSHClient
 from reclab_agent.tools.contracts import ToolError, ToolSpec
 from reclab_agent.tools.registry import ToolRegistry
 
-class RemoteTools:
+class RemoteToolbox:
     def __init__(self, *args, **kwargs):
         self.client = SSHClient(*args, **kwargs)
         self._tools = ToolRegistry()
@@ -32,7 +32,7 @@ class RemoteTools:
                        {"job_id": string}, self.stop_job)
 
     def _register(self, name: str, description: str, properties: dict[str, Any], handler: Callable) -> None:
-        def invoke(**arguments: Any) -> dict[str, Any]:
+        def invoke_remote(**arguments: Any) -> dict[str, Any]:
             try:
                 return handler(**arguments)
             except OSError as error:
@@ -41,7 +41,7 @@ class RemoteTools:
         self._tools.register_function(ToolSpec(name, description, {
             "type": "object", "properties": properties, "required": list(properties),
             "additionalProperties": False,
-        }), invoke)
+        }), invoke_remote)
 
     @property
     def specs(self) -> list[ToolSpec]:

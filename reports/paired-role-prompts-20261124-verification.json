@@ -1,0 +1,12 @@
+{
+  "snapshot_manifest_verified": true,
+  "source_snapshot_matches_started_hash": true,
+  "snapshot_files": 119,
+  "source_snapshot": "E:\\DongTing\\简历\\reclab-agent\\.reclab\\evaluation-snapshots\\paired-role-prompts-20261124",
+  "same_task_prompt": true,
+  "same_manifest": true,
+  "same_grading_policy": true,
+  "workspace_sources_match_started_hash": true,
+  "changed_workspace_files": [],
+  "credentials_copied": false
+}

@@ -15,13 +15,13 @@ RunSession：消息、模型轮次、权限、工具调用、Trace
                  |
 ToolRegistry：组合已有工具箱或注册新 Tool / 函数
           /                        \
-RecLabToolbox                  OptimizationToolbox（显式配置）
+EvidenceToolbox                  OptimizationToolbox（显式配置）
 只读历史证据                  Workspace + 可信实验 runner
                                       |
                      SSH+tmux / Docker → 预测 → 独立评分
 ```
 
-`core/` 不知道 SASRec、Semantic ID、Docker 参数或推荐指标；策略只决定何时规划、执行或评价。`Toolbox` 只要求 `specs` 和 `invoke()`，因此旧 `RecLabToolbox` 无需改写即可使用。
+`core/` 不知道 SASRec、Semantic ID、Docker 参数或推荐指标；策略只决定何时规划、执行或评价。`Toolbox` 只要求 `specs` 和 `invoke()`，因此旧 `EvidenceToolbox` 无需改写即可使用。
 
 代码职责、工具位置和迁移路径见[项目架构与代码导航](architecture.md)。通用接口从 `core`、策略从 `agents`、工具从 `tools`、流程从 `workflow` 导入；任务契约在 `domain`，装配入口在 `application`。
 
@@ -43,11 +43,11 @@ RecLabToolbox                  OptimizationToolbox（显式配置）
 ```python
 from reclab_agent.core import AgentConfig, OpenAIResponsesBackend
 from reclab_agent.agents import create_agent
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 
 agent = create_agent(
     "plan_execute",
-    RecLabToolbox("."),
+    EvidenceToolbox("."),
     OpenAIResponsesBackend("YOUR_MODEL_ID"),
     config=AgentConfig(max_steps=20, model_retries=2),
     max_plan_steps=4,
@@ -63,12 +63,12 @@ result = agent.run("比较已有证据中的模型差距，区分观察和待检
 现有函数可直接注册，无需继承或修改框架：
 
 ```python
-from reclab_agent.tools import RecLabToolbox, ToolRegistry, ToolSpec
+from reclab_agent.tools import EvidenceToolbox, ToolRegistry, ToolSpec
 
 def describe_profile():
     return {"profile": "development", "test_labels_available": False}
 
-tools = ToolRegistry().include(RecLabToolbox("."))
+tools = ToolRegistry().include(EvidenceToolbox("."))
 tools.register_function(
     ToolSpec("describe_profile", "Describe the configured development profile", {
         "type": "object", "properties": {}, "additionalProperties": False,
@@ -79,7 +79,7 @@ tools.register_function(
 
 复杂工具可继承 `Tool` 并实现 `spec` 和 `run(arguments)`。注册表拒绝重名，组合旧工具箱时保留其结果信封；可预期参数错误转成结构化结果，意外实现错误继续抛出。注册某项能力不表示所有任务都能使用它，任务白名单仍在模型和执行层检查。
 
-新策略继承 `core.Agent`，通过 `_session()` 创建单次运行，复用 `turn()`、`execute()`、`run_tools()` 和 `finish()`。每个子任务继续使用同一会话，保证总预算和 Trace 连贯。保持规划、评价等只读阶段的工具限制，并注册到 `agents.factory.AGENT_TYPES`。
+新策略继承 `core.Agent`，通过 `_session()` 创建单次运行，复用 `turn()`、`execute()`、`run_loop()` 和 `finish()`。每个子任务继续使用同一会话，保证总预算和 Trace 连贯。保持规划、评价等只读阶段的工具限制，并注册到 `agents.factory.AGENT_TYPES`。
 
 ## 模型优化的接入方式
 
@@ -121,8 +121,8 @@ runner(snapshot, *, candidate_id, seed, max_seconds) -> ExperimentRecord
 接入代码示意，变量由宿主提供的任务、工作区、审阅和实验配置产生：
 
 ```python
-from reclab_agent.tools import RecLabToolbox
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools import EvidenceToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 from reclab_agent.agents.optimization import OptimizationAgent
 
 research = OptimizationToolbox(
@@ -136,7 +136,7 @@ research = OptimizationToolbox(
 agent = OptimizationAgent(
     research, llm_backend, kind="react", max_steps=32,
     target_model="SASRec 下一商品推荐模型",
-    evidence=RecLabToolbox(repository_root),
+    evidence=EvidenceToolbox(repository_root),
 )
 result = agent.run()
 ```

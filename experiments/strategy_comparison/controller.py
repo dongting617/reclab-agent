@@ -11,7 +11,7 @@ from reclab_agent.execution.locking import job_lock
 from reclab_agent.domain.contracts import canonical_json
 from reclab_agent.execution.worker import InputTree
 from reclab_agent.infrastructure.files import atomic_write, confined_path, read_regular_file
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 from reclab_agent.application.binding import bind_task_tools
 from .tools import CountedBackend, RoundResearch, restore_snapshot
 from reclab_agent.domain.configuration import read_json_strict
@@ -117,7 +117,7 @@ def _run_strategy(config, global_plan, baseline, baseline_bytes, strategy, backe
             # this strategy only. Planner/critic calls and retries count too.
             per_round_turns = max(1, remaining // (len(candidates) - index + 1))
             agent = agent_factory(proxy, counted, kind=strategy, target_model=selected_model,
-                                  evidence=RecLabToolbox(output), max_steps=per_round_turns,
+                                  evidence=EvidenceToolbox(output), max_steps=per_round_turns,
                                   trace_path=output / "traces" / f"round-{index}.jsonl", **options)
             history = [{"round": item["round"], "candidate_id": item["candidate_id"],
                         "experiments": [{"record": {key: entry["record"][key] for key in

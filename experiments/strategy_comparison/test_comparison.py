@@ -12,7 +12,7 @@ from experiments.strategy_comparison import controller as comparison
 from experiments.strategy_comparison.settings import ComparisonConfiguration, with_comparison
 from reclab_agent.domain.research import EvidenceRef, ExperimentRecord
 from reclab_agent.application.launch import LaunchError
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 from reclab_agent.experiments.workspace import create_workspace
 from tests import test_experiment_runner as fixtures
 

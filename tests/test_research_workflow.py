@@ -26,6 +26,45 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaises(ToolError):
             research.run_experiment("candidate-1", 42)
 
+    def test_independent_audit_gates_candidate_acceptance(self):
+        from reclab_agent.core import ModelTurn
+        class AuditBackend(launch_fixture.ScriptedLaunchBackend):
+            verdict = "rejected"
+            def respond(inner, *, instructions, input_items, tools):
+                names = {tool.get("name") for tool in tools}
+                if "read_audit_evidence" in names:
+                    return ModelTurn([], "Independent evidence assessment: check comparability and scores.")
+                if "submit_audit" in names:
+                    return ModelTurn([], json.dumps({"verdict": inner.verdict, "summary": "Evidence audit",
+                        "findings": [{"message": "Checked recorded experiment", "evidence_ids": ["e3"]}]}))
+                return super().respond(instructions=instructions, input_items=input_items, tools=tools)
+        self.config = replace(self.config, task=replace(self.config.task, mode="research_audit"))
+        report = self.run_launch(AuditBackend())
+        self.assertEqual(report["status"], "completed", report.get("error"))
+        self.assertFalse(report["audits"]["candidate-1"]["audit_approved"])
+        self.assertFalse(report["comparison"][0]["improves"])
+        self.assertEqual(report["comparison"][0]["decision"], "inconclusive")
+        self.assertFalse(report["experiments"][1]["eligible"])
+        self.assertEqual(report["best_experiment_id"], report["experiments"][0]["record"]["experiment_id"])
+
+    def test_approved_audit_keeps_deterministic_score_gate(self):
+        from reclab_agent.core import ModelTurn
+        class AuditBackend(launch_fixture.ScriptedLaunchBackend):
+            def respond(inner, *, instructions, input_items, tools):
+                names = {tool.get("name") for tool in tools}
+                if "read_audit_evidence" in names:
+                    return ModelTurn([], "Independent evidence assessment")
+                if "submit_audit" in names:
+                    return ModelTurn([], json.dumps({"verdict": "approved", "summary": "Evidence supports claim",
+                        "findings": [{"message": "Observed experiment", "evidence_ids": ["e3"]}]}))
+                return super().respond(instructions=instructions, input_items=input_items, tools=tools)
+        self.config = replace(self.config, task=replace(self.config.task, mode="research_audit"))
+        report = self.run_launch(AuditBackend())
+        self.assertEqual(report["status"], "completed", report.get("error"))
+        self.assertTrue(report["audits"]["candidate-1"]["audit_approved"])
+        self.assertTrue(report["comparison"][0]["improves"])
+        self.assertEqual(report["best_experiment_id"], report["experiments"][1]["record"]["experiment_id"])
+
     def test_explicit_baseline_reuses_checkpoint_with_one_training_slot(self):
         first = self.run_launch()
         root = Path(first["session_directory"])

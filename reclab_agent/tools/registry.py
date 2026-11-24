@@ -35,7 +35,7 @@ class ToolRegistry:
         spec = copy.deepcopy(tool.spec)
         self._check_specs([spec])
 
-        def invoke(arguments: dict[str, Any]) -> dict[str, Any]:
+        def invoke_tool(arguments: dict[str, Any]) -> dict[str, Any]:
             try:
                 return {"ok": True, "tool": spec.name, "result": tool.run(arguments)}
             except ToolError as error:
@@ -46,7 +46,7 @@ class ToolRegistry:
                         "error": {"code": "INVALID_ARGUMENTS", "message": str(error)}}
 
         self._specs[spec.name] = spec
-        self._handlers[spec.name] = invoke
+        self._handlers[spec.name] = invoke_tool
         return self
 
     def register_function(self, spec: ToolSpec, handler: Callable[..., dict[str, Any]]) -> ToolRegistry:
@@ -64,7 +64,8 @@ class ToolRegistry:
 
     def invoke(self, name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         if name not in self._handlers:
-            return {"ok": False, "error": {"code": "UNKNOWN_TOOL", "message": f"Unknown tool: {name}"}}
+            return {"ok": False,
+                    "error": {"code": "UNKNOWN_TOOL", "message": f"Unknown tool: {name}"}}
         if arguments is not None and not isinstance(arguments, dict):
             return {"ok": False, "tool": name,
                     "error": {"code": "INVALID_ARGUMENTS", "message": "tool arguments must be an object"}}

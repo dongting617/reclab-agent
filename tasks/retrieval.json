@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "corpus_root": "retrieval-corpus",
-  "annotation": "curated technical smoke corpus; paragraph relevance",
+  "annotation": "curated technical smoke corpus; paragraph relevance; research_audit_v1",
   "documents": [
     {
       "path": "baseline.md",
@@ -37,7 +37,7 @@
     },
     {
       "path": "roles.md",
-      "sha256": "4d2b8806d54f174acac9ea8260097e52b35ba0217092bb1263e0730d4ef374f7"
+      "sha256": "e76fd7dd11eac78f130b5e35687ab3f105d4653c4b2a9f3328959a528d56dbc4"
     },
     {
       "path": "web.md",

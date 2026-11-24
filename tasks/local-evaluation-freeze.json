@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "files": {
-    "retrieval.json": "b85f70269aeb7e561ea86c7a8be040555d9a97a8c73925134eb7b1b6f2574c75",
+    "retrieval.json": "42b05554b3f2368141956d6facc77f5b034b445f0eb5eb1c9d7b4b0f44922204",
     "diagnostic-dev.json": "d2d66f1d40759b595ed5202ce63ae36e21236ecfdc283b370c07a45d3486f709",
     "diagnostic-frozen.json": "904650754c5f6736f5dee17a6d26c8e64433ba9a445fc46e5e8f0fac594f73cb"
   },
@@ -21,5 +21,6 @@
     "protocol_mismatch",
     "unconfirmed_stop"
   ],
-  "note": "Do not use frozen labels to tune prompts or place labels in the retrieval corpus."
+  "note": "Do not use frozen labels to tune prompts or place labels in the retrieval corpus.",
+  "retrieval_protocol": "research_audit_v1; diagnostic task bytes unchanged"
 }

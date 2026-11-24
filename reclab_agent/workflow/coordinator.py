@@ -1,9 +1,12 @@
 """Four-stage research orchestration over registered function tools."""
 from __future__ import annotations
 from reclab_agent.domain.contracts import canonical_json
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 from reclab_agent.experiments.baselines import baseline_identity, checkpoint_manifest
 from reclab_agent.workflow.stages import StudyStage
+from reclab_agent.core.trace import TraceWriter
+import time
+import uuid
 
 
 class RequestLimitExceeded(RuntimeError):
@@ -39,6 +42,17 @@ class StudyCoordinator:
         self.research, self.backend, self.agent_factory = research, backend, agent_factory
         self.report, self.write, self.progress = report, write, progress
         self.output = config.output_directory
+        self.study_id = self.output.name
+        self.trace = TraceWriter(self.output / "agent.jsonl")
+        self.report["observability"] = {"event_schema_version": 2, "study_id": self.study_id,
+                                       "trace": "agent.jsonl"}
+
+    def event(self, event, **payload):
+        """Write host and agent events into the same ordered research trace."""
+        self.trace.write({"study_id": self.study_id, "run_id": self.study_id,
+            "task_id": self.config.task.task_id, "role": "coordinator",
+            "stage": self.research.active_stage,
+            "candidate_id": self.research.active_candidate_id, "event": event, **payload})
 
     def stage(self, stage, **payload):
         self.research.active_stage = stage.value
@@ -47,11 +61,27 @@ class StudyCoordinator:
         self.report["budget_usage"] = {**self.research.usage, "model_requests": self.backend.calls}
         self.research.save_state()
         self.write("report.json", self.report)
+        self.event("stage_changed", **payload)
         if self.progress:
             self.progress("Research stage: " + stage.value)
 
     def invoke(self, name, **arguments):
-        result = self.research.invoke(name, arguments)
+        started = time.perf_counter()
+        call_id = uuid.uuid4().hex
+        try:
+            result = self.research.invoke(name, arguments)
+        except Exception as error:
+            self.event("tool_error", call_id=call_id, tool=name, arguments=arguments,
+                error_type=type(error).__name__, experiment_id=arguments.get("experiment_id"),
+                elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
+            raise
+        value = result.get("result")
+        experiment_id = arguments.get("experiment_id")
+        if isinstance(value, dict):
+            experiment_id = value.get("experiment_id", experiment_id)
+        self.event("tool_call", call_id=call_id, tool=name, arguments=arguments, result=result,
+                   experiment_id=experiment_id,
+                   elapsed_ms=round((time.perf_counter() - started) * 1000, 3))
         if not result.get("ok"):
             self.report.setdefault("tool_errors", []).append({"tool": name, **result["error"]})
             self.write("report.json", self.report)
@@ -63,9 +93,11 @@ class StudyCoordinator:
         candidate = self.research.active_candidate_id or "background"
         self.research.conversation_path = self.output / "conversations" / f"{phase}-{candidate}.json"
         options = {"target_model": self.report["context"]["target_model"],
-                   "evidence": RecLabToolbox(self.output),
+                   "evidence": EvidenceToolbox(self.output),
                    "max_steps": max(1, self.backend.limit - self.backend.calls),
-                   "trace_path": self.output / "agent.jsonl"}
+                   "trace_path": self.output / "agent.jsonl", "trace_writer": self.trace,
+                   "trace_context": {"study_id": self.study_id, "parent_run_id": self.study_id,
+                       "stage": phase, "candidate_id": candidate, "role": "researcher"}}
         if kind:
             options["kind"] = kind
         return self.agent_factory(self.research, self.backend, **options).run(prompt, allowed_tools=allowed_tools)
@@ -139,7 +171,7 @@ class StudyCoordinator:
                 if self.config.task.mode == "research_audit":
                     self.report.setdefault("audits", {})[candidate_id] = {
                         key: self.report["agent_result"].get(key) for key in
-                        ("status", "audit", "audit_approved", "evidence_packet_hash")}
+                        ("status", "audit", "audit_approved", "audit_protocol_version", "role_prompt_hash", "citation_check", "evidence_packet_hash")}
             self.stage(StudyStage.ANALYSIS, candidate_id=candidate_id)
             for value in self.research.experiments:
                 if value["candidate_id"] != candidate_id:
@@ -151,6 +183,7 @@ class StudyCoordinator:
                     entry["audit"] = audit
                     if audit.get("status") != "completed" or audit.get("audit_approved") is not True:
                         entry["eligible"] = False
+                        entry["audit_blocked"] = True
                         if comparison is not None:
                             comparison.update(improves=False, decision="inconclusive", audit_required=True)
                 if not any(x["record"]["experiment_id"] == value["experiment_id"] for x in self.report["experiments"]):

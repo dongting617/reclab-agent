@@ -1,5 +1,5 @@
-# Planner Executor Reviewer
+# Researcher and independent auditor
 
-Planner 生成计划，Executor 调用批准范围内的工具，Reviewer 只复核证据。三个角色共用预算，最多修订一次；角色数量本身不能证明收益。
+主研究者调用任务允许的工具；独立审计者使用隔离会话，只读冻结证据，先独立分析再核查研究结论。研究和审计共用不可重置的请求预算。
 
-Planner and reviewer receive no executable tools. Role checkpoints preserve completed work, permissions and request reservations across restart.
+The researcher can execute authorized research tools. The independent auditor can only read frozen evidence using read_audit_evidence; it cannot edit source, train, change budgets or access arbitrary files. Audit checkpoints preserve separate contexts and request reservations across restart.

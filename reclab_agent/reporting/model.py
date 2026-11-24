@@ -133,6 +133,7 @@ def _entry(value, root, destination, metrics):
     result = {"id": _text(record.get("candidate_id"), 160),
               "experiment_id": _text(record.get("experiment_id"), 160),
               "record": record, "metrics": None, "verified": False, "eligible": row.get("eligible", True),
+              "audit_blocked": row.get("audit_blocked", False),
               "eligibility_recorded": "eligible" in row, "process_metrics": row.get("process_metrics"),
               "audit": row.get("audit"), "evaluation_hash": None,
               "warnings": [], "changes": [], "links": []}
@@ -219,8 +220,8 @@ def _group(name, entries, baseline, primary, guards, rounds, usage, calls, token
         entry["deltas"] = {key: entry["metrics"][key] - base_metrics[key] for key in entry["metrics"]}
         entry["relative"] = {key: _relative(entry["metrics"][key], base_metrics[key]) for key in entry["metrics"]}
         entry["guardrail"] = all(entry["metrics"][key] >= base_metrics[key] for key in guards)
-        if not entry.get("audit_pass"):
-            entry["decision"] = "独立审计未通过或未记录，证据不足"
+        if entry.get("audit_blocked") or not entry.get("audit_pass"):
+            entry["decision"] = "独立审计未通过或未完成，证据不足"
         elif not entry.get("process_pass"):
             entry["decision"] = "必需过程指标缺失、未达标或定义不可比，证据不足"
             entry["warnings"].append(entry["decision"])
@@ -450,6 +451,8 @@ def build_report_view(report, *, output_directory=None, context=None):
     audit_notes = [_text(item.get("finding"), 2000) for item in report.get("model_implementation_audit_zh", [])
                    if isinstance(item, dict) and item.get("finding")]
     audit_notes += ["假设与风险：" + json.dumps(h, ensure_ascii=False)[:2000] for h in report.get("hypotheses", [])]
+    audit_notes += ["独立审计 " + _text(candidate, 128) + "：" + json.dumps(value, ensure_ascii=False)[:4000]
+                    for candidate, value in report.get("audits", {}).items()]
     audit_notes += ["过程指标：" + json.dumps(e["process_metrics"], ensure_ascii=False)[:2000]
                     for e in report.get("experiments", []) if e.get("process_metrics")]
     diagnostic = report.get("post_experiment_numerical_diagnostic") or {}

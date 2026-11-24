@@ -9,9 +9,9 @@ from reclab_agent import ModelTurn
 from reclab_agent.domain.contracts import Budget, TaskSpec
 from reclab_agent.domain.research import EvidenceRef, ExperimentRecord, PlanReview, ResearchPlan
 from reclab_agent.agents.optimization import OptimizationAgent
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 from reclab_agent.experiments.workspace import create_workspace
-from reclab_agent.tools import RecLabToolbox
+from reclab_agent.tools import EvidenceToolbox
 
 
 class OptimizationTests(unittest.TestCase):
@@ -208,7 +208,7 @@ class OptimizationTests(unittest.TestCase):
                                    "arguments": json.dumps(args), "call_id": str(self.calls)}], "")
 
         agent = OptimizationAgent(self.toolbox(runner=runner), FeedbackBackend(),
-                                  evidence=RecLabToolbox(self.root))
+                                  evidence=EvidenceToolbox(self.root))
         result = agent.run()
         self.assertEqual((result["status"], result["tool_calls"]), ("completed", 3))
         self.assertEqual(observed, [True, 0.25])

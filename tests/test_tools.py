@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 import unittest
-from reclab_agent import RecLabToolbox, load_tasks, run_reference_suite
+from reclab_agent import EvidenceToolbox, load_tasks, run_reference_suite
 from reclab_agent.tools import json_pointer
 
 
@@ -11,7 +11,7 @@ ROOT = Path(__file__).absolute().parents[1]
 class RecLabToolTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tools = RecLabToolbox(ROOT)
+        cls.tools = EvidenceToolbox(ROOT)
 
     def test_path_traversal_is_blocked(self):
         result = self.tools.invoke("inspect_artifact", {"path": "../resume.pdf"})

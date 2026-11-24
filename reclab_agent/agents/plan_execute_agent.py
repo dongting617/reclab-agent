@@ -56,7 +56,7 @@ class PlanExecuteAgent(Agent):
                 "Stay within the original task and available tool permissions."
             )})
             session.event("plan_step_started", plan_step=index, instruction=instruction)
-            status, answer = session.run_tools(phase=f"execute:{index}")
+            status, answer = session.run_loop(phase=f"execute:{index}")
             result = {"step": index, "instruction": instruction, "status": status, "answer": answer}
             results.append(result)
             session.event("plan_step_finished", **result)

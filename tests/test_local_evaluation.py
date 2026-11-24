@@ -81,17 +81,17 @@ class EvaluationTests(unittest.TestCase):
                              backend=backend, max_requests=1, max_steps=2)
         self.assertEqual(backend.calls, 1)
 
-    def test_failed_review_cannot_pass_using_a_correct_executor_draft(self):
+    def test_invalid_audit_cannot_pass_using_a_correct_research_answer(self):
         from tests.test_agent_strategies import ScriptedBackend, text_turn
-        backend = ScriptedBackend(text_turn('{"steps":["inspect evidence"]}'),
+        backend = ScriptedBackend(
             ModelTurn(output=[{"type": "function_call", "name": "read_json_values", "call_id": "read",
                               "arguments": '{"path":"evidence/case.json","pointers":[""]}'}], output_text=""),
             text_turn('{"decision":"retain","reason":"observed metrics","citations":[{"path":"evidence/case.json","pointer":"/metrics"}]}'),
-            text_turn('{"approved":"not-a-boolean","feedback":""}'))
-        report = run_diagnostic_suite(ROOT / "tasks/diagnostic-dev.json", self.root / "review.json",
-                                      mode="team", backend=backend, max_requests=4)
+            text_turn("Independent evidence assessment"), text_turn('{"verdict":"approved"}'))
+        report = run_diagnostic_suite(ROOT / "tasks/diagnostic-dev.json", self.root / "audit.json",
+                                      mode="research_audit", backend=backend, max_requests=4, max_steps=4)
         first = report["results"][0]
-        self.assertEqual(first["agent_status"], "invalid_review")
+        self.assertEqual(first["agent_status"], "invalid_audit")
         self.assertTrue(first["decision_correct"])
         self.assertFalse(first["passed"])
 
@@ -111,26 +111,9 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(sum(r["status"] == "not_run" for r in report["results"]), 27)
         self.assertEqual(report["status"], "partial")
 
-    def test_invalid_plan_is_not_misclassified_as_a_final_answer_parse_failure(self):
-        from tests.test_agent_strategies import ScriptedBackend, text_turn
-        fixture=json.loads((ROOT/'tests/fixtures/team-output-failures-20261124.json').read_text(encoding='utf-8'))
-        plan=next(row for row in fixture['cases'] if row['agent_status']=='invalid_plan')
-        backend=ScriptedBackend(text_turn(plan['last_model_text']))
-        output=self.root/'invalid-plan.json'
-        report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',output,mode='team',backend=backend,max_requests=1)
-        row=report['results'][0]
-        self.assertEqual(row['failure']['category'],'agent_termination')
-        self.assertEqual(row['failure']['code'],'invalid_plan')
-        self.assertEqual(row['raw_answer'],'')
-        trace=[json.loads(line) for line in Path(row['trace']).read_text().splitlines()]
-        self.assertEqual(next(e for e in trace if e['event']=='model_turn')['output_text'],plan['last_model_text'])
-        run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',output,mode='team',backend=backend,max_requests=1)
-        self.assertEqual(len(backend.requests),1)
-
     def test_prose_plus_json_is_saved_but_not_accepted_as_valid_output(self):
         from tests.test_agent_strategies import ScriptedBackend, text_turn
-        fixture=json.loads((ROOT/'tests/fixtures/team-output-failures-20261124.json').read_text(encoding='utf-8'))
-        raw=fixture['cases'][0]['raw_answer']
+        raw='Explanation before JSON\n```json\n{"decision":"retain"}\n```'
         report=run_diagnostic_suite(ROOT/'tasks/diagnostic-dev.json',self.root/'prose.json',mode='react',
             backend=ScriptedBackend(text_turn(raw)),max_requests=1)
         row=report['results'][0]

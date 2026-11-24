@@ -84,13 +84,13 @@ class LaunchRemoteToolsTests(unittest.TestCase):
 
     def test_docker_has_no_remote_tools(self):
         self.config.execution_backend = "docker"
-        with patch.object(module, "RemoteTools") as factory:
+        with patch.object(module, "RemoteToolbox") as factory:
             self.assertIsNone(module.build_remote_tools(self.config))
             factory.assert_not_called()
 
     def test_native_tools_bind_local_roots_without_ssh_or_key_reads(self):
         self.write_connection()
-        with patch.object(module, "RemoteTools") as factory, patch.object(module.subprocess, "run") as run:
+        with patch.object(module, "RemoteToolbox") as factory, patch.object(module.subprocess, "run") as run:
             result = module.build_remote_tools(self.config)
             self.assertIs(result, factory.return_value)
             connection = factory.call_args.args[0]
@@ -111,7 +111,7 @@ class LaunchRemoteToolsTests(unittest.TestCase):
     def test_windows_connection_maps_drive_paths_without_reading_keys(self):
         self.write_connection(key_path="C:/Users/Example/.ssh/key", known_hosts_path="D:\\SSH Files\\known_hosts")
         with patch.object(module, "_is_wsl", return_value=True), patch.object(Path, "is_file", return_value=True), \
-                patch.object(module, "RemoteTools") as factory:
+                patch.object(module, "RemoteToolbox") as factory:
             module.build_remote_tools(self.config, windows_ssh=True)
             connection = factory.call_args.args[0]
             self.assertEqual(connection.key_path.as_posix(), "/mnt/c/Users/Example/.ssh/key")

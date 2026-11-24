@@ -17,7 +17,7 @@ from reclab_agent.domain.research import EvidenceRef
 from reclab_agent.domain.research import ExperimentRecord
 from reclab_agent.domain.research import PlanReview
 from reclab_agent.domain.research import ResearchPlan
-from reclab_agent.tools.toolbox import OptimizationToolbox
+from reclab_agent.tools.optimization_toolbox import OptimizationToolbox
 from reclab_agent.experiments.workspace import create_workspace
 
 

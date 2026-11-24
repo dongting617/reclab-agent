@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-24T13:59:55.190303+00:00",
+  "scope": "priority_one_trace_correlation_model_provenance_and_recovery",
+  "status": "passed",
+  "python": "3.12.10",
+  "validation": [
+    {
+      "modules": [
+        "tests.test_observability",
+        "tests.test_react_agent",
+        "tests.test_agent_core",
+        "tests.test_agent_strategies",
+        "tests.test_research_audit_agent",
+        "tests.test_workbench.RunCatalogTests"
+      ],
+      "tests": 58,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "environment": "sandbox"
+    },
+    {
+      "modules": [
+        "tests.test_workbench.WebTests"
+      ],
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "environment": "outside_sandbox_local_in_process_http_client"
+    }
+  ],
+  "syntax": {
+    "files": 9,
+    "status": "passed"
+  },
+  "new_recovery_cases": {
+    "subprocess_exit_after_request_reservation": {
+      "exit_code": 23,
+      "reserved_before_exit": 3,
+      "total_requests_after_resume": 5,
+      "completed_tool_executions": 1,
+      "unresolved_request_spans": 1
+    },
+    "interruption_after_possible_tool_side_effect": {
+      "status_after_resume": "reconciliation_required",
+      "tool_executions": 1,
+      "additional_model_requests": 0
+    },
+    "writer_and_catalog_restart": "cursor_returns_only_new_events",
+    "partial_trace_tail": "append_rejected_without_overwriting"
+  },
+  "external_model_requests": 0,
+  "gpu_jobs": 0,
+  "limitations": [
+    "Offline fault injection does not establish recovery at every interruption point or on remote GPU.",
+    "One shared writer and one owning controller per research trace; no independent multiprocess append guarantee.",
+    "Direct backend startup probes are outside RunSession request tracing.",
+    "Configured model aliases do not establish the provider weights version.",
+    "No power-loss durability or cross-store transaction guarantee.",
+    "Sandbox HTTP attempt stopped at Windows socketpair setup; the three HTTP tests passed outside the sandbox."
+  ],
+  "source_sha256": {
+    "reclab_agent/core/trace.py": "2a0d93dd97d2b507d068a970770e5e78765e888f400033b51cd47c8e3eb7e546",
+    "reclab_agent/core/session.py": "1fd391fe0c74c98938af1d469bfa5f730fe219dc6050f984bc3ec3c51888f965",
+    "reclab_agent/core/agent.py": "0099b3c0f64666e111a4b826b9551cc7e8a5e49f83d0db970a460a198b727547",
+    "reclab_agent/workflow/coordinator.py": "1b43159410e956bbbe83e3bbeb05a983140c8a7780caacfd3bf9cde867068d89",
+    "reclab_agent/agents/research_audit_agent.py": "58c75d356afe6b3d82edd35295fb11b6af1ff557eac885300989c2fcd5747567",
+    "reclab_agent/application/runs.py": "16d5d88886f9e18a4ca91ed26e74a84e95fd534731700061d19822dcbd13d907",
+    "reclab_agent/memory/storage.py": "c65f6a549189e46f14283b03c21df69232b01ae40f88df390b5ded8c489d8f9f",
+    "tests/test_observability.py": "ec7bc384cc8d6ea250adce9cff9284a24965c8d1f904a1c7985a286464d9e4b8",
+    "tests/test_react_agent.py": "0b0521dba973a93dc4d459895f67129729daada66b5be0079ecb81086f2557b1"
+  }
+}
