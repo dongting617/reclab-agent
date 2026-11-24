@@ -345,6 +345,17 @@
 - 补查策略实验时发现实验目录残留旧工具导入，已同步为 `EvidenceToolbox` 和 `optimization_toolbox`；37 项策略实验测试通过。
 - 关键审计与可观测源码保留主分支版本，冻结实验 JSON 未因本次文档和界面整合被改写。详情见[整合验收](../reports/workbench-acceptance-20261124.md)。
 
+### 2026-11-24：补充 Agent Runtime 与设计亮点
+
+**状态：文档补充完成。**
+
+- 核对 `Agent`、`RunSession`、研究协调器、工具授权、审计检查点和 Trace 实现，在 README 增加十一项独立设计说明及单 Agent 调用关系图。
+- 每个主题按问题、方案、优点组织，使用 Agent Runtime、ReAct、Plan and Execute、Reflection、Workflow Orchestration、Tool Abstraction、Tool Authorization、Long-term Memory、Multi-Agent Collaboration、Budget Management、Checkpointing and Recovery、Evaluation Framework、Observability 等常用术语。
+- 策略模式采用流程与场景对照表，评测体系按对象和评分方式分层；长期记忆与可观测性、预算管理与故障恢复分别说明。
+- 补充多 Agent 时序图，展示主研究者、业务工具、宿主协调器、独立审计会话和只读证据工具箱的交接；明确先独立分析再核查结论、共享预算，以及审计与独立评分的职责边界。
+- 明确应用层权限隔离与操作系统隔离的区别，以及恢复、作业复用和 checkpoint 续训的边界；不将运行完成或模型声明当作质量提升。
+- 本次仅修改文档，未新增运行能力或实验成绩；检查新增源码引用和 Markdown 链接。
+
 ## 后续记录模板
 
 ```markdown
