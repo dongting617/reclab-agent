@@ -1,0 +1,13 @@
+{
+  "kind": "live_cpu_coding_container_boundaries",
+  "image": "sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1",
+  "gpu_jobs": 0,
+  "model_requests": 0,
+  "checks": {
+    "nonroot_readonly_offline_and_no_api_key": true,
+    "bounded_timeout": true,
+    "bounded_output": true,
+    "independent_watchdog_after_controller_crash": true
+  },
+  "passed": true
+}

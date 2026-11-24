@@ -29,6 +29,17 @@ def main(argv=None):
     diagnostic.add_argument("--max-steps", type=int, default=8)
     diagnostic.add_argument("--max-requests", type=int, default=120)
     diagnostic.add_argument("--prices", type=Path)
+    diagnostic.add_argument("--env-file", type=Path)
+    coding = sub.add_parser("coding", help="compare actual code edits using frozen CPU Docker checks")
+    coding.add_argument("--manifest", type=Path, default=Path("tasks/coding.json"))
+    coding.add_argument("--output", type=Path, default=Path("reports/local-coding.json"))
+    coding.add_argument("--image", required=True, help="immutable locally cached sha256 image ID")
+    coding.add_argument("--mode", choices=("reference", "react", "team"), default="reference")
+    coding.add_argument("--model")
+    coding.add_argument("--env-file", type=Path)
+    coding.add_argument("--repetitions", type=int, choices=(1,2), default=2)
+    coding.add_argument("--max-steps", type=int, default=8)
+    coding.add_argument("--max-requests", type=int, default=64)
     costs = sub.add_parser("costs", help="summarize a saved trace using explicitly supplied token prices")
     costs.add_argument("--trace", required=True, type=Path)
     costs.add_argument("--prices", type=Path)
@@ -45,16 +56,34 @@ def main(argv=None):
             atomic_write(args.output, canonical_json(result).encode("utf-8"))
             summary = {"output": str(args.output), "manifest_hash": result["manifest_hash"],
                        "runs": [{k: v for k, v in row.items() if k != "results"} for row in result["runs"]]}
-        elif args.command == "diagnostics":
+        elif args.command in {"diagnostics", "coding"}:
             from reclab_agent.core import OpenAIResponsesBackend
             from reclab_agent.evaluation.diagnostics import run_diagnostic_suite
+            if args.mode != "reference" and args.env_file:
+                from types import SimpleNamespace
+                from reclab_agent.application.environment import load_agent_environment
+                load_agent_environment(args.env_file, SimpleNamespace(model_env="RECLAB_MODEL",
+                    api_key_env="OPENAI_API_KEY", tavily_key_env="TAVILY_API_KEY"))
+            args.model = args.model or os.environ.get("RECLAB_MODEL")
             if args.mode != "reference" and not args.model:
                 raise ValueError("--model or RECLAB_MODEL is required for actual agent evaluation")
             backend = OpenAIResponsesBackend(args.model) if args.mode != "reference" else None
-            result = run_diagnostic_suite(args.manifest, args.output, mode=args.mode, backend=backend,
-                                         max_steps=args.max_steps, max_requests=args.max_requests,
-                                         prices=read_json_strict(args.prices) if args.prices else None)
-            summary = {k: result[k] for k in ("kind", "status", "tasks", "passed", "pass_rate", "model_requests", "resource_usage")}
+            if backend is not None:
+                # Count each HTTP attempt at the evaluator boundary; SDK retries
+                # would otherwise consume unrecorded requests outside its quota.
+                backend.client = backend.client.with_options(max_retries=0, timeout=40)
+            if args.command == "coding":
+                from reclab_agent.evaluation.coding import run_coding_suite
+                from reclab_agent.execution.coding import CodingContainer
+                result = run_coding_suite(args.manifest, args.output, executor=CodingContainer(args.image),
+                    mode=args.mode, backend=backend, repetitions=args.repetitions,
+                    max_steps=args.max_steps, max_requests=args.max_requests)
+                summary = {k:result[k] for k in ("kind","status","trials","passed","pass_rate","model_requests","resource_usage")}
+            else:
+                result = run_diagnostic_suite(args.manifest, args.output, mode=args.mode, backend=backend,
+                                             max_steps=args.max_steps, max_requests=args.max_requests,
+                                             prices=read_json_strict(args.prices) if args.prices else None)
+                summary = {k: result[k] for k in ("kind", "status", "tasks", "passed", "pass_rate", "model_requests", "resource_usage")}
             summary["output"] = str(args.output)
         else:
             from reclab_agent.evaluation.costs import summarize_usage

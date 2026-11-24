@@ -1,0 +1,5 @@
+{
+  "manifest": "coding.json",
+  "sha256": "fd092f4c90f53ad39905acb3006958dcd78feedb84adeed7afaceece56feb586",
+  "policy": "Reference solutions and private expected values stay outside tool workspaces and containers."
+}

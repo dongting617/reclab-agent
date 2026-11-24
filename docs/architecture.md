@@ -21,7 +21,7 @@
 | `configs/`、`reclab.json` | 任务、模型、执行环境、预算和默认配置位置 |
 | `tests/` | 单元测试、工具边界与流程集成测试 |
 | `experiments/strategy_comparison/` | 多策略对比实验脚本；区别于包内负责实验生命周期的 `reclab_agent/experiments/` |
-| `evidence/`、`tasks/` | 默认证据诊断任务的脱敏事实与确定性断言 |
+| `evidence/`、`tasks/` | 脱敏事实、冻结诊断/检索/编码任务与独立评分断言 |
 | `reports/` | 验收和实验报告，历史报告不随模块迁移改写 |
 | `scripts/`、`docker/` | 启动、环境准备、验收及镜像脚本 |
 | `docs/` | 需求、架构、操作说明、实施方案和优化记录 |
@@ -41,10 +41,10 @@
 | `tools/` | 能力组、`context.py`、`toolbox.py`、`registry.py` | Agent 工具定义、处理函数及注册组合 |
 | `domain/` | `contracts.py`、`research.py`、`configuration.py`、`authorization.py` | 任务、计划、实验、结论契约；配置校验和范围授权 |
 | `experiments/` | `adapters.py`、`backend.py`、`workspace.py`、`runner.py`、`remote_runner.py`、`baselines.py`、`diagnostics.py`、`outcomes.py` | 数据/评分适配器、工作区、快照、训练→预测→独立评分、基线验证与指标比较 |
-| `execution/` | `worker.py`、`models.py`、`config.py`、`docker.py`、`locking.py`、`ssh.py`、`remote_agent.py`、`watchdog.py` | 执行类型、Worker、SSH 传输、远端监督、Docker 和锁 |
+| `execution/` | `worker.py`、`models.py`、`config.py`、`docker.py`、`coding.py`、`locking.py`、`ssh.py`、`remote_agent.py`、`watchdog.py` | 执行类型、Worker、SSH 传输、远端监督、Docker、编码容器和锁 |
 | `memory/` | `project.py`、`storage.py`、`retrieval.py` | 项目账本、本地 Git/Wiki、经验检索、产物与状态存储 |
 | `data/` | `beauty.py`、`datasets.py` | Beauty 数据转换及数据协议 |
-| `evaluation/` | `ranking.py`、`traces.py`、`benchmark.py`、`retrieval.py`、`diagnostics.py`、`costs.py` | 验证集评分、检索/冻结诊断评测与显式单价成本估算 |
+| `evaluation/` | `ranking.py`、`traces.py`、`benchmark.py`、`retrieval.py`、`diagnostics.py`、`coding.py`、`costs.py` | 验证集评分、检索/冻结诊断/编码评测与显式单价成本估算 |
 | `integrations/` | `tavily.py`、`text_models.py` | 外部文献服务与可选 CPU 文本模型适配 |
 | `reporting/` | `model.py`、`rendering.py`、`__init__.py` | 报告数据整理、Markdown/HTML 渲染及公开接口 |
 | `infrastructure/` | `files.py` | 共用路径约束、文件校验和原子写入 |
@@ -61,6 +61,7 @@
 |---|---|
 | `tools/evidence.py` | `list_evidence`、`inspect_artifact`、`read_json_values`、`compare_numeric_values`、`diagnose_beam_gap`、`diagnose_frequency_gap` |
 | `tools/workspace.py` | `read_source`、`apply_patch`、`validate_candidate` |
+| `tools/coding.py` | 复用工作区工具，增加编码评测专用 `run_checks` 和补丁/检查次数约束 |
 | `tools/planning.py` | `record_hypothesis` |
 | `tools/experiments.py` | `run_experiment`、`get_experiment`、`read_log`、`list_experiments` |
 | `tools/diagnostics.py` | `write_diagnostic`、`run_diagnostics` |
@@ -82,6 +83,8 @@
 - `toolbox.py`：`OptimizationToolbox` 组合能力组，不再集中实现所有业务方法。
 
 默认 `RecLabToolbox` 仍只开放六个证据工具。`OptimizationToolbox` 在配置可信 runner 后注册训练工具，挂载知识和文献服务后注册对应工具；协调器按阶段继续限制范围。SSH 工具由宿主配置，与 `execution/ssh.py` 的传输实现分开。
+
+编码对照沿用现有层级：`cli/evaluate.py → evaluation/coding.py → tools/coding.py → execution/coding.py`。任务和冻结记录在 `tasks/coding*.json`；执行层只运行固定 CPU 容器驱动，独立评分器保留隐藏答案，候选只能编辑工作区的 `src/solution.py`。它不增加另一套研究流程。
 
 ## 调整代码时应放在哪里
 

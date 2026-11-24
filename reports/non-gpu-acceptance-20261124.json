@@ -1,0 +1,477 @@
+{
+  "date": "2026-11-24",
+  "status": "completed_with_negative_cases",
+  "first_push": "73e1b76",
+  "gpu_jobs": 0,
+  "protocol": {
+    "model": "qwen3.7-flash",
+    "sdk_retries": 0,
+    "http_timeout_seconds": 40,
+    "diagnostics": {
+      "max_steps": 8,
+      "requests_per_batch": 240,
+      "modes": [
+        "react",
+        "team"
+      ],
+      "splits": [
+        "dev",
+        "frozen"
+      ]
+    },
+    "coding": {
+      "max_steps": 8,
+      "requests_per_batch": 64,
+      "repetitions": 2,
+      "patches_per_trial": 4,
+      "public_checks_per_trial": 3
+    }
+  },
+  "tests": {
+    "main_total": 512,
+    "main_passed": 504,
+    "main_skipped": 8,
+    "strategy_total": 37,
+    "strategy_passed": 37,
+    "unit_and_cli_exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "gpu_jobs": 0,
+    "package_python_files": 109,
+    "missing_package_files": [],
+    "web_assets_in_wheel": true,
+    "syntax_compiled": 109
+  },
+  "request_budget": {
+    "max_requests": 640,
+    "diagnostic_max": 512,
+    "coding_max": 128,
+    "reserved_requests": 478,
+    "deadline_unix": 1795486578.3289425,
+    "old_phase_requests": 335,
+    "old_phase_max_requests": 400,
+    "old_phase_not_resumed": true
+  },
+  "tavily": {
+    "cache_reused_without_network": true,
+    "extract": [
+      {
+        "coverage": "extracted_text",
+        "note_id": "lit-6c6d4bc93ebe48d23854cae6",
+        "sha256": "b64763fbaf3ae1f80b18904b4dc36ec61dffb2de3401d50d1893cf19fba6347e",
+        "source": "literature/lit-6c6d4bc93ebe48d23854cae6.md",
+        "url": "https://arxiv.org/pdf/1808.09781"
+      }
+    ],
+    "gpu_jobs": 0,
+    "kind": "live_tavily_search_extract",
+    "model_requests": 0,
+    "network_requests": 2,
+    "search": [
+      {
+        "coverage": "snippet_only",
+        "note_id": "lit-2ba08e6699e55d6b547ce840",
+        "sha256": "efd6a1ecaa3c464008d1b2f19980b5331bcdc69575969ad636838f6f83b2a5e5",
+        "source": "literature/lit-2ba08e6699e55d6b547ce840.md",
+        "url": "https://arxiv.org/pdf/1808.09781"
+      },
+      {
+        "coverage": "snippet_only",
+        "note_id": "lit-57a179ba58d4e7fc17507784",
+        "sha256": "9900d3530c373242d595658cd7c35848cf85302c13280f82855b5e4ce35c2d03",
+        "source": "literature/lit-57a179ba58d4e7fc17507784.md",
+        "url": "https://arxiv.org/html/2504.09596v1"
+      },
+      {
+        "coverage": "snippet_only",
+        "note_id": "lit-550773cbb66d8eefaac67a6f",
+        "sha256": "4fc71c0dc5b55344b811d90d0a2b9ed8c42e03991e00f65493dbf9c0a1b9be46",
+        "source": "literature/lit-550773cbb66d8eefaac67a6f.md",
+        "url": "https://arxiv.org/html/2211.01297v4"
+      },
+      {
+        "coverage": "snippet_only",
+        "note_id": "lit-257f08b4bbf8421351ab0700",
+        "sha256": "181a1011d13d2304cb2e4d243c393ac0a729a145fea40897e65c229860650ab6",
+        "source": "literature/lit-257f08b4bbf8421351ab0700.md",
+        "url": "https://arxiv.org/abs/1808.09781"
+      },
+      {
+        "coverage": "snippet_only",
+        "note_id": "lit-1629fd83ac608809519d376c",
+        "sha256": "5031084c03aec5c3399eb75720a0d68a4be56ca121fe9bedd0c3d816f48b29bb",
+        "source": "literature/lit-1629fd83ac608809519d376c.md",
+        "url": "https://arxiv.org/pdf/2108.11333"
+      }
+    ],
+    "status": "passed"
+  },
+  "container": {
+    "kind": "live_cpu_coding_container_boundaries",
+    "image": "sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1",
+    "gpu_jobs": 0,
+    "model_requests": 0,
+    "checks": {
+      "nonroot_readonly_offline_and_no_api_key": true,
+      "bounded_timeout": true,
+      "bounded_output": true,
+      "independent_watchdog_after_controller_crash": true
+    },
+    "passed": true
+  },
+  "runs": [
+    {
+      "report": "diagnostic-v2-dev-react-20261124.json",
+      "sha256": "6b4dafd5c05031cee30cefb21295ee0fbee157eb84c3805cafbb099aca3477b5",
+      "kind": "synthetic_agent_diagnostics",
+      "mode": "react",
+      "status": "completed",
+      "passed": 28,
+      "pass_rate": 0.9333333333333333,
+      "model_requests": 66,
+      "model": "qwen3.7-flash",
+      "split": "dev",
+      "trials": 30,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 12032,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 0,
+        "input_tokens": 73076,
+        "model_requests": 66,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 29365,
+        "price_assumption": null,
+        "requests_without_usage": 0,
+        "usage_complete": true
+      },
+      "recorded_elapsed_ms": 327333.563,
+      "elapsed_rows": 30,
+      "error_types": {},
+      "agent_statuses": {
+        "completed": 30
+      },
+      "functional_checks_passed": null,
+      "failed_ids": [
+        "positive_gain-5",
+        "guardrail_regression-2"
+      ]
+    },
+    {
+      "report": "diagnostic-v2-dev-team-20261124.json",
+      "sha256": "fc68b09549cc1fa175d91a5080a50ead80f53894b76d74698aaf938d966c0818",
+      "kind": "synthetic_agent_diagnostics",
+      "mode": "team",
+      "status": "partial",
+      "passed": 27,
+      "pass_rate": 0.9,
+      "model_requests": 128,
+      "model": "qwen3.7-flash",
+      "split": "dev",
+      "trials": 30,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 37120,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 1,
+        "input_tokens": 170464,
+        "model_requests": 128,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 95959,
+        "price_assumption": null,
+        "requests_without_usage": 1,
+        "usage_complete": false
+      },
+      "recorded_elapsed_ms": 1090511.522,
+      "elapsed_rows": 29,
+      "error_types": {
+        "APITimeoutError": 1
+      },
+      "agent_statuses": {
+        "completed": 29
+      },
+      "functional_checks_passed": null,
+      "failed_ids": [
+        "positive_gain-3",
+        "positive_gain-4",
+        "primary_regression-4"
+      ]
+    },
+    {
+      "report": "diagnostic-v2-frozen-react-20261124.json",
+      "sha256": "c8e267f28f30875fb9e88068f0ff7fdfacf8e09f2ab727715cb1ee9603f4c31a",
+      "kind": "synthetic_agent_diagnostics",
+      "mode": "react",
+      "status": "partial",
+      "passed": 26,
+      "pass_rate": 0.8666666666666667,
+      "model_requests": 66,
+      "model": "qwen3.7-flash",
+      "split": "frozen",
+      "trials": 30,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 9728,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 0,
+        "input_tokens": 73229,
+        "model_requests": 66,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 27953,
+        "price_assumption": null,
+        "requests_without_usage": 0,
+        "usage_complete": true
+      },
+      "recorded_elapsed_ms": 345266.106,
+      "elapsed_rows": 30,
+      "error_types": {
+        "JSONDecodeError": 1
+      },
+      "agent_statuses": {
+        "completed": 30
+      },
+      "functional_checks_passed": null,
+      "failed_ids": [
+        "data_mismatch-2",
+        "unconfirmed_stop-1",
+        "unconfirmed_stop-3",
+        "missing_required_diagnostic-2"
+      ]
+    },
+    {
+      "report": "diagnostic-v2-frozen-team-20261124.json",
+      "sha256": "20dc2c68841c845028dcb9bcc893dacff5d5c913af46b101171896f5ea36c7dc",
+      "kind": "synthetic_agent_diagnostics",
+      "mode": "team",
+      "status": "partial",
+      "passed": 23,
+      "pass_rate": 0.7666666666666667,
+      "model_requests": 123,
+      "model": "qwen3.7-flash",
+      "split": "frozen",
+      "trials": 30,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 23936,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 2,
+        "input_tokens": 151360,
+        "model_requests": 123,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 82079,
+        "price_assumption": null,
+        "requests_without_usage": 2,
+        "usage_complete": false
+      },
+      "recorded_elapsed_ms": 960497.775,
+      "elapsed_rows": 28,
+      "error_types": {
+        "JSONDecodeError": 4,
+        "APITimeoutError": 2
+      },
+      "agent_statuses": {
+        "completed": 27,
+        "invalid_plan": 1
+      },
+      "functional_checks_passed": null,
+      "failed_ids": [
+        "data_mismatch-1",
+        "budget_exhausted-1",
+        "budget_exhausted-2",
+        "budget_exhausted-5",
+        "unconfirmed_stop-3",
+        "unconfirmed_stop-4",
+        "missing_required_diagnostic-5"
+      ]
+    },
+    {
+      "report": "coding-reference-20261124.json",
+      "sha256": "4e8388dd3e39866b3f5614bc7584d41445a222dc929ddd8dd0d8483c70cf7ed6",
+      "kind": "isolated_functional_coding",
+      "mode": "reference",
+      "status": "completed",
+      "passed": 8,
+      "pass_rate": 1.0,
+      "model_requests": 0,
+      "model": null,
+      "split": null,
+      "trials": 8,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 0,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 0,
+        "input_tokens": 0,
+        "model_requests": 0,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 0,
+        "price_assumption": null,
+        "requests_without_usage": 0,
+        "reserved_attempts": 0,
+        "usage_complete": true
+      },
+      "recorded_elapsed_ms": 31692.719,
+      "elapsed_rows": 8,
+      "error_types": {},
+      "agent_statuses": {
+        "reference_recipe": 8
+      },
+      "functional_checks_passed": 8,
+      "failed_ids": []
+    },
+    {
+      "report": "coding-react-20261124.json",
+      "sha256": "8683d9c9553784f940f1b7749b822c70705db36db627b90f1c2994be7ef01c7c",
+      "kind": "isolated_functional_coding",
+      "mode": "react",
+      "status": "completed",
+      "passed": 3,
+      "pass_rate": 0.375,
+      "model_requests": 43,
+      "model": "qwen3.7-flash",
+      "split": null,
+      "trials": 8,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 29184,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 0,
+        "input_tokens": 64355,
+        "model_requests": 43,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 8974,
+        "price_assumption": null,
+        "requests_without_usage": 0,
+        "reserved_attempts": 43,
+        "usage_complete": true
+      },
+      "recorded_elapsed_ms": 193212.799,
+      "elapsed_rows": 8,
+      "error_types": {},
+      "agent_statuses": {
+        "completed": 7,
+        "step_limit_exceeded": 1
+      },
+      "functional_checks_passed": 4,
+      "failed_ids": [
+        "exclude_seen-1",
+        "exclude_seen-2",
+        "recent_history-1",
+        "negative_catalog-1",
+        "negative_catalog-2"
+      ]
+    },
+    {
+      "report": "coding-team-20261124.json",
+      "sha256": "0ab22f54e76cb8f26e52b1191c6e1c45046ebd4366481f16ae610561fe3dfda8",
+      "kind": "isolated_functional_coding",
+      "mode": "team",
+      "status": "partial",
+      "passed": 6,
+      "pass_rate": 0.75,
+      "model_requests": 52,
+      "model": "qwen3.7-flash",
+      "split": null,
+      "trials": 8,
+      "resource_usage": {
+        "billing_verified": false,
+        "cached_input_tokens": 25984,
+        "currency": null,
+        "estimated_cost": null,
+        "failed_requests": 1,
+        "input_tokens": 84590,
+        "model_requests": 52,
+        "note": "Estimate covers reported tokens only; unreported requests and GPU/service charges are excluded.",
+        "output_tokens": 23102,
+        "price_assumption": null,
+        "requests_without_usage": 1,
+        "reserved_attempts": 52,
+        "usage_complete": false
+      },
+      "recorded_elapsed_ms": 401258.44,
+      "elapsed_rows": 8,
+      "error_types": {
+        "APITimeoutError": 1
+      },
+      "agent_statuses": {
+        "completed": 7
+      },
+      "functional_checks_passed": 6,
+      "failed_ids": [
+        "exclude_seen-2",
+        "recent_history-1"
+      ]
+    }
+  ],
+  "runtime": {
+    "date": "2026-11-24",
+    "image_id": "sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1",
+    "repo_digests": [
+      "public.ecr.aws/docker/library/python@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1"
+    ],
+    "platform": "linux/amd64",
+    "python_version": "3.12.15",
+    "docker_server_version": "29.1.3",
+    "active_coding_containers": [],
+    "gpu_jobs": 0,
+    "model_requests": 0,
+    "image_downloaded_in_this_phase": false
+  },
+  "git_checkout": {
+    "date": "2026-11-24",
+    "kind": "autocrlf_true_frozen_evidence_checkout",
+    "before": {
+      "files": 24,
+      "changed_bytes": 21,
+      "examples": [
+        "tasks/retrieval.json",
+        "tasks/local-evaluation-freeze.json",
+        "tasks/diagnostic-frozen.json"
+      ]
+    },
+    "after": {
+      "files": 24,
+      "changed_bytes": 0,
+      "examples": []
+    },
+    "gpu_jobs": 0,
+    "model_requests": 0
+  },
+  "token_totals": {
+    "input_tokens": 617074,
+    "cached_input_tokens": 137984,
+    "output_tokens": 267432,
+    "requests_without_usage": 4
+  },
+  "estimated_cost": null,
+  "billing_verified": false,
+  "demo": {
+    "path": "workbench-demo-20261124.mp4",
+    "kind": "six_authentic_ui_screenshots_composed_into_video",
+    "continuous_recording": false,
+    "seconds": 24,
+    "width": 1280,
+    "height": 800,
+    "sha256": "2cddb57207ce388e73fe25f264f9affdacb1751cd9d74f58b8065471823b851f"
+  },
+  "limitations": [
+    "Synthetic scene variants and coding repetitions are correlated; no statistical superiority claim.",
+    "Some coding descriptions omit explicit input-field schemas; wrong-key failures may reflect task ambiguity as well as agent behavior. Frozen protocol was not tuned after observing scores.",
+    "Identical request limits do not mean equal used tokens, latency, or money. Default remains single agent and BM25.",
+    "Missing usage is not free. No price table or provider bill was verified.",
+    "CPU Docker evidence does not validate cloud GPU container isolation or all interruption recovery paths.",
+    "GPU negative results and failed candidates remain in the first publication."
+  ]
+}

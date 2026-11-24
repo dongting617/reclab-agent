@@ -109,9 +109,11 @@ python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
 
 费用只有在显式提供价格表后才估算；缺失 usage 不算免费，估算不等于服务商账单。详细命令见[本地功能与验收](docs/non-gpu-work.md)。
 
+编码对照入口为 `python -m reclab_agent.cli.evaluate coding --help`，需要 Linux/WSL 的本地 Docker 和已核验镜像；默认 `reference` 不调用模型。选择 `react` 或 `team` 才会产生 API 请求，候选代码始终在容器中执行。
+
 ## 5. 测试与当前进度
 
-2026-11-24：GPU 阶段结果已归档，下一步先推送，再执行非 GPU 剩余验收。SASRec 四阶段已实际运行，dropout 候选的两项验证指标均下降，保留原基线；GRU 已完成共享接口的基线训练和独立评分，两份未通过 Smoke Test 的模型候选也保留失败记录。详见 [GPU 验收报告](reports/gpu-acceptance-20261123.md)。
+2026-11-24：GPU 阶段已归档并推送（`73e1b76`），非 GPU 正式对照也已结束。SASRec 四阶段已实际运行，dropout 候选的两项验证指标均下降，保留原基线；GRU 已完成共享接口的基线训练和独立评分，两份未通过 Smoke Test 的模型候选也保留失败记录。详见 [GPU 验收报告](reports/gpu-acceptance-20261123.md)与[非 GPU 对照报告](reports/non-gpu-acceptance-20261124.md)。
 
 ```bash
 python -m unittest discover -s tests -q
@@ -126,12 +128,14 @@ python -m reclab_agent
 | Web 页面、CLI 共用状态、报告和事件 | 已实现，HTTP 与浏览器交互验收通过 |
 | 多角色协作、共享预算与角色恢复 | 已实现并通过离线测试 |
 | CPU 文本模型适配、四种检索模式和评测 | 真实 CPU 模型已运行；本次小语料重排变差，默认保留 BM25 |
-| 30+30 场景、冻结校验、诊断评测与成本统计 | 已实现；匿名 v2 参考检查 60/60，正式模型成绩待另行评测 |
+| 30+30 场景、冻结校验、诊断评测与成本统计 | 开发集：单 Agent 28/30、多角色 27/30；冻结集：26/30、23/30，多角色未达 80% 目标 |
+| 四类真实编码对照 | 已冻结任务、补丁工具和 CPU Docker 检查；参考配方 8/8，单 Agent 3/8，多角色 6/8，保留失败 |
+| Tavily 文献搜索与正文提取 | 真实搜索、提取与缓存复用通过，共 2 次网络请求 |
 | 真实 GPU 训练、验证集评分与 GRU 迁移 | 基线和 dropout 候选均有真实分数；候选未改善，保留基线 |
 | 远程作业恢复 | 训练进程保留、同一作业复用已实测；首次恢复需人工核验，相关路径已修复并保留失败记录 |
-| 完整回归 | 506 项主测试（498 通过、8 项环境跳过）及 37 项策略测试通过；106 个 Python 文件和 Web 资源已验证打包 |
+| 完整回归 | 512 项主测试（504 通过、8 项环境跳过）及 37 项策略测试通过；109 个 Python 文件和 Web 资源已验证打包 |
 
-仍待验收：匿名 v2 的正式模型对照、编码任务的同预算对照及演示录像；Tavily Key 已配置，真实搜索/提取留在第二批验收。当前专用实例使用原生 SSH/tmux，尚未验证云端 Docker/GPU 隔离，也未证明所有中断点都能自动恢复。单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
+本轮合计预留 478/640 次模型请求，4 次缺少 usage，未核实账单；保留单 Agent 与 BM25 默认。[工作台演示视频](reports/workbench-demo-20261124.mp4)使用实际界面截图合成，展示真实会话，不是连续录屏。编码候选只在本地 CPU Docker 中执行，这四类合成小任务不代表生产仓库修复能力，部分输入字段说明也有歧义。仍待验证云端 Docker/GPU 隔离、所有中断点自动恢复和连续录屏；单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
 
 ## 代码与文档
 

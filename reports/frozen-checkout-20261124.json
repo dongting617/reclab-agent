@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-24",
+  "kind": "autocrlf_true_frozen_evidence_checkout",
+  "before": {
+    "files": 24,
+    "changed_bytes": 21,
+    "examples": [
+      "tasks/retrieval.json",
+      "tasks/local-evaluation-freeze.json",
+      "tasks/diagnostic-frozen.json"
+    ]
+  },
+  "after": {
+    "files": 24,
+    "changed_bytes": 0,
+    "examples": []
+  },
+  "gpu_jobs": 0,
+  "model_requests": 0
+}

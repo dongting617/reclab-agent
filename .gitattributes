@@ -2,3 +2,6 @@
 backends/sasrec/src/sasrec.py -text
 start.cmd text eol=crlf
 scripts/start-agent.ps1 text eol=crlf
+# Frozen inputs and published evidence are hashed as bytes across platforms.
+tasks/** -text
+reports/*.json -text

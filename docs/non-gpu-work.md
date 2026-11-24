@@ -1,6 +1,6 @@
 # 本地功能、评测与验收
 
-更新日期：2026-11-23。沿用现有分层与四阶段流程，不新增编排框架。本页区分功能实现、离线测试和真实接口结果。
+更新日期：2026-11-24。沿用现有分层与四阶段流程，不新增编排框架。本页区分功能实现、离线测试和真实接口结果。
 
 ## 本地工作台与同一份状态
 
@@ -89,6 +89,8 @@ BM25 验收：Recall@5 = 1.0，MRR = 0.9583，无答案查询返回空结果。�
 
 `tasks/diagnostic-v2/local-evaluation-freeze.json` 固定 manifest 哈希。生成脚本仅用于建立首个版本，已有冻结文件时拒绝覆盖。新版本应另行冻结，不为改善测试成绩改标签。
 
+`.gitattributes` 为 `tasks/**` 和 `reports/*.json` 保留字节，避免 Windows Git 自动换行破坏冻结哈希。[跨平台检出复核](../reports/frozen-checkout-20261124.json)在独立临时仓库验证 `core.autocrlf=true`：修复前 24 个文件中 21 个字节改变，修复后为 0，没有改写标签或重冻。
+
 ```bash
 python -m reclab_agent.cli.evaluate diagnostics \
   --manifest tasks/diagnostic-v2/diagnostic-dev.json \
@@ -101,7 +103,7 @@ python -m reclab_agent.cli.evaluate diagnostics \
 
 默认 `reference` 运行确定性参考策略，只校验任务/工具/评分链路；两组 30/30 不能当作真实 Agent 成功率。
 
-初稿中 dataset ID 含场景族名称，可能构成额外提示。已保留原始 v1 冻结文件和真实试跑记录，另建 v2 匿名标识版本并作为默认；旧分数不迁移到 v2。v2 的两组参考检查均为 30/30，但本轮没有追加付费调用来运行新的正式模型评测。
+初稿中 dataset ID 含场景族名称，可能构成额外提示。已保留原始 v1 冻结文件和真实试跑记录，另建 v2 匿名标识版本并作为默认；旧分数不迁移到 v2。v2 的两组参考检查均为 30/30。2026-11-24 在 GPU 阶段首次推送后另行运行匿名 v2 正式模型对照，结果见最新验收汇总。
 
 v1 真实接口工程试跑：ReAct 开发集 27/30、冻结集 29/30；结构化多角色冻结集 27/30，其中引用错误、格式错误和一次接口超时均保留。开发阶段格式兼容及角色交接修复记录未删除。不同模式的调用量和校准过程不同，不宣布模式胜者，也不将这些结果当作匿名 v2 或真实推荐优化的成绩。
 
@@ -109,8 +111,8 @@ v1 真实接口工程试跑：ReAct 开发集 27/30、冻结集 29/30；结构�
 
 ```bash
 python -m reclab_agent.cli.evaluate diagnostics \
-  --manifest tasks/diagnostic-v2/diagnostic-frozen.json --mode team --model YOUR_MODEL \
-  --max-steps 8 --max-requests 140 \
+  --manifest tasks/diagnostic-v2/diagnostic-frozen.json --mode team --env-file .reclab/agent.env \
+  --max-steps 8 --max-requests 240 \
   --output reports/diagnostic-frozen-team.json
 ```
 
@@ -128,18 +130,47 @@ python -m reclab_agent.cli.evaluate diagnostics \
 python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
 ```
 
-本轮接口试跑共预留 335 次请求，硬限额为 400 次；原时间窗口结束后没有追加调用。失败与超时同样占请求额度。多个校准报告和恢复报告可能重叠，不能简单相加来推算账单。
+11 月 23 日的接口试跑共预留 335 次请求，硬限额为 400 次；该时间窗口结束后没有恢复其额度。11 月 24 日的正式匿名诊断和编码对照独立设置合计最多 640 次请求、一个小时截止时间，诊断分配 512 次、编码分配 128 次。失败与超时同样占请求额度。多个校准报告和恢复报告可能重叠，不能简单相加来推算账单。当前评测 CLI 关闭 SDK 内部重试，并设置单请求 40 秒超时；Agent 重试仍经过评测计数。
+
+本轮每组诊断使用 `max_steps=8`、`max_requests=240`，四组另受宿主总额度约束。CLI 的 `--max-requests` 只约束当前输出批次，不自动为多个进程共享额度；本轮宿主的合计上限和实际预留数单独归档在汇总报告中。
 
 ## 验收证据与边界
 
-- [本轮验收汇总](../reports/non-gpu-acceptance-20261123.json)：测试、打包、运行检查与遗留项。
+- [最新验收汇总](../reports/non-gpu-acceptance-20261124.md)：匿名模型对照、编码、用量和交付边界；[第一批本地验收](../reports/non-gpu-acceptance-20261123.json)保留历史结果。
 - [本地 Web HTTP 检查](../reports/local-web-http-20261123.json)：页面与静态资源、共享 CLI 状态、幂等提交、取消和事件流；没有启动训练。
 - [BM25 检索结果](../reports/local-retrieval-bm25-20261123.json)：固定语料 Recall@5 为 1.0，MRR 为 0.9583；不代表开放领域答案质量。
 - [匿名 v2 开发集参考检查](../reports/diagnostic-dev-v2-reference-20261123.json)与[冻结集参考检查](../reports/diagnostic-frozen-v2-reference-20261123.json)：各 30/30，均未调用模型。
 
-主测试 496 项（488 通过、8 项因环境条件跳过），策略测试 37 项通过；106 个 Python 文件与三个 Web 资源均已验证打包。最后一处前端事件刷新修复通过 JavaScript 语法检查和浏览器实际交互复核。
+最新回归为主测试 512 项（504 通过、8 项因环境条件跳过），策略测试 37 项通过；109 个 Python 文件与三个 Web 资源均已验证打包。前端事件刷新修复也通过 JavaScript 语法检查和浏览器实际交互复核。
 
-后续状态已更新：真实 SASRec 训练/评分、同一作业恢复核验与 GRU 迁移基线已有 [GPU 验收记录](../reports/gpu-acceptance-20261123.md)，包含失败与负结果。Tavily Key 已配置；匿名 v2 正式模型对照、编码任务对照、联网搜索/提取和演示录像继续在第二批验收。原生 SSH/tmux 不等同于云端 Docker/GPU 隔离，首次恢复仍需人工核验。
+后续状态已更新：真实 SASRec 训练/评分、同一作业恢复核验与 GRU 迁移基线已有 [GPU 验收记录](../reports/gpu-acceptance-20261123.md)，包含失败与负结果。第二批已完成 Tavily 真实搜索/提取、CPU 编码及匿名诊断对照；开发集单/多角色为 28/30、27/30，冻结集为 26/30、23/30，多角色冻结成绩未达 80% 目标。本阶段预留 478/640 次请求，4 次缺少 usage，未核实账单。原生 SSH/tmux 不等同于云端 Docker/GPU 隔离，首次恢复仍需人工核验。
+
+## 四类编码任务对照
+
+沿用 `tools/`、`execution/` 和 `evaluation/` 的现有分层，不增加研究阶段。冻结文件为 `tasks/coding.json` 和 `tasks/coding-freeze.json`；生成器 `scripts/build_coding_evaluation.py` 拒绝覆盖既有冻结记录。
+
+四类任务分别修复已看物品过滤、零填充均值、最近历史截取与左填充、负样本目录。每类两个独立 trial，各有 3 个公开检查和 24 个隐藏检查。模型只读取说明和 `src/solution.py`，可调用源码读取、补丁、语法检查及 `run_checks`；隐藏答案和参考实现不挂载进候选容器。评分由宿主确定性比较容器返回值，宿主不执行候选源码。
+
+实际评测使用本地已缓存的不可变 Python 镜像 ID `sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1`。Linux/WSL 中须先具备 Docker 访问权限；评测不会下载镜像、扩大 socket 权限或转为宿主执行。容器使用 UID 65532、无网络、只读根和源码、128 MB/1 CPU/64 进程上限、10 秒超时、有限输出及独立清理 Watchdog；不转发宿主 API Key。真实边界与控制器强制退出检查见 [容器验收](../reports/coding-container-acceptance-20261124.json)。
+
+[运行环境记录](../reports/coding-runtime-20261124.json)保存 Docker 29.1.3、容器 Python 3.12.15、linux/amd64 和完整仓库摘要。需要准备同一公开镜像时，可先手动执行 `docker pull public.ecr.aws/docker/library/python@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1`，再核验本地 ID；本轮复用了缓存，没有下载。
+
+```bash
+python -m reclab_agent.cli.evaluate coding --image sha256:YOUR_VERIFIED_LOCAL_IMAGE_ID \
+  --mode reference --repetitions 2 --output reports/my-coding-reference.json
+
+python -m reclab_agent.cli.evaluate coding --image sha256:YOUR_VERIFIED_LOCAL_IMAGE_ID \
+  --mode react --env-file .reclab/agent.env --repetitions 2 \
+  --max-steps 8 --max-requests 64 --output reports/my-coding-react.json
+```
+
+`YOUR_VERIFIED_LOCAL_IMAGE_ID` 必须替换为本地核验的 64 位镜像 ID。`--mode team` 使用相同每 trial 最多 8 次模型请求、4 次补丁、3 次公开检查；整批最多 64 次模型请求，失败也计数。相同输出文件恢复时不重跑已记录 trial；中断中的 trial 标为失败，已预留次数继续占用。参考模式不使用模型或 API Key。
+
+2026-11-24 实测固定参考配方 8/8、单 Agent 3/8、多角色 6/8。多角色包含一次接口超时和一次错误字段名造成的失败；单 Agent 包含未修改源码、用尽步数及隐藏检查失败。失败保留在分母；两种模式的实际请求、Token 和时延并不相等。这个小规模合成结果不代表真实推荐收益或一般仓库修复能力，不据此切换默认模式。
+
+成功规则还要求 Agent 正常完成：单 Agent 另有一次源码已通过全部检查，但会话达到步数上限，仍计失败。部分任务说明未完整列出输入字段，错误键名也可能反映任务歧义；后续改进须另行冻结清晰的输入契约，不能回改本轮说明并覆盖成绩。
+
+[工作台截图式演示](../reports/workbench-demo-20261124/README.md)展示已完成真实 GPU 会话，视频不发起训练；它是实际截图合成，未声称连续录屏。
 
 ## 真实 CPU 检索结果
 
