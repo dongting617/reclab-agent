@@ -26,7 +26,8 @@ class EvaluationTools(ToolGroup):
         process = evaluate_process_metrics(output, entry["record"], definitions)
         base_process = evaluate_process_metrics(output, baseline, definitions)
         required = any(x["purpose"] == "required" for x in definitions)
-        comparable = bool(process["definition_hash"]) and process["definition_hash"] == base_process["definition_hash"]
+        comparable = (bool(process["definition_hash"]) and process["definition_hash"] == base_process["definition_hash"]
+                      and all(row["status"] == "observed" for row in base_process["metrics"] if row["purpose"] == "required"))
         entry["process_metrics"] = process
         entry["eligible"] = process["passes_required"] and (not required or comparable)
         if not entry["eligible"]:

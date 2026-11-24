@@ -12,6 +12,7 @@ dependencies = []
 
 [project.optional-dependencies]
 openai = ["openai>=2.0"]
+retrieval = ["sentence-transformers>=5,<6"]
 service = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "jinja2>=3.1,<4"]
 orchestration = ["langgraph>=1,<2", "langgraph-checkpoint-sqlite>=2,<4"]
 test = ["httpx>=0.27,<1"]
@@ -19,6 +20,8 @@ test = ["httpx>=0.27,<1"]
 [project.scripts]
 reclab = "reclab_agent.cli.diagnostics:main"
 reclab-research = "reclab_agent.cli.research:main"
+reclab-eval = "reclab_agent.cli.evaluate:main"
+reclab-web = "reclab_agent.cli.web:main"
 
 [tool.setuptools.package-data]
 "reclab_agent.web" = ["templates/*.html", "static/*.js", "static/*.css"]

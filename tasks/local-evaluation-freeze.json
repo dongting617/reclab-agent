@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "files": {
+    "retrieval.json": "b85f70269aeb7e561ea86c7a8be040555d9a97a8c73925134eb7b1b6f2574c75",
+    "diagnostic-dev.json": "d2d66f1d40759b595ed5202ce63ae36e21236ecfdc283b370c07a45d3486f709",
+    "diagnostic-frozen.json": "904650754c5f6736f5dee17a6d26c8e64433ba9a445fc46e5e8f0fac594f73cb"
+  },
+  "dev_scene_groups": [
+    "failed_train",
+    "guardrail_regression",
+    "missing_score",
+    "positive_gain",
+    "primary_regression",
+    "seed_mismatch"
+  ],
+  "frozen_scene_groups": [
+    "budget_exhausted",
+    "data_mismatch",
+    "duplicate_candidate",
+    "missing_required_diagnostic",
+    "protocol_mismatch",
+    "unconfirmed_stop"
+  ],
+  "note": "Do not use frozen labels to tune prompts or place labels in the retrieval corpus."
+}

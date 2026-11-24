@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 from reclab_agent.core.agent import Agent
+from reclab_agent.core.llm import parse_json_response
 from reclab_agent.core.session import StepLimitExceeded
 
 
@@ -48,7 +49,7 @@ class ReflectionAgent(Agent):
             if not turn.output_text.strip():
                 return finish("empty_response", draft)
             try:
-                review = json.loads(turn.output_text)
+                review = parse_json_response(turn.output_text)
                 if (not isinstance(review, dict) or type(review.get("approved")) is not bool
                         or not isinstance(review.get("feedback"), str)
                         or (not review["approved"] and not review["feedback"].strip())):

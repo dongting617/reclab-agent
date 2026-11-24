@@ -44,6 +44,21 @@ class JsonObject:
 
 
 class AgentCoreTests(unittest.TestCase):
+    def test_missing_tool_artifact_returns_an_error_to_the_agent(self):
+        import json
+        tools = ToolRegistry()
+        def missing():
+            raise FileNotFoundError("fixture artifact")
+        tools.register_function(ToolSpec("read_missing", "Read a missing fixture", {
+            "type": "object", "properties": {}, "required": [], "additionalProperties": False}), missing)
+        backend = RecordingBackend(ModelTurn([{"type": "function_call", "name": "read_missing",
+            "arguments": "{}", "call_id": "missing-call"}], ""), text_turn("Evidence missing."))
+        result = ReActAgent(tools, backend).run("Inspect the artifact")
+        self.assertEqual(result["status"], "completed")
+        output = json.loads(backend.requests[1]["input_items"][-1]["output"])
+        self.assertEqual(output["error"]["code"], "FILE_NOT_FOUND")
+        self.assertEqual(result["tool_calls"], 1)
+
     def test_public_interfaces_export_current_implementations(self):
         self.assertIs(reclab_agent.Agent, Agent)
         self.assertIs(reclab_agent.AgentConfig, AgentConfig)
@@ -83,6 +98,18 @@ class AgentCoreTests(unittest.TestCase):
         turn = OpenAIResponsesBackend("injected-model", client).respond(
             instructions="instructions", input_items=[], tools=[])
         self.assertEqual(turn, ModelTurn([], "", "empty", None))
+
+    def test_text_only_response_omits_tool_specific_options(self):
+        calls = []
+        response = SimpleNamespace(output=[], output_text="{}", id="plain", usage=None)
+        def create(**request):
+            calls.append(request)
+            return response
+        client = SimpleNamespace(responses=SimpleNamespace(create=create))
+        OpenAIResponsesBackend("injected-model", client).respond(instructions="plan", input_items=[], tools=[])
+        self.assertNotIn("tools", calls[0])
+        self.assertNotIn("tool_choice", calls[0])
+        self.assertNotIn("parallel_tool_calls", calls[0])
 
     def test_history_is_a_deep_copy_and_each_run_starts_fresh(self):
         toolbox = ToolRegistry().register_function(

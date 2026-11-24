@@ -1,5 +1,7 @@
 param(
     [switch]$Plan,
+    [switch]$Web,
+    [int]$Port = 8000,
     [string]$Config,
     [string]$EnvFile
 )
@@ -63,6 +65,7 @@ Push-Location -LiteralPath $projectRoot
 try {
     $agentArguments = @('-B', '-m', 'reclab_agent.start')
     if ($Plan) { $agentArguments += '--plan' }
+    if ($Web) { $agentArguments += @('--web', '--port', [string]$Port) }
 
     if ($selectedPython) {
         if ($Config) { $agentArguments += @('--config', $Config) }

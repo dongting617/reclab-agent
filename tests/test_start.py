@@ -148,6 +148,14 @@ class SimpleStartTests(unittest.TestCase):
         self.assertIn("没有有效候选分数", output.getvalue())
         self.assertIn("report.html", output.getvalue())
 
+    def test_web_start_does_not_load_credentials_or_start_research(self):
+        with patch.object(start, "load_profile", side_effect=AssertionError("credential path loaded")), \
+                patch.object(start, "ensure_runtime", return_value=None), \
+                patch("reclab_agent.cli.web.main") as web, \
+                patch.object(start, "run_optimization", side_effect=AssertionError("training started")):
+            self.assertEqual(start.main(["--web", "--port", "8765"], project_root=self.root), 0)
+        web.assert_called_once_with(["--root", str(self.root), "--port", "8765"])
+
     def test_unexpected_provider_errors_do_not_echo_credentials_or_tracebacks(self):
         with patch.object(start, "load_task_configuration", return_value=self.config), \
                 patch.object(start, "ensure_runtime", return_value=None), \

@@ -42,12 +42,12 @@ class RemoteExperimentRunner(ExperimentRunner):
                 raise RuntimeError("an earlier job has unconfirmed stopping; reconcile it before retrying")
             environment = self.tools.bootstrap()
             marker = confined_path(self.config.output_directory, "active-remote-job.json")
+            prior = read_json_strict(marker, max_bytes=1_000_000) if marker.exists() else None
+            connection = self.tools.connection
+            if prior and (prior.get("remote_root"), prior.get("host"), prior.get("port")) != (
+                    connection.remote_root, connection.host, connection.port):
+                raise RuntimeError("an earlier remote job belongs to a different connection; reconcile it first")
             if marker.exists() and not self.config.resume_jobs:
-                prior = read_json_strict(marker, max_bytes=1_000_000)
-                connection = self.tools.connection
-                if (prior.get("remote_root"), prior.get("host"), prior.get("port")) != (
-                        connection.remote_root, connection.host, connection.port):
-                    raise RuntimeError("an earlier remote job belongs to a different connection; reconcile it first")
                 # A controller restart conservatively stops its previous phase
                 # before admitting another experiment. Raw job_status remains
                 # available for inspecting a running tmux job without doing this.
@@ -72,9 +72,16 @@ class RemoteExperimentRunner(ExperimentRunner):
                 "runtime": runtime["fingerprint"],
             })[:32]
             relative = f"experiments/{experiment_id}"
+            recovering = bool(prior and self.config.resume_jobs)
+            if recovering and (prior.get("experiment_id") != experiment_id or prior.get("job_id") not in {
+                    experiment_id + "-train", experiment_id + "-predict"}):
+                raise RuntimeError("pending remote job does not match this experiment; reconcile it first")
             existing = confined_path(self.config.output_directory, f"{relative}/record.json")
             if existing.exists():
-                return ExperimentRecord.from_dict(read_json_strict(existing, max_bytes=1_000_000))
+                saved = read_json_strict(existing, max_bytes=1_000_000)
+                if not recovering or saved["status"] == "completed":
+                    return ExperimentRecord.from_dict(saved)
+                self._write(f"{relative}/recovery-previous-record.json", saved)
             record = ExperimentRecord(
                 experiment_id, self.plan.plan_hash, candidate_id, snapshot["source_hash"],
                 config_hash, self.dataset.dataset_id, self.plan.protocol_hash, None, seed,
@@ -94,6 +101,9 @@ class RemoteExperimentRunner(ExperimentRunner):
         root = self.tools.connection.remote_root.rstrip("/")
         remote_output = f"results/{record.experiment_id}"
         marker = confined_path(self.config.output_directory, "active-remote-job.json")
+        prior = read_json_strict(marker, max_bytes=1_000_000) if self.config.resume_jobs and marker.exists() else None
+        if prior:
+            active_job = prior["job_id"]
 
         def remaining():
             if self.clock() >= deadline:
@@ -132,7 +142,13 @@ class RemoteExperimentRunner(ExperimentRunner):
             if self.config.resume_jobs:
                 try:
                     job = self.tools.job_status(active_job)
-                except (KeyError, ToolError):
+                except KeyError:
+                    job = self.tools.run_remote(active_job, argv, source_remote, seconds, record.seed)
+                except ToolError as error:
+                    missing = error.code == "NOT_FOUND" or (
+                        error.code == "INVALID_ARGUMENTS" and str(error) == "unknown job_id")
+                    if not missing:
+                        raise
                     job = self.tools.run_remote(active_job, argv, source_remote, seconds, record.seed)
             else:
                 job = self.tools.run_remote(active_job, argv, source_remote, seconds, record.seed)
@@ -159,6 +175,11 @@ class RemoteExperimentRunner(ExperimentRunner):
             source_local = source.directory.relative_to(self.config.output_directory / "snapshots").as_posix()
             for local_tree, label, prefix, base in ((source, "source", source_remote, source_local),
                                                     (self.public, "public", public_remote, "")):
+                if prior:
+                    # A persisted phase is submitted only after every upload.
+                    # Recheck hashes during collection; do not rewrite live inputs.
+                    observations.append({"operation": "reuse_uploaded_inputs", "root": prefix})
+                    continue
                 for path in sorted(local_tree.directory.rglob("*")):
                     if path.is_file():
                         remaining()
@@ -170,7 +191,14 @@ class RemoteExperimentRunner(ExperimentRunner):
             self.public.verify()
             stage = "train"
             train_seconds = max(1, max_seconds * 4 // 5)
-            wait_for("train", train_seconds, [])
+            if prior and prior["job_id"].endswith("-predict"):
+                training_id = record.experiment_id + "-train"
+                training = self.tools.job_status(training_id)
+                if training.get("status") != "completed" or training.get("exit_code") != 0 or training.get("stop_confirmed") is not True:
+                    raise RuntimeError("prediction recovery requires a verified completed training job")
+                record = replace(record, training_job_id=training_id)
+            else:
+                wait_for("train", train_seconds, [])
             stage = "predict"
             wait_for("predict", max_seconds - train_seconds,
                      ["--model", f"{root}/{remote_output}/train", "--split", "valid"])

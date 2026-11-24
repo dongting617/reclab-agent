@@ -1,0 +1,208 @@
+{
+  "gpu_jobs": 0,
+  "identity": "f6071060c5153d73ea52493722373b1003295bde405a316bb566b978d0dbf66d",
+  "kind": "synthetic_agent_diagnostics",
+  "limitations": [
+    "Synthetic task success is not real coding or recommendation quality.",
+    "Citation location checks do not prove every claim is factually supported.",
+    "Variants in a scene group are correlated; do not treat them as independent trials."
+  ],
+  "manifest_hash": "d2d66f1d40759b595ed5202ce63ae36e21236ecfdc283b370c07a45d3486f709",
+  "mode": "team",
+  "model": "qwen3.7-flash",
+  "model_requests": 24,
+  "prompt_hash": "6b53f6feae9aa19ce4a0696981fa0ba0f71a9304a776720644647a32e66626ea",
+  "results": [
+    {
+      "citation_located": false,
+      "decision_correct": false,
+      "error_type": "APITimeoutError",
+      "id": "positive_gain-1",
+      "passed": false,
+      "scene_group": "positive_gain",
+      "status": "failed"
+    },
+    {
+      "citation_located": false,
+      "decision_correct": false,
+      "error_type": "APITimeoutError",
+      "id": "positive_gain-2",
+      "passed": false,
+      "scene_group": "positive_gain",
+      "status": "failed"
+    },
+    {
+      "citation_located": false,
+      "decision_correct": false,
+      "error_type": "APITimeoutError",
+      "id": "positive_gain-3",
+      "passed": false,
+      "scene_group": "positive_gain",
+      "status": "failed"
+    },
+    {
+      "citation_located": false,
+      "decision_correct": false,
+      "error_type": "APITimeoutError",
+      "id": "positive_gain-4",
+      "passed": false,
+      "scene_group": "positive_gain",
+      "status": "failed"
+    },
+    {
+      "agent_status": "invalid_review",
+      "answer": {
+        "citations": [
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/baseline/ndcg@20"
+          },
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/candidate/ndcg@20"
+          },
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/baseline/recall@20"
+          },
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/candidate/recall@20"
+          }
+        ],
+        "decision": "retain",
+        "reason": "Candidate completed with all process diagnostics passing and identical scope to baseline (dataset positive_gain-4, protocol ranking-v1, seed 2026). No training slots remain to be lost, but one is available. NDCG@20 improved from 0.092 to 0.097, and Recall@20 increased from 0.15 to 0.16."
+      },
+      "citation_located": true,
+      "decision_correct": true,
+      "elapsed_ms": 52535.35,
+      "id": "positive_gain-5",
+      "passed": true,
+      "scene_group": "positive_gain",
+      "status": "completed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/positive_gain-5.jsonl"
+    },
+    {
+      "citation_located": false,
+      "decision_correct": false,
+      "error_type": "ValueError",
+      "id": "primary_regression-1",
+      "passed": false,
+      "scene_group": "primary_regression",
+      "status": "failed"
+    },
+    {
+      "agent_status": "invalid_plan",
+      "citation_located": false,
+      "decision_correct": false,
+      "elapsed_ms": 2862.921,
+      "error_type": "JSONDecodeError",
+      "id": "primary_regression-2",
+      "passed": false,
+      "scene_group": "primary_regression",
+      "status": "failed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/primary_regression-2.jsonl"
+    },
+    {
+      "agent_status": "invalid_plan",
+      "citation_located": false,
+      "decision_correct": false,
+      "elapsed_ms": 25155.975,
+      "error_type": "JSONDecodeError",
+      "id": "primary_regression-3",
+      "passed": false,
+      "scene_group": "primary_regression",
+      "status": "failed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/primary_regression-3.jsonl"
+    },
+    {
+      "agent_status": "invalid_plan",
+      "citation_located": false,
+      "decision_correct": false,
+      "elapsed_ms": 28231.756,
+      "error_type": "JSONDecodeError",
+      "id": "primary_regression-4",
+      "passed": false,
+      "scene_group": "primary_regression",
+      "status": "failed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/primary_regression-4.jsonl"
+    },
+    {
+      "agent_status": "invalid_review",
+      "answer": {
+        "citations": [
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/baseline/ndcg@20"
+          },
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics/candidate/ndcg@20"
+          }
+        ],
+        "decision": "reject",
+        "reason": "Retention criteria require ndcg@20 to improve while recall@20 remains no worse. Although recall@20 improved (0.15 -> 0.16), ndcg@20 degraded (0.092 -> 0.09). Since the primary improvement metric did not increase, the candidate is rejected."
+      },
+      "citation_located": true,
+      "decision_correct": true,
+      "elapsed_ms": 44925.329,
+      "id": "primary_regression-5",
+      "passed": true,
+      "scene_group": "primary_regression",
+      "status": "completed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/primary_regression-5.jsonl"
+    },
+    {
+      "agent_status": "invalid_review",
+      "answer": {
+        "citations": [
+          {
+            "path": "evidence/case.json",
+            "pointer": "/metrics"
+          }
+        ],
+        "decision": "reject",
+        "reason": "While NDCG@20 improved (0.081 vs 0.08) and the experimental scope matched (dataset: guardrail_regression-0, protocol: ranking-v1, seed: 2026), Recall@20 degraded from 0.15 to 0.14. The retention criteria require Recall@20 to be no worse than the baseline."
+      },
+      "citation_located": true,
+      "decision_correct": true,
+      "elapsed_ms": 52116.772,
+      "id": "guardrail_regression-1",
+      "passed": true,
+      "scene_group": "guardrail_regression",
+      "status": "completed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/guardrail_regression-1.jsonl"
+    },
+    {
+      "agent_status": "invalid_plan",
+      "citation_located": false,
+      "decision_correct": false,
+      "elapsed_ms": 30277.028,
+      "error_type": "JSONDecodeError",
+      "id": "guardrail_regression-2",
+      "passed": false,
+      "scene_group": "guardrail_regression",
+      "status": "failed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/guardrail_regression-2.jsonl"
+    },
+    {
+      "agent_status": "invalid_plan",
+      "citation_located": false,
+      "decision_correct": false,
+      "elapsed_ms": 4483.99,
+      "error_type": "JSONDecodeError",
+      "id": "guardrail_regression-3",
+      "passed": false,
+      "scene_group": "guardrail_regression",
+      "status": "failed",
+      "trace": "/mnt/e/DongTing/简历/reclab-agent/reports/diagnostic-dev-team-20261123-v3-traces/guardrail_regression-3.jsonl"
+    }
+  ],
+  "scope": "synthetic independent scenario groups; not real training results",
+  "split": "dev",
+  "status": "interrupted_calibration",
+  "original_status": "running",
+  "calibration_only": true,
+  "superseded_by": "reports/team-transport-smoke-20261123-v5.json",
+  "exclusion_reason": "Developer calibration before structured role handoff and completion-status grading fixes; not a formal score. Original measurements preserved."
+}

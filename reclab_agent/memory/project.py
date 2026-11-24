@@ -19,7 +19,9 @@ from reclab_agent.memory.retrieval import KnowledgeIndex
 
 
 class Project:
-    def __init__(self, root):
+    def __init__(self, root, *, retrieval=None):
+        self.retrieval = retrieval or {}
+        self._text_models = None
         self.root = validated_directory(root, create=True)
         for directory in ("code", "wiki/experiments", "wiki/literature", "wiki/experience", "artifacts"):
             confined_path(self.root, directory).mkdir(parents=True, exist_ok=True)
@@ -72,11 +74,25 @@ class Project:
         eid = entry["record"]["experiment_id"]
         raw = canonical_json(entry)
         with self.connect() as db:
-            prior = db.execute("SELECT entry FROM experiments WHERE id=?", (eid,)).fetchone()
+            prior = db.execute("SELECT entry,verified,scope,root FROM experiments WHERE id=?", (eid,)).fetchone()
             if prior and prior[0] != raw:
                 previous = json.loads(prior[0])
                 if any(previous.get(key) != entry.get(key) for key in ("record", "metrics", "evaluation_hash")):
-                    raise ValueError("experiment identity already has different evidence")
+                    old, new = previous["record"], entry["record"]
+                    identity = ("experiment_id", "plan_hash", "candidate_id", "source_hash", "config_hash",
+                                "dataset_id", "protocol_hash", "seed", "image", "runtime", "program_validation")
+                    promotable = (not prior["verified"] and verified and prior["scope"] == scope
+                        and prior["root"] == str(Path(root).absolute())
+                        and old.get("status") in {"failed", "timed_out", "cancelled"}
+                        and new.get("status") == "completed" and new.get("score")
+                        and all(old.get(key) == new.get(key) for key in identity)
+                        and all(not old.get(key) or old[key] == new.get(key)
+                                for key in ("training_job_id", "prediction_job_id")))
+                    if not promotable:
+                        raise ValueError("experiment identity already has different evidence")
+                    db.execute("INSERT INTO events(run_id,kind,payload,created) VALUES(?,?,?,?)",
+                        (eid, "experiment_reconciled", canonical_json({"previous": previous, "verified": entry}), time.time()))
+                    db.execute("UPDATE experiments SET entry=?,verified=1 WHERE id=?", (raw, eid))
                 return
             db.execute("INSERT OR IGNORE INTO experiments VALUES(?,?,?,?,?)", (eid, scope, raw, str(Path(root).absolute()), int(verified)))
 
@@ -159,17 +175,25 @@ class Project:
                 db.execute("UPDATE notes SET replaced_by=? WHERE id=? AND scope=?", (note_id, replaces, scope))
         return {"note_id": note_id, "source": relative, "sha256": hashlib.sha256(raw).hexdigest()}
 
-    def reindex(self, scope):
+    def reindex(self, scope, *, embedding_fn=None, reranker=None):
         with self.connect() as db:
             rows = db.execute("SELECT path FROM notes WHERE scope=? AND replaced_by IS NULL ORDER BY id", (scope,)).fetchall()
-        index = KnowledgeIndex(self.root / "wiki")
+        index = KnowledgeIndex(self.root / "wiki", embedding_fn=embedding_fn, reranker=reranker)
         index.build([r[0] for r in rows])
         return index
 
-    def search(self, scope, query, k=5):
+    def search(self, scope, query, k=5, *, mode=None, embedding_fn=None, reranker=None):
         if type(k) is not int or not 1 <= k <= 20:
             raise ValueError("k must be between 1 and 20")
-        return self.reindex(scope).search(query, k=k)
+        mode = mode or self.retrieval.get("mode", "bm25")
+        if mode != "bm25" and embedding_fn is None:
+            from reclab_agent.integrations.text_models import TextModels
+            if self._text_models is None:
+                options = {k: v for k, v in self.retrieval.items() if k not in {"mode", "allow_download"}}
+                self._text_models = TextModels(**options, local_files_only=not self.retrieval.get("allow_download", False))
+            embedding_fn = self._text_models.embed
+            reranker = self._text_models.rerank if mode == "reranked" else reranker
+        return self.reindex(scope, embedding_fn=embedding_fn, reranker=reranker).search(query, k=k, mode=mode)
 
 
 def knowledge_scope(config, inspection):

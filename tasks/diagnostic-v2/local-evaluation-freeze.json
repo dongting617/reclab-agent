@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "benchmark_version": 2,
+  "files": {
+    "diagnostic-dev.json": "9481024326538704696e652aa6546611d9f56bf01eb2573d4967f88ba12ddc1e",
+    "diagnostic-frozen.json": "9be5f8d448468dcf1808b2df1eddaa2f10e81a26ec412a42cba5a162dbfced20"
+  },
+  "note": "Scene group names and labels are not passed to model inputs. Pilot scores do not apply to this freeze."
+}

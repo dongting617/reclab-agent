@@ -16,6 +16,7 @@ from reclab_agent.infrastructure.files import atomic_write, confined_path, read_
 _STATUS = {"completed": "已结束", "incomplete": "已结束，结果不完整", "failed": "执行失败",
            "cancelled": "已取消", "running": "进行中"}
 _MODE = {"single": "ReAct", "react": "ReAct", "plan_execute": "Plan and Execute",
+         "team": "Planner–Executor–Reviewer",
          "reviewer": "Reflection", "reflection": "Reflection", "strategy_comparison": "模式对比实验"}
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
@@ -438,5 +439,6 @@ def build_report_view(report, *, output_directory=None, context=None):
             "json_href": json_href, "audit_notes": audit_notes,
             "guard_note": "保护指标要求不低于基线。" if guards else "本次未配置保护指标，仅按主指标比较。",
             "wall_seconds": report.get("elapsed_seconds"),
+            "resource_usage": report.get("resource_usage"),
             "total_attempts": report.get("budget_usage", {}).get("experiment_attempts",
                 sum(group["attempts"] for group in groups) + bool(baseline["record"]))}

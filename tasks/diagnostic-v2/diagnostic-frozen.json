@@ -1,0 +1,1058 @@
+{
+  "schema_version": 1,
+  "split": "frozen",
+  "origin": "synthetic scenario groups with anonymous dataset identities; not real training results",
+  "tasks": [
+    {
+      "id": "protocol_mismatch-1",
+      "scene_group": "protocol_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-661a06b3c7901257",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-661a06b3c7901257",
+            "protocol": "different-ranking",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "protocol_mismatch-2",
+      "scene_group": "protocol_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-ce32a09ab134480d",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-ce32a09ab134480d",
+            "protocol": "different-ranking",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "protocol_mismatch-3",
+      "scene_group": "protocol_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-9b526301294ec5ca",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-9b526301294ec5ca",
+            "protocol": "different-ranking",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "protocol_mismatch-4",
+      "scene_group": "protocol_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-f659ce5b4973ca92",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-f659ce5b4973ca92",
+            "protocol": "different-ranking",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "protocol_mismatch-5",
+      "scene_group": "protocol_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-cad41da11f5afadb",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-cad41da11f5afadb",
+            "protocol": "different-ranking",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "data_mismatch-1",
+      "scene_group": "data_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-78cf6c49bc925978",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-6ea39305c87a6082",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "data_mismatch-2",
+      "scene_group": "data_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-f468ede739a8879a",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-91f5e6d0b576789e",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "data_mismatch-3",
+      "scene_group": "data_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-8687614037679671",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-8c66f9a5bb580ece",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "data_mismatch-4",
+      "scene_group": "data_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-9b6d4d30e5d03f81",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-8dadc5ccce5fac67",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "data_mismatch-5",
+      "scene_group": "data_mismatch",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-291653b8dea1389a",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-b87147f23be135f5",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/scope"
+    },
+    {
+      "id": "budget_exhausted-1",
+      "scene_group": "budget_exhausted",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-1783a793cd414c96",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-1783a793cd414c96",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 0,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/remaining_training_jobs"
+    },
+    {
+      "id": "budget_exhausted-2",
+      "scene_group": "budget_exhausted",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-b18db34c2ade5241",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-b18db34c2ade5241",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 0,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/remaining_training_jobs"
+    },
+    {
+      "id": "budget_exhausted-3",
+      "scene_group": "budget_exhausted",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-d779066cc02692ba",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-d779066cc02692ba",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 0,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/remaining_training_jobs"
+    },
+    {
+      "id": "budget_exhausted-4",
+      "scene_group": "budget_exhausted",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-2c011753c8fd1d48",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-2c011753c8fd1d48",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 0,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/remaining_training_jobs"
+    },
+    {
+      "id": "budget_exhausted-5",
+      "scene_group": "budget_exhausted",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-05e7e252c8c706c4",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-05e7e252c8c706c4",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 0,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/remaining_training_jobs"
+    },
+    {
+      "id": "unconfirmed_stop-1",
+      "scene_group": "unconfirmed_stop",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-035421651ceb7f93",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-035421651ceb7f93",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": false,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/stop_confirmed"
+    },
+    {
+      "id": "unconfirmed_stop-2",
+      "scene_group": "unconfirmed_stop",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-b1987c9ef9ebe132",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-b1987c9ef9ebe132",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": false,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/stop_confirmed"
+    },
+    {
+      "id": "unconfirmed_stop-3",
+      "scene_group": "unconfirmed_stop",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-003a3a3873984a6f",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-003a3a3873984a6f",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": false,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/stop_confirmed"
+    },
+    {
+      "id": "unconfirmed_stop-4",
+      "scene_group": "unconfirmed_stop",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-4ed82c05c65e6dcb",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-4ed82c05c65e6dcb",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": false,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/stop_confirmed"
+    },
+    {
+      "id": "unconfirmed_stop-5",
+      "scene_group": "unconfirmed_stop",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-d30f9b441ce2b7ce",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-d30f9b441ce2b7ce",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": false,
+        "required_process_pass": true,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/stop_confirmed"
+    },
+    {
+      "id": "missing_required_diagnostic-1",
+      "scene_group": "missing_required_diagnostic",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-44bd6b61bfc082e4",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-44bd6b61bfc082e4",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": false,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/required_process_pass"
+    },
+    {
+      "id": "missing_required_diagnostic-2",
+      "scene_group": "missing_required_diagnostic",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-240fca9d97cd5942",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-240fca9d97cd5942",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": false,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/required_process_pass"
+    },
+    {
+      "id": "missing_required_diagnostic-3",
+      "scene_group": "missing_required_diagnostic",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-69f704abdc7b48f8",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-69f704abdc7b48f8",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": false,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/required_process_pass"
+    },
+    {
+      "id": "missing_required_diagnostic-4",
+      "scene_group": "missing_required_diagnostic",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-1dec48fb0e697bc8",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-1dec48fb0e697bc8",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": false,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/required_process_pass"
+    },
+    {
+      "id": "missing_required_diagnostic-5",
+      "scene_group": "missing_required_diagnostic",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-1f28c027fb42dc4b",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-1f28c027fb42dc4b",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": false,
+        "duplicate_source": false
+      },
+      "expected_decision": "inconclusive",
+      "required_pointer": "/required_process_pass"
+    },
+    {
+      "id": "duplicate_candidate-1",
+      "scene_group": "duplicate_candidate",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-5366f2b16fab8412",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-5366f2b16fab8412",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.08,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.081,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": true
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/duplicate_source"
+    },
+    {
+      "id": "duplicate_candidate-2",
+      "scene_group": "duplicate_candidate",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-48af46b9b37ab7cc",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-48af46b9b37ab7cc",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.083,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.085,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": true
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/duplicate_source"
+    },
+    {
+      "id": "duplicate_candidate-3",
+      "scene_group": "duplicate_candidate",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-4b8ead6d934783e5",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-4b8ead6d934783e5",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.086,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": true
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/duplicate_source"
+    },
+    {
+      "id": "duplicate_candidate-4",
+      "scene_group": "duplicate_candidate",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-c0884dd16325c90e",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-c0884dd16325c90e",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.089,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.093,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": true
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/duplicate_source"
+    },
+    {
+      "id": "duplicate_candidate-5",
+      "scene_group": "duplicate_candidate",
+      "evidence": {
+        "status": "completed",
+        "scope": {
+          "baseline": {
+            "dataset": "data-a8fb673c5144ff35",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          },
+          "candidate": {
+            "dataset": "data-a8fb673c5144ff35",
+            "protocol": "ranking-v1",
+            "seed": 2026
+          }
+        },
+        "metrics": {
+          "baseline": {
+            "ndcg@20": 0.092,
+            "recall@20": 0.15
+          },
+          "candidate": {
+            "ndcg@20": 0.097,
+            "recall@20": 0.16
+          }
+        },
+        "remaining_training_jobs": 1,
+        "stop_confirmed": true,
+        "required_process_pass": true,
+        "duplicate_source": true
+      },
+      "expected_decision": "stop",
+      "required_pointer": "/duplicate_source"
+    }
+  ],
+  "benchmark_version": 2
+}

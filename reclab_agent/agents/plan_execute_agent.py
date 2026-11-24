@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 from reclab_agent.core.agent import Agent
+from reclab_agent.core.llm import parse_json_response
 from reclab_agent.core.session import StepLimitExceeded
 
 
@@ -37,7 +38,7 @@ class PlanExecuteAgent(Agent):
         if not turn.output_text.strip():
             return finish("empty_response")
         try:
-            payload = json.loads(turn.output_text)
+            payload = parse_json_response(turn.output_text)
             steps = payload.get("steps") if isinstance(payload, dict) else None
             if (not isinstance(steps, list) or not 1 <= len(steps) <= self.max_plan_steps
                     or any(not isinstance(step, str) or not step.strip() for step in steps)):

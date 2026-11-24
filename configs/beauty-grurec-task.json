@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "task": {
+    "task_id": "beauty-grurec-migration",
+    "question": "验证 next_item_v1 训练与独立验证集评分接口对 GRURec 的迁移能力；在原预算内提出并验证一个候选，保留正负结果和实际源码差异，不预设收益。",
+    "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+    "baseline_id": "grurec-baseline",
+    "mode": "single",
+    "budget": {
+      "max_model_turns": 20,
+      "max_patches": 4,
+      "max_training_jobs": 2,
+      "max_job_seconds": 600,
+      "max_total_job_seconds": 1200,
+      "max_cost_cny": 20
+    }
+  },
+  "source": {
+    "directory": "../backends/sasrec",
+    "config": "gru",
+    "editable_files": [
+      "src/grurec.py",
+      "configs/gru.json"
+    ]
+  },
+  "data": {
+    "directory": "../.reclab/datasets/beauty-d1",
+    "adapter": "next_item_v1",
+    "expected_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917"
+  },
+  "evaluation": {
+    "evaluator": "next_item_ranking_v1",
+    "primary_metric": "ndcg@20",
+    "guardrail_metrics": [
+      "recall@20"
+    ]
+  },
+  "experiment": {
+    "candidate_ids": [
+      "candidate-1"
+    ],
+    "seeds": [
+      2026
+    ]
+  },
+  "agent": {
+    "model_env": "RECLAB_MODEL",
+    "api_key_env": "OPENAI_API_KEY"
+  },
+  "execution": {
+    "backend": "ssh_tmux",
+    "connection": "autodl-ssh.json"
+  },
+  "output": {
+    "directory": "../.reclab/runs/beauty-grurec-migration"
+  }
+}

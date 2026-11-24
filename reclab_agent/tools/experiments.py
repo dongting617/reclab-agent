@@ -76,6 +76,8 @@ class ExperimentTools(ToolGroup):
                 or any(getattr(record, field) != value for field, value in expected.items())
                 or record.status in {"planned", "running"}):
             raise ToolError("INVALID_EXPERIMENT_RESULT", "runner must return a matching terminal ExperimentRecord")
+        if self.state_path is not None and (self.state_path.parent / "active-remote-job.json").exists():
+            raise ToolError("RECONCILIATION_REQUIRED", "remote job is still recorded as active; preserve the pending request and reconcile it before recording a terminal result")
         if record.experiment_id in self._records:
             raise ToolError("INVALID_EXPERIMENT_RESULT", "experiment ID was already used for another request")
         self._records[record.experiment_id] = record

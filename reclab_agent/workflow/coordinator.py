@@ -14,6 +14,7 @@ class CountedBackend:
     """One request allowance shared by probes, phases and SDK-level retries."""
     def __init__(self, backend, limit):
         self.backend, self.limit, self.calls = backend, limit, 0
+        self.model = getattr(backend, "model", None)
         self.before_request = None
         self.deadline = None
 

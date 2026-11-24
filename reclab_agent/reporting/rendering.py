@@ -23,6 +23,22 @@ def _table(view):
     return ["候选", *view["metrics"], "主指标变化（绝对 / 相对）", "判定"], rows
 
 
+def _usage_text(view):
+    usage = view.get("resource_usage")
+    if not isinstance(usage, dict):
+        return None
+    text = (f"模型请求 {usage.get('model_requests', 0)} 次；已记录输入 tokens {usage.get('input_tokens', 0)}，"
+            f"缓存输入 {usage.get('cached_input_tokens', 0)}，输出 {usage.get('output_tokens', 0)}。")
+    if usage.get("requests_without_usage"):
+        text += f" {usage['requests_without_usage']} 次请求缺少 usage，费用信息不完整。"
+    cost = usage.get("estimated_cost")
+    if _number(cost):
+        text += f" 按配置单价估算 {cost:.6f} {usage.get('currency', '')}；不等于已核验账单。"
+    else:
+        text += " 未配置单价，不计算金额；未核验服务商账单。"
+    return text
+
+
 def render_markdown(view):
     lines = [f"# {view['title']}", "", f"**状态：{_md(view['status'])}**", "", _md(view["summary"]), ""]
     if view["metadata"]:
@@ -41,6 +57,8 @@ def render_markdown(view):
             lines += ["本报告未登记可打开的本地权重文件；其他模型产物请查看训练记录。", ""]
     lines += ["## 执行情况与资源", ""]
     lines += [f"实际训练尝试合计 {view['total_attempts']} 次（含基线）。", ""]
+    if _usage_text(view):
+        lines += [_md(_usage_text(view)), ""]
     for group in view["groups"]:
         resources = [f"训练尝试 {group['attempts']} 次", f"可用评分 {group['scored']} 个", f"无可用评分 {group['failed']} 个"]
         if _number(group["calls"]):
@@ -123,6 +141,8 @@ def render_html(view):
             parts.append('<p class="muted">本报告未登记可打开的本地权重文件；其他模型产物请查看训练记录。</p>')
         parts.append("</section>")
     parts += ["<section><h2>执行情况与资源</h2>", f'<p>实际训练尝试合计 {e(view["total_attempts"])} 次（含基线）。</p>']
+    if _usage_text(view):
+        parts.append(f'<p>{e(_usage_text(view))}</p>')
     for group in view["groups"]:
         parts += [f'<div class="resource"><strong>{e(group["name"])}</strong> · 训练尝试 {e(group["attempts"])} 次 · 可用评分 {group["scored"]} 个 · 无可用评分 {group["failed"]} 个']
         details = []

@@ -39,6 +39,32 @@ class ProjectMemoryTests(unittest.TestCase):
         restarted.note("experience", "scope-a", "fixed-gradient", "# Gradient clipping\n\nCorrected interpretation.", replaces="failed-gradient")
         self.assertTrue(all(x["source_relative"] == "experience/fixed-gradient.md" for x in restarted.search("scope-a", "gradient")))
 
+    def test_verified_reconciliation_preserves_prior_failure_without_changing_identity(self):
+        import json
+        record = {"experiment_id": "exp-recovered", "source_hash": "a" * 64,
+                  "status": "failed", "training_job_id": "same-train", "score": None}
+        self.project.record({"record": record}, "scope-a", self.root, verified=False)
+        recovered = {"record": {**record, "status": "completed", "score": {"sha256": "b" * 64}},
+                     "metrics": {"ndcg@20": .1}}
+        self.project.record(recovered, "scope-a", self.root, verified=True)
+        self.assertTrue(self.project.experiments()[0]["verified"])
+        with self.project.connect() as db:
+            audit = json.loads(db.execute("SELECT payload FROM events WHERE kind='experiment_reconciled'").fetchone()[0])
+        self.assertEqual(audit["previous"]["record"]["status"], "failed")
+        self.assertEqual(audit["verified"], recovered)
+        self.project.accept("scope-a", "exp-recovered")
+        with self.assertRaises(ValueError):
+            self.project.record({**recovered, "metrics": {"ndcg@20": .9}}, "scope-a", self.root, verified=True)
+
+    def test_reconciliation_rejects_different_training_identity(self):
+        record = {"experiment_id": "exp-recovered", "source_hash": "a" * 64,
+                  "status": "failed", "training_job_id": "original", "score": None}
+        self.project.record({"record": record}, "scope-a", self.root, verified=False)
+        for change in ({"source_hash": "c" * 64}, {"training_job_id": "new-training"}):
+            with self.assertRaises(ValueError):
+                self.project.record({"record": {**record, **change, "status": "completed", "score": {"sha256": "b" * 64}}},
+                                    "scope-a", self.root, verified=True)
+
     def test_git_tracks_source_versions_without_touching_input_repository(self):
         import shutil
         if not shutil.which("git"):

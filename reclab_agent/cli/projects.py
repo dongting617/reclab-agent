@@ -13,7 +13,7 @@ from reclab_agent.memory.project import Project, knowledge_scope
 def project_command(args):
     config = load_task_configuration(args.config)
     _, plan, inspection = prepare_launch(config)
-    project = Project(config.project_directory or config.output_directory / "project")
+    project = Project(config.project_directory or config.output_directory / "project", retrieval=config.retrieval)
     scope = knowledge_scope(config, inspection)
     if args.project_operation == "init":
         path = project.root / "project.json"

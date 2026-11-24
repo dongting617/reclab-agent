@@ -57,11 +57,14 @@ class WorkflowTests(unittest.TestCase):
         first = self.run_launch()
         path = Path(first["report_path"])
         first["status"] = "failed"  # Simulate failure after scoring but before final delivery.
+        first["error"] = "synthetic previous failure"
         path.write_text(json.dumps(first), encoding="utf-8")
         self.records.clear()
         resumed = launch.run_optimization(self.config, approve_plan=True, registry=self.registry,
             binder=self.binder, backend=launch_fixture.ScriptedLaunchBackend(), resume_directory=path.parent)
         self.assertEqual(resumed["status"], "completed", resumed.get("error"))
+        self.assertNotIn("error", resumed)
+        self.assertEqual(resumed["previous_failures"][-1]["error"], "synthetic previous failure")
         self.assertEqual(self.records, [])
         self.assertEqual(resumed["budget_usage"]["experiment_attempts"], first["budget_usage"]["experiment_attempts"])
         self.assertEqual(resumed["budget_usage"]["model_requests"], first["budget_usage"]["model_requests"])
@@ -105,6 +108,26 @@ class WorkflowTests(unittest.TestCase):
         toolbox = self.research_instances[0]
         self.assertEqual({s.name for s in toolbox.specs},
                          {c.name for c in tool_catalog(toolbox=toolbox, availability="available")})
+
+    def test_unconfirmed_remote_marker_preserves_pending_request_and_budget(self):
+        original_binder = self.binder
+        def binder(config, **kwargs):
+            research = original_binder(config, **kwargs)
+            runner = research._runner
+            def uncertain(snapshot, **arguments):
+                record = runner(snapshot, **arguments)
+                (config.output_directory / "active-remote-job.json").write_text(
+                    json.dumps({"experiment_id": record.experiment_id}))
+                return replace(record, status="failed", score=None, failure="connection lost")
+            research._runner = uncertain
+            return research
+        self.binder = binder
+        report = self.run_launch()
+        research = self.research_instances[0]
+        self.assertEqual(report["status"], "failed")
+        self.assertIsNotNone(research.pending_request)
+        self.assertEqual(research.usage["experiment_attempts"], 1)
+        self.assertEqual(research.experiments, [])
 
     def test_next_task_uses_the_verified_accepted_source_as_baseline(self):
         original_binder = self.binder

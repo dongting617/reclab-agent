@@ -17,7 +17,7 @@
 | 目录/文件 | 内容 |
 |---|---|
 | `reclab_agent/` | Agent 系统的 Python 实现 |
-| `backends/` | 被优化的推荐模型源码，包含独立训练与预测入口 |
+| `backends/` | 被优化的推荐模型源码，包含独立训练与预测入口；`sasrec/` 的共享 next-item 运行时提供 SASRec 默认模型及 GRURec 迁移示例 |
 | `configs/`、`reclab.json` | 任务、模型、执行环境、预算和默认配置位置 |
 | `tests/` | 单元测试、工具边界与流程集成测试 |
 | `experiments/strategy_comparison/` | 多策略对比实验脚本；区别于包内负责实验生命周期的 `reclab_agent/experiments/` |
@@ -33,10 +33,10 @@
 
 | 子包 | 主要文件 | 负责什么 |
 |---|---|---|
-| `cli/` | `diagnostics.py`、`research.py`、`projects.py`、`worker.py` | 参数解析、命令分发与终端输出 |
-| `application/` | `start.py`、`launch.py`、`binding.py`、`inspection.py`、`environment.py`、`history.py` | 装配配置、模型后端、工具和流程；启动检查、基线选择与结果归档 |
+| `cli/` | `diagnostics.py`、`research.py`、`projects.py`、`worker.py`、`web.py`、`evaluate.py` | 参数解析、命令分发、工作台与本地评测入口 |
+| `application/` | `start.py`、`launch.py`、`binding.py`、`inspection.py`、`environment.py`、`history.py`、`runs.py` | 应用装配、启动检查、归档及 CLI/Web 共用的会话查询 |
 | `workflow/` | `stages.py`、`coordinator.py`、`resources.py` | 四阶段顺序、阶段权限、停止条件、共享模型和联网预算 |
-| `agents/` | `optimization.py`、各策略和 `factory.py` | 优化 Agent 的上下文与策略组合；Simple、ReAct、计划执行、Reflection |
+| `agents/` | `optimization.py`、`team_agent.py`、各策略和 `factory.py` | 原有策略与可恢复的 Planner–Executor–Reviewer 协作 |
 | `core/` | `agent.py`、`config.py`、`llm.py`、`session.py`、`trace.py` | 通用 Agent 接口、模型协议、对话运行、工具调度和审计轨迹 |
 | `tools/` | 能力组、`context.py`、`toolbox.py`、`registry.py` | Agent 工具定义、处理函数及注册组合 |
 | `domain/` | `contracts.py`、`research.py`、`configuration.py`、`authorization.py` | 任务、计划、实验、结论契约；配置校验和范围授权 |
@@ -44,12 +44,12 @@
 | `execution/` | `worker.py`、`models.py`、`config.py`、`docker.py`、`locking.py`、`ssh.py`、`remote_agent.py`、`watchdog.py` | 执行类型、Worker、SSH 传输、远端监督、Docker 和锁 |
 | `memory/` | `project.py`、`storage.py`、`retrieval.py` | 项目账本、本地 Git/Wiki、经验检索、产物与状态存储 |
 | `data/` | `beauty.py`、`datasets.py` | Beauty 数据转换及数据协议 |
-| `evaluation/` | `ranking.py`、`traces.py`、`benchmark.py` | 推荐模型验证集评分；另含 Agent 轨迹评测与证据任务基准 |
-| `integrations/` | `tavily.py` | 外部文献服务客户端、来源保存与网页提取 |
+| `evaluation/` | `ranking.py`、`traces.py`、`benchmark.py`、`retrieval.py`、`diagnostics.py`、`costs.py` | 验证集评分、检索/冻结诊断评测与显式单价成本估算 |
+| `integrations/` | `tavily.py`、`text_models.py` | 外部文献服务与可选 CPU 文本模型适配 |
 | `reporting/` | `model.py`、`rendering.py`、`__init__.py` | 报告数据整理、Markdown/HTML 渲染及公开接口 |
 | `infrastructure/` | `files.py` | 共用路径约束、文件校验和原子写入 |
 | `examples/` | `demo.py` | 合成演示，不代表真实模型优化验收 |
-| `web/` | `app.py` | 原有可选 Web 服务草稿；需 service 依赖及页面/静态资源，标准入口仍是 CLI |
+| `web/` | `app.py`、`templates/index.html`、`static/app.js`、`static/app.css` | 本地工作台与只读研究视图；真实优化仍从 CLI 启动 |
 
 `execution/__init__.py` 导出 Worker 类型与执行 API。已有作业身份、数据库、实验产物格式和训练/预测协议不因目录调整而迁移。
 
@@ -70,6 +70,7 @@
 | `tools/literature.py` | `search_literature`、`fetch_literature` |
 | `tools/remote.py` | `upload`、`download`、`run_remote`、`job_status`、`tail_log`、`gpu_status`、`stop_job` |
 | `tools/connectivity.py` | 启动兼容性探针 `startup_check`，不作为实验能力开放 |
+| `tools/role_results.py` | `role_plan`、`role_review` 的数据输出 schema，不派发业务操作 |
 
 工具支持层：
 

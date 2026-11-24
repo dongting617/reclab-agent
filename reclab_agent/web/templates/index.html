@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RecLab · 研究工作台</title>
+    <link rel="stylesheet" href="/static/app.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <div>
+        <b class="brand">RecLab</b><span class="muted">推荐模型研究工作台</span>
+      </div>
+      <span id="connection">正在连接</span>
+    </header>
+    <main>
+      <aside>
+        <div class="section-title">
+          <h2>任务与研究会话</h2>
+          <button id="refresh" class="quiet">刷新</button>
+        </div>
+        <p class="hint">CLI 和工作台读取同一份状态。打开页面不会启动训练。</p>
+        <button id="demo">运行本地证据演示</button>
+        <p class="hint">无需 API Key 或 GPU，仅验证证据工具。</p>
+        <div id="runs" class="run-list"></div>
+        <details>
+          <summary>登记新任务</summary>
+          <form id="task-form">
+            <label
+              >任务名称<input
+                name="task_id"
+                required
+                value="local-task" /></label
+            ><label
+              >研究问题<textarea
+                name="question"
+                required
+                placeholder="描述目标、指标和约束"
+              ></textarea></label
+            ><label
+              >数据集 ID<input
+                name="dataset_id"
+                required
+                value="beauty" /></label
+            ><label
+              >基线 ID<input
+                name="baseline_id"
+                required
+                value="baseline" /></label
+            ><button type="submit">保存任务</button>
+            <p class="hint">未配置执行器时保存为等待配置。</p>
+          </form>
+        </details>
+      </aside>
+      <section class="workspace">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">RESEARCH OVERVIEW</p>
+            <h1 id="title">选择一个任务</h1>
+          </div>
+          <button id="cancel" class="quiet" disabled>取消等待任务</button>
+        </div>
+        <p id="notice" role="status">从左侧选择会话，或运行一次本地演示。</p>
+        <div class="tabs" role="tablist">
+          <button data-panel="overview" class="active">概览</button
+          ><button data-panel="changes">计划与改动</button
+          ><button data-panel="experiments">实验</button
+          ><button data-panel="report">报告</button
+          ><button data-panel="trace">Trace</button>
+        </div>
+        <section id="overview" class="panel">
+          <div id="summary" class="cards"></div>
+          <h2>阶段与状态</h2>
+          <pre id="state">暂无任务</pre>
+        </section>
+        <section id="changes" class="panel" hidden>
+          <h2>假设、范围与改动记录</h2>
+          <pre id="diff">暂无改动记录</pre>
+        </section>
+        <section id="experiments" class="panel" hidden>
+          <h2>实验与验证集独立评分</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>候选</th>
+                  <th>状态</th>
+                  <th>指标</th>
+                </tr>
+              </thead>
+              <tbody id="experiment-rows"></tbody>
+            </table>
+          </div>
+        </section>
+        <section id="report" class="panel" hidden>
+          <h2>保存的报告</h2>
+          <p class="hint">实测指标与模型解释需结合证据核验。</p>
+          <pre id="report-body">报告尚未生成</pre>
+        </section>
+        <section id="trace" class="panel" hidden>
+          <h2>持久化事件</h2>
+          <p class="hint">重连按事件序号续读，重复事件不会重复显示。</p>
+          <pre id="trace-body">暂无事件</pre>
+        </section>
+      </section>
+    </main>
+    <footer>背景 → 假设 → 实验 → 分析 · 默认固定单种子、验证集评估</footer>
+  </body>
+</html>

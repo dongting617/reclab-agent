@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-24",
+  "kind": "posthoc_read_only_process_evidence",
+  "model_requests": 0,
+  "training_jobs": 0,
+  "raw_artifacts_modified": false,
+  "plan_hash": "2f5edde432aa6e39c354853844f93ef0143924dac2f9a53aa132af0768588bf6",
+  "collector": "training_log_summary_v1",
+  "analysis": {
+    "entry": {
+      "record": {
+        "experiment_id": "exp-d809a38208d374abaee8b65b56f912ef",
+        "plan_hash": "2f5edde432aa6e39c354853844f93ef0143924dac2f9a53aa132af0768588bf6",
+        "candidate_id": "candidate-1",
+        "source_hash": "0f2d8ff1500926bcdddcc6028f50452d7e78a7835b9425c9ee9d9bf26b63d019",
+        "config_hash": "7952deebf937aae3c2514f0a93d849de7fd91f0d8ce238c8ccebdad0efe0493f",
+        "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+        "protocol_hash": "9bf203b02357e7200fcbbf51b65c91282b0097618d4ece4bda77e58e9a9a5f82",
+        "image": null,
+        "seed": 2026,
+        "status": "completed",
+        "program_validation": "passed",
+        "training_job_id": "exp-d809a38208d374abaee8b65b56f912ef-train",
+        "prediction_job_id": "exp-d809a38208d374abaee8b65b56f912ef-predict",
+        "score": {
+          "source": "experiments/exp-d809a38208d374abaee8b65b56f912ef/grade.json",
+          "sha256": "078104e20aa9be0bd8723982394d09983e25a5074fddd21feff1e1550600b692",
+          "location": "/metrics/ndcg@20",
+          "conditions": "Independent local validation-set evaluation of remote predictions under the recorded training seed."
+        },
+        "failure": null,
+        "runtime": {
+          "backend": "ssh_tmux",
+          "details": {
+            "environment": {
+              "gpu": {
+                "exit_code": 0,
+                "stderr": "",
+                "stdout": "NVIDIA GeForce RTX 4080 SUPER, GPU-9be766b4-10f8-8579-4500-8ed9cbade843, 595.71.05, 32760\n"
+              },
+              "helper_sha256": "1fbe9d8d24cea7971ca8075527c0e80b93239c10639712f1e27ff78a52b330a9",
+              "hostname": "autodl-container-af9c49bd44-9106cc05",
+              "libraries": {
+                "numpy": "2.3.2",
+                "torch": "2.8.0+cu128"
+              },
+              "platform": "linux",
+              "protocol_version": 1,
+              "python": "/root/miniconda3/bin/python",
+              "python_version": "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+              "root": "/root/autodl-tmp/reclab-agent-runs/ssh-tmux",
+              "tmux": {
+                "exit_code": 0,
+                "stderr": "",
+                "stdout": "tmux 3.2a\n"
+              },
+              "torch_cuda": "12.8"
+            },
+            "host": "connect.westb.seetacloud.com",
+            "port": 13232,
+            "remote_root": "/root/autodl-tmp/reclab-agent-runs/ssh-tmux"
+          },
+          "fingerprint": "d15def599d1a11a26946f9fa74676d5a743e9d2327c0418b070c46adf1d7d6c5"
+        }
+      },
+      "metrics": {
+        "ndcg@20": 0.07741930180175842,
+        "recall@20": 0.1477680172104697
+      },
+      "evaluation_hash": "77055d00f56bad4ad4c1bc067e10dc6b17104db58cb9cbab09c74acb6651cd13",
+      "process_metrics": {
+        "definition_hash": "0e4db9296e99a273130e3d860aef60593315bf8e9db22e63605103e0d58e7d36",
+        "metrics": [
+          {
+            "expected": ">= 28",
+            "name": "training_epochs_reached",
+            "operator": ">=",
+            "purpose": "required",
+            "threshold": 28,
+            "value": 12,
+            "passes": false,
+            "status": "observed"
+          },
+          {
+            "expected": "< 0.5",
+            "name": "training_loss_final",
+            "operator": "<=",
+            "purpose": "diagnostic",
+            "threshold": 0.5,
+            "value": 5.8544455324168485,
+            "passes": false,
+            "status": "observed"
+          },
+          {
+            "expected": "false",
+            "name": "grad_nan_check",
+            "operator": "==",
+            "purpose": "diagnostic",
+            "threshold": null,
+            "value": null,
+            "passes": null,
+            "status": "missing"
+          }
+        ],
+        "derived_evidence": [
+          {
+            "source": "/mnt/e/DongTing/简历/reclab-agent/.reclab/runs/beauty-sasrec-dropout-remaining/sessions/20261124T002218Z-84bbab02/experiments/exp-d809a38208d374abaee8b65b56f912ef/train/epochs.jsonl",
+            "sha256": "98d54e64744ae982a9a2ca1e6ab3df0beff69261f7306a2e7972cf311c119f74",
+            "collector": "training_log_summary_v1",
+            "metrics": [
+              "training_epochs_reached",
+              "training_loss_final"
+            ]
+          }
+        ],
+        "source": "/mnt/e/DongTing/简历/reclab-agent/.reclab/runs/beauty-sasrec-dropout-remaining/sessions/20261124T002218Z-84bbab02/experiments/exp-d809a38208d374abaee8b65b56f912ef/predict/process_metrics.json",
+        "passes_required": false
+      },
+      "eligible": false
+    },
+    "comparison": {
+      "candidate_id": "candidate-1",
+      "experiment_id": "exp-d809a38208d374abaee8b65b56f912ef",
+      "deltas": {
+        "ndcg@20": -0.003031003959591147,
+        "recall@20": -0.007664037289351028
+      },
+      "passes_guardrails": false,
+      "improves": false,
+      "decision": "inconclusive"
+    }
+  },
+  "note": "Recomputed from original logs; missing gradient observations are not inferred from finite losses."
+}

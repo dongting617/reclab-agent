@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "corpus_root": "retrieval-corpus",
+  "annotation": "curated technical smoke corpus; paragraph relevance",
+  "documents": [
+    {
+      "path": "baseline.md",
+      "sha256": "b3f26d00d1b92f752931410d82936f19a7f8dd92097a8aeab64bc9fa33e72ecd"
+    },
+    {
+      "path": "validation.md",
+      "sha256": "0fefdd3b1477b00e09c8eb6386139a2d432cde7ee9e83400a4eaed3c111253f7"
+    },
+    {
+      "path": "patch.md",
+      "sha256": "b5730c91c9e57be17a39e764b57ba9fa941896ad9b602015d8b08fff09aa1675"
+    },
+    {
+      "path": "restore.md",
+      "sha256": "2fd276ba3796ffe084c5da8e4531d5a157fc01f0f953a935ca3dd59dfcc38116"
+    },
+    {
+      "path": "recovery.md",
+      "sha256": "3d70aa40e17917886a5fcc80c1e672a18143258ed51585092ac98f1e998838cc"
+    },
+    {
+      "path": "memory.md",
+      "sha256": "531a2a51769664db5472af7f00b53c46d31b1b7df26c220926c0a0d976d06ce6"
+    },
+    {
+      "path": "literature.md",
+      "sha256": "649527362be0b7bf8aa2cdbff199cb28901da317b3abb2ca5ffe036849933bee"
+    },
+    {
+      "path": "diagnostics.md",
+      "sha256": "53ef012a7ce7fb862b5cf18fe8733ec775aab911a7c9f7516f22276c443655f4"
+    },
+    {
+      "path": "roles.md",
+      "sha256": "4d2b8806d54f174acac9ea8260097e52b35ba0217092bb1263e0730d4ef374f7"
+    },
+    {
+      "path": "web.md",
+      "sha256": "1a567a984b5442ebcb89e5748f4e857501de90ccbbed3a4df2b66cd9c42f74e5"
+    },
+    {
+      "path": "budget.md",
+      "sha256": "90bcdba30bec5d9e0a8ca64ed7835d76d0173be6d75e0aedf692e7b4062c74e0"
+    },
+    {
+      "path": "freeze.md",
+      "sha256": "7532537a328fca542c00ab912185eeeb0e06ae4c35b1844a4f151b22884d672a"
+    }
+  ],
+  "queries": [
+    {
+      "id": "baseline",
+      "query": "什么时候能够复用历史基线？",
+      "relevant": [
+        {
+          "source": "baseline.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "query": "Can user bootstrap prove stability across training seeds?",
+      "relevant": [
+        {
+          "source": "validation.md",
+          "line_start": 5,
+          "line_end": 5
+        }
+      ]
+    },
+    {
+      "id": "patch",
+      "query": "如何防止使用过期源码覆盖候选文件？",
+      "relevant": [
+        {
+          "source": "patch.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "restore",
+      "query": "Why can a CRLF snapshot have the same source identity?",
+      "relevant": [
+        {
+          "source": "restore.md",
+          "line_start": 5,
+          "line_end": 5
+        }
+      ]
+    },
+    {
+      "id": "recovery",
+      "query": "控制端重启后如何避免再次消耗训练额度？",
+      "relevant": [
+        {
+          "source": "recovery.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "query": "Where should observed experiment facts and interpretations be stored?",
+      "relevant": [
+        {
+          "source": "memory.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "literature",
+      "query": "只有搜索摘要时能说读过论文全文吗？",
+      "relevant": [
+        {
+          "source": "literature.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "query": "NDCG 提升但必需过程指标缺失应该怎样处理？",
+      "relevant": [
+        {
+          "source": "diagnostics.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "roles",
+      "query": "Which agent roles are allowed to execute tools?",
+      "relevant": [
+        {
+          "source": "roles.md",
+          "line_start": 5,
+          "line_end": 5
+        }
+      ]
+    },
+    {
+      "id": "web",
+      "query": "重连网页如何避免重复显示事件？",
+      "relevant": [
+        {
+          "source": "web.md",
+          "line_start": 3,
+          "line_end": 3
+        }
+      ]
+    },
+    {
+      "id": "budget",
+      "query": "Are missing usage records equivalent to zero cost?",
+      "relevant": [
+        {
+          "source": "budget.md",
+          "line_start": 5,
+          "line_end": 5
+        }
+      ]
+    },
+    {
+      "id": "freeze",
+      "query": "Can reference tool checks establish end-to-end agent performance?",
+      "relevant": [
+        {
+          "source": "freeze.md",
+          "line_start": 5,
+          "line_end": 5
+        }
+      ]
+    },
+    {
+      "id": "unanswerable",
+      "query": "unobtainium_session_9239",
+      "relevant": []
+    }
+  ]
+}

@@ -38,10 +38,11 @@ def load_profile(root, config=None, env_file=None):
         env_file if env_file is not None else profile["env_file"])
 
 
-def _usable_python(path):
+def _usable_python(path, *, web=False):
     try:
-        result = subprocess.run([str(path), "-I", "-c",
-            "import sys,openai; assert sys.version_info >= (3,10); assert int(openai.__version__.split('.')[0]) >= 2"],
+        check = ("import sys,fastapi,uvicorn,jinja2; assert sys.version_info >= (3,10)" if web else
+                 "import sys,openai; assert sys.version_info >= (3,10); assert int(openai.__version__.split('.')[0]) >= 2")
+        result = subprocess.run([str(path), "-I", "-c", check],
             capture_output=True, timeout=30, check=False)
         return result.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
@@ -50,8 +51,11 @@ def _usable_python(path):
 
 def ensure_runtime(root, argv):
     """Reuse an SDK environment, preparing one once when it is missing."""
+    web = "--web" in argv
     try:
-        if importlib.util.find_spec("openai") is not None and int(importlib.metadata.version("openai").split(".")[0]) >= 2:
+        if web and all(importlib.util.find_spec(name) is not None for name in ("fastapi", "uvicorn", "jinja2")):
+            return None
+        if not web and importlib.util.find_spec("openai") is not None and int(importlib.metadata.version("openai").split(".")[0]) >= 2:
             return None
     except (ImportError, ValueError, importlib.metadata.PackageNotFoundError):
         pass
@@ -60,7 +64,7 @@ def ensure_runtime(root, argv):
     try:
         cached = read_json_strict(state, max_bytes=16_384)
         path = Path(cached["python"])
-        if path.is_absolute() and path != Path(sys.executable) and _usable_python(path):
+        if path.is_absolute() and path != Path(sys.executable) and _usable_python(path, web=web):
             return subprocess.call([str(path), "-B", "-m", "reclab_agent.application.start", *argv], cwd=root)
     except (OSError, ValueError, TypeError, KeyError):
         pass
@@ -72,15 +76,16 @@ def ensure_runtime(root, argv):
         cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
         environment = cache / "reclab-agent" / f"python-{sys.version_info.major}.{sys.version_info.minor}"
     python = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-    if not _usable_python(python):
+    if not _usable_python(python, web=web):
         print("Preparing the local Agent environment (first start only)...", flush=True)
         create = subprocess.run([sys.executable, "-m", "venv", str(environment)],
                                 capture_output=True, check=False)
         if create.returncode:
             raise LaunchError("could not prepare the local Python environment")
+        dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "jinja2>=3.1,<4"] if web else ["openai>=2.0"]
         install = subprocess.run([str(python), "-m", "pip", "install", "--disable-pip-version-check",
-                                  "--no-compile", "openai>=2.0"], capture_output=True, check=False)
-        if install.returncode or not _usable_python(python):
+                                  "--no-compile", *dependencies], capture_output=True, check=False)
+        if install.returncode or not _usable_python(python, web=web):
             raise LaunchError("could not install the Agent SDK; check network access and retry")
     atomic_write(state, canonical_json({"python": str(python)}).encode("utf-8"))
     return subprocess.call([str(python), "-B", "-m", "reclab_agent.application.start", *argv], cwd=root)
@@ -113,12 +118,23 @@ def main(argv=None, *, project_root=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(description="Start the configured model-optimization Agent")
     parser.add_argument("--plan", action="store_true", help="view the task without API calls or training")
+    parser.add_argument("--web", action="store_true", help="open the local workbench without loading API keys or starting training")
+    parser.add_argument("--port", type=int, default=8000, help="local workbench port")
     parser.add_argument("--config", help="override the task selected in reclab.json")
     parser.add_argument("--env-file", help="override the local API settings file")
     parser.add_argument("--windows-ssh", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     root = Path(project_root) if project_root is not None else Path(__file__).resolve().parents[2]
     try:
+        if args.web:
+            if args.plan or args.config or args.env_file:
+                raise ValueError("--web cannot be combined with --plan, --config or --env-file")
+            delegated = ensure_runtime(root, argv)
+            if delegated is not None:
+                return delegated
+            from reclab_agent.cli.web import main as web_main
+            web_main(["--root", str(root), "--port", str(args.port)])
+            return 0
         task_path, env_path = load_profile(root, args.config, args.env_file)
         config = load_task_configuration(task_path)
         if args.plan:

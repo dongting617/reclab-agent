@@ -107,6 +107,61 @@ class RemoteRunnerTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(len(self.remote.runs), 2)
 
+    def test_resume_reuses_uploaded_inputs_and_existing_jobs_after_local_failure(self):
+        snapshot = self.snapshot()
+        first = self.execute(snapshot=snapshot)
+        failed = first.to_dict()
+        failed.update(status="failed", score=None, failure="upload: temporary SSH failure")
+        record_path = self.config.output_directory / "experiments" / first.experiment_id / "record.json"
+        record_path.write_text(json.dumps(failed))
+        marker = self.config.output_directory / "active-remote-job.json"
+        marker.write_text(json.dumps({"experiment_id": first.experiment_id, "job_id": first.training_job_id,
+                                     "remote_root": "/fixture", "host": "fixture.invalid", "port": 22}))
+        self.config = replace(self.config, resume_jobs=True)
+        def no_upload(*args, **kwargs):
+            raise AssertionError("recovery must not rewrite inputs used by the live job")
+        self.remote.upload = no_upload
+        result = self.execute(snapshot=snapshot)
+        self.assertEqual(result.status, "completed", result.failure)
+        self.assertEqual(result.training_job_id, first.training_job_id)
+        self.assertEqual(len(self.remote.runs), 2)
+        self.assertFalse(marker.exists())
+        self.assertTrue((record_path.parent / "recovery-previous-record.json").exists())
+
+    def test_resume_rejects_a_pending_job_from_another_experiment(self):
+        snapshot = self.snapshot()
+        marker = self.config.output_directory / "active-remote-job.json"
+        marker.write_text(json.dumps({"experiment_id": "another-exp", "job_id": "another-exp-train",
+                                     "remote_root": "/fixture", "host": "fixture.invalid", "port": 22}))
+        self.config = replace(self.config, resume_jobs=True)
+        with self.assertRaisesRegex(RuntimeError, "does not match"):
+            self.execute(snapshot=snapshot)
+        self.assertEqual(self.remote.runs, [])
+        self.assertTrue(marker.exists())
+
+    def test_prediction_recovery_accepts_explicit_unknown_job_without_retraining(self):
+        snapshot = self.snapshot()
+        first = self.execute(snapshot=snapshot)
+        failed = first.to_dict()
+        failed.update(status="failed", score=None, failure="prediction not submitted")
+        (self.config.output_directory / "experiments" / first.experiment_id / "record.json").write_text(json.dumps(failed))
+        marker = self.config.output_directory / "active-remote-job.json"
+        marker.write_text(json.dumps({"experiment_id": first.experiment_id, "job_id": first.prediction_job_id,
+                                     "remote_root": "/fixture", "host": "fixture.invalid", "port": 22}))
+        self.config = replace(self.config, resume_jobs=True)
+        del self.remote.jobs[first.prediction_job_id]
+        self.remote.runs.clear()
+        original_status = self.remote.job_status
+        def status(job_id):
+            if job_id not in self.remote.jobs:
+                raise ToolError("INVALID_ARGUMENTS", "unknown job_id")
+            return original_status(job_id)
+        self.remote.job_status = status
+        result = self.execute(snapshot=snapshot)
+        self.assertEqual(result.status, "completed", result.failure)
+        self.assertEqual([row[0] for row in self.remote.runs], [first.prediction_job_id])
+        self.assertFalse(marker.exists())
+
     def test_training_failure_stops_without_prediction_or_score(self):
         self.remote.fail_phase = "train"
         record = self.execute()

@@ -17,15 +17,16 @@ from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
 from reclab_agent.domain.contracts import TaskSpec
 from reclab_agent.memory.storage import RunStore
+from reclab_agent.application.runs import RunCatalog
 
 
 def _run_demo(state_root: Path) -> dict[str, Any]:
     # Keep demo startup optional and make the HTTP contract independently testable.
-    from reclab_agent.examples.demo import run_demo
-    return run_demo(state_root)
+    from reclab_agent.application.runs import run_evidence_demo
+    return run_evidence_demo(state_root.parent)
 
 
-def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
+def create_app(root: Path, run_task: Callable | None = None, *, catalog=None) -> FastAPI:
     """Create a workbench for a repository root; bind the server to localhost.
 
     A supplied task runner receives ``(TaskSpec, run_id)`` and is responsible
@@ -35,7 +36,9 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
     app = FastAPI(title="RecLab Agent Workbench", version="0.2.0")
     app.state.repository_root = Path(root)
     app.state.state_root = Path(root) / ".reclab"
-    app.state.store = RunStore(app.state.state_root / "state")
+    catalog = catalog or RunCatalog(root)
+    app.state.store = catalog.store
+    app.state.catalog = catalog
     app.state.task_runner = run_task
     package_root = Path(__file__).parent
     templates = Jinja2Templates(directory=str(package_root / "templates"))
@@ -43,12 +46,16 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
 
     def get_run(run_id: str) -> dict[str, Any]:
         try:
-            return app.state.store.get(run_id)
+            return catalog.get(run_id)
         except (KeyError, ValueError) as error:
             raise HTTPException(status_code=404, detail="运行记录不存在") from error
 
     async def execute_task(task: TaskSpec, run_id: str) -> None:
         try:
+            current = app.state.store.get(run_id)
+            if current["status"] != "queued":
+                return
+            app.state.store.update(run_id, "running", {**current["state"], "execution_started": True})
             if inspect.iscoroutinefunction(run_task):
                 await run_task(task, run_id)
             else:
@@ -73,7 +80,7 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
         return {
             "status": "ok",
             "execution_mode": "external_runner" if run_task is not None else "offline",
-            "demo": {"kind": "trusted_synthetic_popularity_fixture", "uses_llm": False},
+            "demo": {"kind": "evidence_reference", "uses_llm": False, "gpu_jobs": 0},
             "live": {
                 "runner_configured": run_task is not None,
                 "model_backend_configured": None if run_task is not None else False,
@@ -88,7 +95,7 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
 
     @app.get("/api/runs")
     def list_runs(limit: int = Query(default=50, ge=1, le=200)):
-        return {"runs": app.state.store.list(limit)}
+        return {"runs": catalog.list(limit)}
 
     @app.get("/api/runs/{run_id}")
     def read_run(run_id: str):
@@ -99,6 +106,7 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
         run = get_run(run_id)
         return JSONResponse(status_code=200 if run["report"] is not None else 202, content={
             "run_id": run_id, "status": run["status"], "report": run["report"],
+            "view": catalog.report_view(run_id),
         })
 
     @app.get("/api/runs/{run_id}/events")
@@ -108,6 +116,8 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
         if last_id:
             try:
                 after = max(after, int(last_id))
+                if int(last_id) < 0:
+                    raise ValueError("negative cursor")
             except ValueError as error:
                 raise HTTPException(status_code=400, detail="Last-Event-ID 必须是事件序号") from error
 
@@ -115,15 +125,15 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
             cursor = after
             idle_polls = 0
             while not await request.is_disconnected():
-                batch = await run_in_threadpool(app.state.store.events, run_id, cursor)
+                batch = await run_in_threadpool(catalog.events, run_id, cursor)
                 for event in batch:
                     if await request.is_disconnected():
                         return
                     cursor = event["seq"]
                     payload = json.dumps(event, ensure_ascii=False, allow_nan=False)
                     yield f"id: {cursor}\nevent: trace\ndata: {payload}\n\n"
-                current = await run_in_threadpool(app.state.store.get, run_id)
-                if current["status"] in RunStore.TERMINAL:
+                current = await run_in_threadpool(catalog.get, run_id)
+                if current["status"] in RunStore.TERMINAL | {"incomplete"}:
                     payload = json.dumps({"run_id": run_id, "status": current["status"], "last_seq": cursor})
                     yield f"event: end\ndata: {payload}\n\n"
                     return
@@ -146,7 +156,22 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
             task = TaskSpec.from_dict(payload)
         except (ValueError, TypeError, OverflowError) as error:
             raise HTTPException(status_code=400, detail=f"无效任务：{error}") from error
-        run_id = app.state.store.create(task)
+        key = request.headers.get("idempotency-key")
+        # Serialize same-key submissions so only the first request starts work.
+        from reclab_agent.execution.locking import job_lock
+        from reclab_agent.domain.contracts import content_hash
+        lock_id = "request-" + content_hash(key or task.to_dict())[:32]
+        with job_lock(app.state.state_root, lock_id) as acquired:
+            if not acquired:
+                raise HTTPException(status_code=409, detail="相同任务正在提交，请使用原幂等键重试")
+            try:
+                run_id = app.state.store.create(task, request_key=key)
+            except ValueError as error:
+                raise HTTPException(status_code=409, detail=str(error)) from error
+            current = app.state.store.get(run_id)
+            if current["status"] != "queued" or current["state"].get("dispatched"):
+                return current
+            app.state.store.update(run_id, "queued", {"dispatched": True})
         if run_task is None:
             state = {
                 "configuration_required": ["model_backend", "worker"],
@@ -158,11 +183,18 @@ def create_app(root: Path, run_task: Callable | None = None) -> FastAPI:
             background_tasks.add_task(execute_task, task, run_id)
         return app.state.store.get(run_id)
 
+    @app.post("/api/runs/{run_id}/cancel")
+    def cancel(run_id: str):
+        try:
+            return catalog.cancel_waiting(run_id)
+        except (ValueError, KeyError) as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
     @app.post("/api/demo", status_code=201)
     def demo():
         try:
             return _run_demo(app.state.state_root)
-        except ImportError as error:
-            raise HTTPException(status_code=503, detail="合成演示模块尚不可用") from error
+        except (ImportError, ValueError, OSError) as error:
+            raise HTTPException(status_code=503, detail="本地证据演示不可用，请确认 --root 指向包含 tasks 和 evidence 的仓库目录") from error
 
     return app

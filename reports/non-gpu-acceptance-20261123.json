@@ -1,0 +1,225 @@
+{
+  "date": "2026-11-23",
+  "scope": "Local work without remote GPU; uncommitted workspace",
+  "remote_gpu_jobs": 0,
+  "tests": {
+    "main": {
+      "total": 496,
+      "passed": 488,
+      "skipped": 8,
+      "failed": 0
+    },
+    "strategy": {
+      "total": 37,
+      "passed": 37,
+      "failed": 0
+    }
+  },
+  "package": {
+    "unit_and_cli_exit_codes": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "gpu_jobs": 0,
+    "package_python_files": 106,
+    "missing_package_files": [],
+    "web_assets_in_wheel": true,
+    "syntax_compiled": 106
+  },
+  "web": {
+    "browser_screenshot_verified": false,
+    "checks": [
+      {
+        "bytes": 4147,
+        "path": "/",
+        "status": 200
+      },
+      {
+        "bytes": 5908,
+        "path": "/static/app.js",
+        "status": 200
+      },
+      {
+        "bytes": 3797,
+        "path": "/static/app.css",
+        "status": 200
+      },
+      {
+        "bytes": 304,
+        "path": "/health",
+        "status": 200
+      },
+      {
+        "gpu_jobs": 0,
+        "reference_checks": 15,
+        "shared_cli_api_demo": true
+      },
+      {
+        "cancellation_confirmed_before_start": true,
+        "idempotent_submission": true,
+        "terminal_sse": true
+      }
+    ],
+    "gpu_jobs": 0,
+    "kind": "live_local_http",
+    "model_requests": 0
+  },
+  "retrieval": {
+    "bm25": {
+      "report": "reports/local-retrieval-bm25-20261123.json",
+      "recall_at_5": 1,
+      "mrr": 0.9583333333333334
+    },
+    "cpu": {
+      "status": "verified",
+      "report": "reports/local-retrieval-cpu-20261123.json",
+      "models": {
+        "device": "cpu",
+        "embedding_loaded": true,
+        "embedding_model": "BAAI/bge-small-zh-v1.5",
+        "embedding_resolved_revision": null,
+        "embedding_revision": null,
+        "libraries": {
+          "sentence-transformers": "5.7.0",
+          "torch": "2.15.0+cpu"
+        },
+        "local_files_only": false,
+        "reranking_loaded": true,
+        "reranking_model": "cross-encoder/ms-marco-TinyBERT-L2-v2",
+        "reranking_resolved_revision": null,
+        "reranking_revision": null
+      },
+      "runs": [
+        {
+          "answerable_queries": 12,
+          "elapsed_ms": 0.992,
+          "mode": "bm25",
+          "mrr": 0.9583333333333334,
+          "no_answer_empty_rate": 1,
+          "queries": 13,
+          "recall@5": 1
+        },
+        {
+          "answerable_queries": 12,
+          "elapsed_ms": 839658.368,
+          "mode": "dense",
+          "mrr": 0.9027777777777778,
+          "no_answer_empty_rate": 0,
+          "queries": 13,
+          "recall@5": 1
+        },
+        {
+          "answerable_queries": 12,
+          "elapsed_ms": 237.532,
+          "mode": "hybrid",
+          "mrr": 0.9583333333333334,
+          "no_answer_empty_rate": 0,
+          "queries": 13,
+          "recall@5": 1
+        },
+        {
+          "answerable_queries": 12,
+          "elapsed_ms": 94593.53000000001,
+          "mode": "reranked",
+          "mrr": 0.611111111111111,
+          "no_answer_empty_rate": 0,
+          "queries": 13,
+          "recall@5": 0.6666666666666666
+        }
+      ],
+      "cached_report": "reports/local-retrieval-cpu-cached-20261123.json"
+    }
+  },
+  "diagnostics": {
+    "active_version": "anonymous-v2",
+    "reference_dev": {
+      "passed": 30,
+      "total": 30,
+      "report": "reports/diagnostic-dev-v2-reference-20261123.json"
+    },
+    "reference_frozen": {
+      "passed": 30,
+      "total": 30,
+      "report": "reports/diagnostic-frozen-v2-reference-20261123.json"
+    },
+    "formal_model_score": null,
+    "v1_engineering_pilot": {
+      "formal": false,
+      "dataset_id_hint_possible": true,
+      "react_dev": "27/30",
+      "react_frozen": "29/30",
+      "team_frozen": "27/30",
+      "equal_budget_comparison": false
+    }
+  },
+  "api_budget": {
+    "attempts_reserved": 335,
+    "max_requests": 400,
+    "deadline_reached": true,
+    "verified_billing": null,
+    "price_table_configured": false
+  },
+  "limitations": [
+    "Tavily live validation requires TAVILY_API_KEY.",
+    "Anonymous v2 formal model evaluation remains pending; v1 pilot scores do not transfer.",
+    "Remote training, live remote-job recovery and recommendation migration not verified in this work.",
+    "Synthetic diagnostic results do not establish real coding or recommendation quality.",
+    "Real coding task equal-budget comparisons/ablations and a demonstration recording remain pending. Formal model experiments need additional API budget."
+  ],
+  "artifacts": [
+    "docs/non-gpu-work.md",
+    "reports/local-web-http-20261123.json",
+    "reports/local-retrieval-bm25-20261123.json",
+    "tasks/diagnostic-v2/local-evaluation-freeze.json",
+    "reports/local-runtime-20261123.json",
+    "reports/local-retrieval-cpu-20261123.json",
+    "reports/local-retrieval-cpu-cached-20261123.json"
+  ],
+  "source_snapshot": {
+    "algorithm": "sha256 of UTF-8 path + space + SHA256(raw bytes) + LF, sorted by path",
+    "files": 109,
+    "sha256": "89ee349c6187363b0623b888de57da89f0cb3cb9df9e53df36ed2b27e32ef65c"
+  },
+  "runtime": {
+    "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+    "packages": {
+      "torch": "2.15.0+cpu",
+      "sentence-transformers": "5.7.0",
+      "transformers": "5.24.0",
+      "fastapi": "0.165.0",
+      "uvicorn": "0.54.0",
+      "openai": "3.55.1"
+    },
+    "remote_gpu_jobs": 0
+  },
+  "browser": {
+    "status": "verified_local_interactions",
+    "user_approved_new_local_tab": true,
+    "url": "http://127.0.0.1:8765/",
+    "screenshot_observed": true,
+    "screenshot_file_published": false,
+    "checks": [
+      "local page rendered",
+      "evidence demo completed",
+      "saved reference report visible",
+      "task registered without execution",
+      "waiting task cancellation confirmed",
+      "cancelled event visible after stream refresh fix"
+    ],
+    "training_started": false,
+    "model_requests": 0,
+    "remote_gpu_jobs": 0,
+    "recording_created": false,
+    "initial_auto_review_rejection_resolved_by_explicit_user_approval": true
+  },
+  "frontend_final_check": {
+    "javascript_syntax": "passed",
+    "cancel_event_refresh": "verified_in_browser",
+    "full_python_suite_rerun_after_js_only_fix": false
+  }
+}

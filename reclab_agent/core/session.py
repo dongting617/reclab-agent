@@ -53,7 +53,8 @@ class RunSession:
     def __init__(self, toolbox: Toolbox, backend: ModelBackend, config: AgentConfig,
                  trace: TraceWriter, instructions: str, prompt: str, *,
                  task_id: str | None = None,
-                 allowed_tools: set[str] | frozenset[str] | None = None):
+                 allowed_tools: set[str] | frozenset[str] | None = None,
+                 resume_run_id: str | None = None):
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("prompt must be a non-empty string")
         known_tools = {spec.name for spec in toolbox.specs}
@@ -69,14 +70,14 @@ class RunSession:
         self.allowed_tools = allowed_tools
         self.tools = function_tools(toolbox, allowed_tools)
         self.inputs: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
-        self.run_id = uuid.uuid4().hex
+        self.run_id = resume_run_id or uuid.uuid4().hex
         self.task_id = task_id or self.run_id
         self.started = time.perf_counter()
         self.steps = 0
         self.tool_calls = 0
         self.evidence: set[str] = set()
         self._finished = False
-        self.event("run_started", prompt=prompt, max_steps=config.max_steps,
+        self.event("run_resumed" if resume_run_id else "run_started", prompt=prompt, max_steps=config.max_steps,
                    allowed_tools=sorted(allowed_tools) if allowed_tools is not None else None)
 
     def event(self, event: str, **payload: Any) -> None:
@@ -130,6 +131,9 @@ class RunSession:
                         "code": "TOOL_NOT_ALLOWED", "message": f"Tool is not allowed for this task: {name}"}}
                 else:
                     envelope = self.toolbox.invoke(name, arguments)
+            except FileNotFoundError:
+                envelope = {"ok": False, "tool": name, "error": {
+                    "code": "FILE_NOT_FOUND", "message": "Required local artifact is missing; inspect the recorded source or experiment paths."}}
             except (json.JSONDecodeError, ValueError) as error:
                 arguments = None
                 envelope = {"ok": False, "tool": name,

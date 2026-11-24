@@ -2,6 +2,15 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
+import json
+import re
+
+
+def parse_json_response(text: str):
+    """Accept JSON or one complete JSON fence; reject prose and ambiguous blocks."""
+    text = text.strip()
+    fence = re.fullmatch(r"```(?:json)?\s*\n([\s\S]*?)\n```", text)
+    return json.loads(fence.group(1) if fence else text)
 
 
 @dataclass(frozen=True)
@@ -35,10 +44,10 @@ class OpenAIResponsesBackend:
 
     def respond(self, *, instructions: str, input_items: list[dict[str, Any]],
                 tools: list[dict[str, Any]]) -> ModelTurn:
-        response = self.client.responses.create(
-            model=self.model, instructions=instructions, input=input_items,
-            tools=tools, tool_choice="auto", parallel_tool_calls=False, store=False,
-        )
+        request = {"model": self.model, "instructions": instructions, "input": input_items, "store": False}
+        if tools:
+            request.update(tools=tools, tool_choice="auto", parallel_tool_calls=False)
+        response = self.client.responses.create(**request)
         output = [item.model_dump(mode="json") for item in response.output]
         usage = response.usage.model_dump(mode="json") if response.usage else None
         return ModelTurn(output, response.output_text or "", response.id, usage)

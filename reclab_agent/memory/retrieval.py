@@ -294,11 +294,11 @@ class KnowledgeIndex:
 
     def search(self, query: str, k: int = 5, mode: str = "bm25") -> list[dict]:
         """Return chunks with citations and actual lexical/fused/reranked scores."""
-        if mode not in {"bm25", "hybrid", "reranked"}:
-            raise RetrievalError("INVALID_MODE", "mode must be bm25, hybrid, or reranked")
+        if mode not in {"bm25", "dense", "hybrid", "reranked"}:
+            raise RetrievalError("INVALID_MODE", "mode must be bm25, dense, hybrid, or reranked")
         if not isinstance(k, int) or isinstance(k, bool) or k < 1:
             raise RetrievalError("INVALID_K", "k must be a positive integer")
-        if mode in {"hybrid", "reranked"} and self.embedding_fn is None:
+        if mode in {"dense", "hybrid", "reranked"} and self.embedding_fn is None:
             raise RetrievalError("EMBEDDING_NOT_CONFIGURED", f"{mode} requires an embedding_fn")
         if mode == "reranked" and self.reranker is None:
             raise RetrievalError("RERANKER_NOT_CONFIGURED", "reranked mode requires a reranker")
@@ -310,6 +310,9 @@ class KnowledgeIndex:
                     for index, score in bm25[:k]]
 
         dense = self._dense(query)
+        if mode == "dense":
+            return [dict(self.chunks[index], mode=mode, score=score, dense_score=score)
+                    for index, score in dense[:k]]
         lexical_scores = dict(bm25)
         dense_scores = dict(dense)
         identities = {chunk["chunk_id"]: index for index, chunk in enumerate(self.chunks)}

@@ -1,0 +1,12 @@
+{
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "packages": {
+    "torch": "2.15.0+cpu",
+    "sentence-transformers": "5.7.0",
+    "transformers": "5.24.0",
+    "fastapi": "0.165.0",
+    "uvicorn": "0.54.0",
+    "openai": "3.55.1"
+  },
+  "remote_gpu_jobs": 0
+}

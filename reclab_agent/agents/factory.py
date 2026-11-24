@@ -4,9 +4,11 @@ from reclab_agent.agents.plan_execute_agent import PlanExecuteAgent
 from reclab_agent.agents.react_agent import ReActAgent
 from reclab_agent.agents.reflection_agent import ReflectionAgent
 from reclab_agent.agents.simple_agent import SimpleAgent
+from reclab_agent.agents.team_agent import TeamAgent
 
 
 AGENT_TYPES = {
+    "team": TeamAgent,
     "react": ReActAgent,
     "single": ReActAgent,
     "simple": SimpleAgent,

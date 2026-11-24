@@ -38,6 +38,7 @@ class TaskConfiguration:
     max_network_requests: int = 10
     tavily_key_env: str = "TAVILY_API_KEY"
     resume_jobs: bool = False
+    retrieval: dict | None = None
 
     @property
     def model_config_path(self) -> Path:
@@ -193,7 +194,18 @@ def load_task_configuration(path: str | Path) -> TaskConfiguration:
     else:
         raise ValueError("execution.backend must be docker or ssh_tmux")
     research = _object(value.get("research", {}), set(), "research",
-                       {"project_directory", "max_wall_seconds", "max_network_requests", "tavily_key_env"})
+                       {"project_directory", "max_wall_seconds", "max_network_requests", "tavily_key_env", "retrieval"})
+    retrieval = research.get("retrieval")
+    if retrieval is not None:
+        _object(retrieval, {"mode"}, "research.retrieval", {"embedding_model", "embedding_revision",
+                "reranking_model", "reranking_revision", "allow_download"})
+        if retrieval["mode"] not in {"bm25", "dense", "hybrid", "reranked"}:
+            raise ValueError("invalid research.retrieval.mode")
+        for key in ("embedding_model", "embedding_revision", "reranking_model", "reranking_revision"):
+            if key in retrieval:
+                _text(retrieval[key], "research.retrieval." + key)
+        if "allow_download" in retrieval and type(retrieval["allow_download"]) is not bool:
+            raise ValueError("research.retrieval.allow_download must be boolean")
     for name in ("max_wall_seconds", "max_network_requests"):
         if name in research and (type(research[name]) is not int or research[name] < 1):
             raise ValueError("research limits must be positive integers")
@@ -215,5 +227,6 @@ def load_task_configuration(path: str | Path) -> TaskConfiguration:
         max_wall_seconds=research.get("max_wall_seconds"),
         max_network_requests=research.get("max_network_requests", 10),
         tavily_key_env=research.get("tavily_key_env", "TAVILY_API_KEY"),
+        retrieval=retrieval,
         baseline_report=_path(experiment["baseline_report"], parent, "experiment.baseline_report") if experiment.get("baseline_report") else None,
     )

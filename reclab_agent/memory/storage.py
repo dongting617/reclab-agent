@@ -56,6 +56,8 @@ class RunStore:
                 CREATE TABLE IF NOT EXISTS events (
                     seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
                     event TEXT NOT NULL, payload TEXT NOT NULL, created REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS requests (
+                    request_key TEXT PRIMARY KEY, task_hash TEXT NOT NULL, run_id TEXT NOT NULL);
             """)
 
     @contextmanager
@@ -68,12 +70,26 @@ class RunStore:
         finally:
             connection.close()
 
-    def create(self, task: TaskSpec, run_id: str | None = None) -> str:
+    def create(self, task: TaskSpec, run_id: str | None = None, *, request_key: str | None = None) -> str:
         run_id = identifier(run_id or uuid.uuid4().hex)
+        task_json = canonical_json(task.to_dict())
+        digest = hashlib.sha256(task_json.encode("utf-8")).hexdigest()
+        if request_key is not None:
+            identifier(request_key)
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if request_key is not None:
+                prior = db.execute("SELECT task_hash,run_id FROM requests WHERE request_key=?", (request_key,)).fetchone()
+                if prior:
+                    if prior[0] != digest:
+                        raise ValueError("idempotency key was already used for a different task")
+                    return prior[1]
             db.execute("INSERT INTO runs VALUES (?, ?, 'queued', '{}', NULL, ?)",
-                       (run_id, canonical_json(task.to_dict()), time.time()))
-        self.event(run_id, "run_created", {"task_id": task.task_id})
+                       (run_id, task_json, time.time()))
+            if request_key is not None:
+                db.execute("INSERT INTO requests VALUES(?,?,?)", (request_key, digest, run_id))
+            db.execute("INSERT INTO events(run_id,event,payload,created) VALUES(?,?,?,?)",
+                       (run_id, "run_created", canonical_json({"task_id": task.task_id}), time.time()))
         return run_id
 
     def get(self, run_id: str) -> dict[str, Any]:
@@ -100,6 +116,21 @@ class RunStore:
                 raise ValueError("terminal runs are immutable; create a new run")
             db.execute("UPDATE runs SET status=?, state=?, report=?, updated=? WHERE run_id=?",
                        (status, state_json, report_json, time.time(), run_id))
+
+    def cancel_waiting(self, run_id: str) -> None:
+        """Atomically race cancellation against dispatch without faking a stop."""
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT status,state FROM runs WHERE run_id=?", (run_id,)).fetchone()
+            if row is None:
+                raise KeyError(run_id)
+            if row["status"] not in {"queued", "waiting_input"}:
+                raise ValueError("running tasks need executor stop confirmation")
+            state = {**json.loads(row["state"]), "stop_confirmed": True, "execution_started": False}
+            db.execute("UPDATE runs SET status='cancelled',state=?,updated=? WHERE run_id=?",
+                       (canonical_json(state), time.time(), run_id))
+            db.execute("INSERT INTO events(run_id,event,payload,created) VALUES(?,?,?,?)",
+                       (run_id, "cancelled", canonical_json(state), time.time()))
 
     def event(self, run_id: str, event: str, payload: dict[str, Any]) -> None:
         self.get(run_id)

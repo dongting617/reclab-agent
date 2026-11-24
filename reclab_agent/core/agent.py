@@ -29,9 +29,11 @@ class Agent(ABC):
         self._history: list[dict[str, Any]] = []
 
     def _session(self, prompt: str, *, task_id: str | None = None,
-                 allowed_tools: set[str] | frozenset[str] | None = None) -> RunSession:
+                 allowed_tools: set[str] | frozenset[str] | None = None,
+                 resume_run_id: str | None = None) -> RunSession:
         session = RunSession(self.toolbox, self.backend, self.config, self.trace,
-                             self.system_prompt, prompt, task_id=task_id, allowed_tools=allowed_tools)
+                             self.system_prompt, prompt, task_id=task_id, allowed_tools=allowed_tools,
+                             resume_run_id=resume_run_id)
         conversation = getattr(self.toolbox, "conversation_path", None)
         if conversation is not None:
             import json

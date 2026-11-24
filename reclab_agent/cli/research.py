@@ -74,6 +74,12 @@ def main(argv: list[str] | None = None) -> int:
         parser.add_argument("--image", required=True)
     else:
         commands = parser.add_subparsers(dest="command", required=True)
+        runs = commands.add_parser("runs", help="read the same local tasks and study sessions as the Web workbench")
+        runs.add_argument("action", choices=("list", "show", "events", "cancel", "demo"))
+        runs.add_argument("--root", type=Path, default=Path.cwd())
+        runs.add_argument("--run-id")
+        runs.add_argument("--after", type=int, default=0)
+        runs.set_defaults(operation="runs")
         check = commands.add_parser("check", help="validate a task configuration and its inputs without running experiments")
         check.add_argument("--config", type=Path, required=True, help="task configuration JSON; paths are relative to this file")
         check.set_defaults(operation="check")
@@ -124,6 +130,23 @@ def main(argv: list[str] | None = None) -> int:
                 command.add_argument("--image", required=True, help="pre-pulled administrator-approved repository@sha256:digest")
     args = parser.parse_args(argv)
     try:
+        if args.operation == "runs":
+            from reclab_agent.application.runs import RunCatalog, run_evidence_demo
+            catalog = RunCatalog(args.root)
+            if args.action not in {"list", "demo"} and not args.run_id:
+                raise ValueError("--run-id is required for show, events and cancel")
+            if args.action == "list":
+                value = {"runs": catalog.list()}
+            elif args.action == "demo":
+                value = run_evidence_demo(args.root)
+            elif args.action == "events":
+                value = {"events": catalog.events(args.run_id, args.after)}
+            elif args.action == "cancel":
+                value = catalog.cancel_waiting(args.run_id)
+            else:
+                value = catalog.get(args.run_id)
+            print(canonical_json({"ok": True, "result": value}))
+            return 0
         if args.operation == "project":
             from reclab_agent.cli.projects import project_command
             print(canonical_json({"ok": True, "result": project_command(args)}))

@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-24",
+  "all_recorded_jobs_terminal": true,
+  "verification_source": "retained_remote_terminal_observations",
+  "live_recheck": "SSH connection refused after completion; no instance restarted",
+  "jobs": [
+    {
+      "job_id": "exp-2d959acb27301d6fca87071e2f8c40f9-predict",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795448070.119275,
+      "finished_at": 1795448075.9367487,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-sasrec-dropout-remaining/sessions/20261124T002218Z-84bbab02/experiments/exp-2d959acb27301d6fca87071e2f8c40f9/execution.json"
+    },
+    {
+      "job_id": "exp-2d959acb27301d6fca87071e2f8c40f9-train",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795447402.1119711,
+      "finished_at": 1795447662.5033095,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/live-20261123/sasrec-recovery.json"
+    },
+    {
+      "job_id": "exp-45fd1dea5ee2a7b35d30e897fd663e2a-predict",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795449070.5113728,
+      "finished_at": 1795449074.9247508,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-grurec-migration/sessions/20261123T154410Z-84a3b288/experiments/exp-45fd1dea5ee2a7b35d30e897fd663e2a/execution.json"
+    },
+    {
+      "job_id": "exp-45fd1dea5ee2a7b35d30e897fd663e2a-train",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795448726.669468,
+      "finished_at": 1795449066.3631094,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-grurec-migration/sessions/20261123T154410Z-84a3b288/experiments/exp-45fd1dea5ee2a7b35d30e897fd663e2a/execution.json"
+    },
+    {
+      "job_id": "exp-d809a38208d374abaee8b65b56f912ef-predict",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795480043.4992707,
+      "finished_at": 1795480048.6242688,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-sasrec-dropout-remaining/sessions/20261124T002218Z-84bbab02/experiments/exp-d809a38208d374abaee8b65b56f912ef/execution.json"
+    },
+    {
+      "job_id": "exp-d809a38208d374abaee8b65b56f912ef-train",
+      "status": "completed",
+      "exit_code": 0,
+      "started_at": 1795479921.5693927,
+      "finished_at": 1795480039.6427588,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-sasrec-dropout-remaining/sessions/20261124T002218Z-84bbab02/experiments/exp-d809a38208d374abaee8b65b56f912ef/execution.json"
+    },
+    {
+      "job_id": "exp-f0b551f1d9b2c0b85385bc10bac588ec-train",
+      "status": "failed",
+      "exit_code": 1,
+      "started_at": 1795449281.580259,
+      "finished_at": 1795449285.4187737,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-grurec-migration/sessions/20261123T154410Z-84a3b288/experiments/exp-f0b551f1d9b2c0b85385bc10bac588ec/execution.json"
+    },
+    {
+      "job_id": "exp-fb6d34adcb834009b2393a3836b3909d-train",
+      "status": "failed",
+      "exit_code": 1,
+      "started_at": 1795448307.2873313,
+      "finished_at": 1795448311.021476,
+      "stop_confirmed": true,
+      "retained_observation": ".reclab/runs/beauty-sasrec-first-run/sessions/20261123T152157Z-0a380ba4/experiments/exp-fb6d34adcb834009b2393a3836b3909d/execution.json"
+    }
+  ],
+  "new_training_attempts": 5,
+  "model_requests_in_studies_including_expired_start": 44,
+  "extra_approved_slot_model_requests": 20,
+  "cloud_docker_gpu_isolation_verified": false,
+  "billing_verified": false,
+  "note": "Job durations exclude instance idle time. Native SSH/tmux acceptance does not verify Docker GPU isolation."
+}

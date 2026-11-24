@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "task": {
+    "task_id": "beauty-sasrec-dropout-remaining",
+    "question": "复用已核验的历史基线，在固定 Beauty 数据、种子 2026 和一次训练额度内验证一个 SASRec dropout 候选。本轮修复验收将搜索空间限制为 configs/default.json 的 model.kwargs.dropout，范围 0.1 到 0.4；其余配置保持原值，以隔离上一轮同时扩容多个参数后出现的前向 Smoke Test 失败。必须先记录假设、真实风险与可采集的过程诊断，再修改和验证；不要将最终 NDCG/Recall 重复声明为过程指标，不假设存在源码未实现的 warmup，不预设收益。",
+    "dataset_id": "beauty-d1-e2c0b12d23d8e77b",
+    "baseline_id": "sasrec-b1-retrain",
+    "mode": "single",
+    "budget": {
+      "max_model_turns": 19,
+      "max_patches": 4,
+      "max_training_jobs": 1,
+      "max_job_seconds": 600,
+      "max_total_job_seconds": 600,
+      "max_cost_cny": 20
+    }
+  },
+  "source": {
+    "directory": "../backends/sasrec",
+    "config": "default",
+    "editable_files": [
+      "configs/default.json"
+    ]
+  },
+  "data": {
+    "directory": "../.reclab/datasets/beauty-d1",
+    "adapter": "next_item_v1",
+    "expected_hash": "4a5b55b4de8ffe955b0c4dd4f1354abdba9e272e9595e1a21b5d2989046ee917"
+  },
+  "evaluation": {
+    "evaluator": "next_item_ranking_v1",
+    "primary_metric": "ndcg@20",
+    "guardrail_metrics": [
+      "recall@20"
+    ]
+  },
+  "experiment": {
+    "candidate_ids": [
+      "candidate-1"
+    ],
+    "seeds": [
+      2026
+    ],
+    "baseline_report": "../.reclab/runs/beauty-sasrec-first-run/sessions/20261123T152157Z-0a380ba4/baseline-exp-2d959acb27301d6fca87071e2f8c40f9.json"
+  },
+  "agent": {
+    "model_env": "RECLAB_MODEL",
+    "api_key_env": "OPENAI_API_KEY"
+  },
+  "execution": {
+    "backend": "ssh_tmux",
+    "connection": "autodl-ssh.json"
+  },
+  "output": {
+    "directory": "../.reclab/runs/beauty-sasrec-dropout-remaining"
+  }
+}

@@ -1,167 +1,144 @@
 # RecLab Agent
 
-RecLab Agent 的目标是在受控预算下自主提出、实现和验证推荐模型改进。项目将 Agent 策略与模型实验分开：Agent 选择动作，工具执行确定性操作，执行层运行候选程序，独立评分器判断模型效果。当前提供证据诊断、多种 Agent 策略，以及按任务配置绑定的优化适配层。AutoDL 使用 SSH+tmux，Docker 暂缓。
+在预算和时间限制内，辅助推荐模型研究：**理解背景 → 提出假设 → 模型实验 → 分析并得出结论**。Agent 选择动作，工具修改登记源码和执行实验，固定评分器从验证集预测重算指标。
 
-## 启动优化实验
+默认基线与候选使用同一个随机种子，每个方案训练一次。历史基线可核验时复用，不强制重跑。
 
-在项目目录执行：
+## 选择使用入口
+
+| 想做什么 | 入口 | 需要远程 GPU |
+|---|---|---|
+| 查看任务、报告、代码改动和事件 | 本地 Web 工作台 | 不需要 |
+| 体验证据工具、运行自动化测试 | 本地演示与测试 | 不需要 |
+| 检索历史经验、查看实验账本 | 项目 CLI | 不需要 |
+| 对比检索、评测诊断决策、统计 token 成本 | 评测 CLI | 不需要；真实文本模型需要本地 CPU 和模型文件 |
+| 自主修改推荐模型并训练评估 | `start.cmd` | 当前 SASRec 任务需要远程训练环境 |
+
+## 1. 本地工作台
+
+Windows 在仓库根目录执行，启动器会复用或准备本地 Web 环境，不读取 API Key、不启动训练：
 
 ```powershell
-.\start.cmd
+.\start.cmd -Web
 ```
 
-启动器自动加载本地 API 配置、选择 Python/WSL 环境、准备 SDK，并按“理解背景 → 提出假设 → 模型实验 → 结果分析和得出结论”执行。先核验可复用的历史基线，没有合适记录时才建立基线，再开展候选实验与独立评分。结束时显示中文结论、关键指标和报告位置。启动此命令即运行当前配置的范围；当前任务最多两次训练，基线与候选共用预算，使用同一个固定随机种子（默认 2026）进行训练和验证集评估。每个方案默认训练一次；训练按 epochs、早停和时间预算执行。
+需要 Python 3.10+。已准备 Python 环境时，也可以手动启动：
 
-每轮实验结束会在会话目录自动生成面向用户的 `report.html` 和 `report.md`，包含任务与范围、实际代码改动、基线/候选指标和变化、失败记录、最佳产物位置与结论边界；失败、无有效候选或中断也会留下报告。原始 `report.json` 保留用于程序处理，报告整理在本地完成。
+```bash
+pip install -e ".[service]"
+python -m reclab_agent.cli.web
+```
 
-项目级 SQLite 账本、本地 Git、Markdown Wiki、BM25 经验检索、任务恢复、过程指标和可选 Tavily 调研已接入标准研究入口。命令和配置见[研究使用说明](docs/research-usage.md)，实际改动与验收边界见[仓库优化记录](docs/optimization-log.md)。2026-11-23 的新链路离线与模型接口检查已执行，真实 GPU 验收受当前 SSH 连接拒绝阻断；Tavily 尚缺本地 Key，未完成联网实测。
+浏览器打开 **http://127.0.0.1:8000**。工作台可以：
 
-本次真实 GPU 实验已补齐[中文结果报告](reports/strategy-comparison-20261120/report.md)和[可离线打开的 HTML 报告](reports/strategy-comparison-20261120/report.html)。
+- 查看 CLI 已保存的研究会话、假设、实际 Diff、独立评分、报告与 Trace。
+- 运行无需 API Key 或 GPU 的本地证据演示。
+- 登记任务并查看等待配置状态；用幂等键避免重复提交。
+- 按事件序号重连，取消尚未执行的等待任务。
 
-只查看任务和预算：
+打开页面不会启动训练。当前 Web 默认不装配真实执行器；实际优化从 CLI 启动，工作台读取相同会话。运行中的远程作业需要执行端确认停止，不能仅在页面上标成已取消。
+
+命令行查看同一份状态：
+
+```bash
+python -m reclab_agent.cli.research runs demo
+python -m reclab_agent.cli.research runs list
+python -m reclab_agent.cli.research runs show --run-id RUN_ID
+python -m reclab_agent.cli.research runs events --run-id RUN_ID --after 0
+```
+
+## 2. 运行推荐模型优化
+
+PowerShell 中先查看任务范围，再启动：
 
 ```powershell
 .\start.cmd -Plan
+.\start.cmd
 ```
 
-默认任务和 API 配置文件的位置集中在 [reclab.json](reclab.json)。模型、数据、可修改文件和预算在它指向的任务配置中设置；实际 API Key 放在被 Git 忽略的 `.reclab/agent.env`，实际 SSH 连接放在 `configs/autodl-ssh.json`。更换任务时修改 `reclab.json` 的 `task` 即可。Linux/macOS 使用 `python -m reclab_agent.application.start`。
+Linux/WSL 可用 `python -m reclab_agent.start --help` 查看启动参数。默认任务由 [reclab.json](reclab.json) 指定。
 
-当前里程碑提供：
+| 配置位置 | 内容 |
+|---|---|
+| `configs/beauty-sasrec-task.json` | 模型、数据、验证指标、可修改文件和总预算 |
+| `.reclab/agent.env` | 模型 API 配置，仅保存在本地 |
+| `configs/autodl-ssh.json` | SSH 连接，参考同目录 example 文件 |
+| 任务配置的 `task.mode` | `single`、`plan_execute`、`reviewer` 或 `team` |
 
-- 限定在仓库根目录内的只读文件沙箱；
-- 证据清单、文件 SHA256 与 JSON 元信息核验；
-- 基于 JSON Pointer 的指标读取和数值比较；
-- Beam Search 漏召与目标频次差距诊断；
-- 15 个带可执行断言的开发集任务；
-- 三份来自 Semantic ID 推荐实验的脱敏证据样本。
-- 统一管理步数上限、重试、消息和 JSONL 审计轨迹的运行会话；
-- OpenAI Responses API 函数调用适配器，以及无需 API Key 的可复现测试后端。
-- 任务级工具白名单，在模型层和执行层同时限制可调用能力；
-- JSONL 轨迹离线回放，评估工具选择、证据引用、越权调用、错误率与延迟。
-- 统一的 Agent、模型后端和工具接口，以及 ReAct、Simple、计划执行和 Reflection 策略；
-- 可组合的工具注册表，原有证据工具与新增业务工具共用权限和审计机制；
-- 按研究计划约束的源码补丁、语法检查、冻结快照与实验回调，保留原实验协议。
+`team` 是 Planner–Executor–Reviewer 协作：规划和复核只能提交结构化数据，不能执行业务工具；执行角色沿用批准范围，三者共享预算，最多修订一次。角色进度可持久恢复；工具操作结果不明时先要求核验，不自动重放。
 
-## 开发与证据诊断
+每次研究保存源码快照、实验记录和 `report.json`、`report.md`、`report.html`。失败和证据不足也保留报告。恢复、基线复用与项目管理详见[使用说明](docs/research-usage.md)。
 
-项目仅依赖 Python 3.10+ 标准库：
+## 3. 经验记忆与检索
+
+项目使用 SQLite 实验账本、本地 Git、Markdown Wiki 和按比较范围过滤的经验检索。默认 **BM25，无额外依赖**；数值结论仍应回读原始评分。
 
 ```bash
-python -m unittest discover -s tests -v
+python -m reclab_agent.cli.research project search --config configs/beauty-sasrec-task.json --query "历史失败与诊断"
+```
+
+可选 CPU 语义检索复用同一套索引，支持 dense、hybrid 和 reranked。先安装 CPU 版 PyTorch，再安装文本模型依赖：
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -e ".[retrieval]"
+python -m reclab_agent.cli.evaluate retrieval --modes bm25
+python -m reclab_agent.cli.evaluate retrieval --modes bm25 dense hybrid reranked --download-models
+```
+
+默认只读本地模型缓存；显式传入 `--download-models` 才允许下载。可用 `--embedding-model`、`--reranking-model` 和对应 revision 指定模型。默认 embedding 面向中文、默认 reranker 面向英文；评测报告记录所用模型、来源哈希、Recall@5、MRR 和延迟，不保证重排一定改善结果。
+
+研究任务可在 `research.retrieval` 中指定检索模式，示例与模型版本说明见[本地功能与验收](docs/non-gpu-work.md)。Tavily 文献搜索需另配 `TAVILY_API_KEY`；缺少 Key 时本地知识仍可用。
+
+## 4. 评测与成本
+
+已有 30 个开发场景、30 个冻结场景，按场景组分开；它们是**合成诊断决策任务**，不代表真实训练或端到端研究能力。答案不进入模型可读的证据目录或检索语料。
+
+默认使用匿名 ID 的 v2 冻结集。初稿的 dataset ID 含场景名称，因此旧分数仅保留为工程试跑记录，不当作 v2 成绩。以下参考检查不调用模型 API：
+
+```bash
+python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-dev.json --output reports/diagnostic-dev-v2-reference.json
+python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/diagnostic-frozen.json --output reports/diagnostic-frozen-v2-reference.json
+```
+
+显式选择 `--mode react` 或 `--mode team` 并配置 `--model`、API Key 后，才运行真实 Agent 评测并产生 API 费用。`--max-requests` 约束整批请求次数，重试和失败请求同样占额度；相同输出文件用于恢复，不重跑已记录的任务。
+
+```bash
+python -m reclab_agent.cli.evaluate costs --trace traces/latest.jsonl
+```
+
+费用只有在显式提供价格表后才估算；缺失 usage 不算免费，估算不等于服务商账单。详细命令见[本地功能与验收](docs/non-gpu-work.md)。
+
+## 5. 测试与当前进度
+
+2026-11-24：GPU 阶段结果已归档，下一步先推送，再执行非 GPU 剩余验收。SASRec 四阶段已实际运行，dropout 候选的两项验证指标均下降，保留原基线；GRU 已完成共享接口的基线训练和独立评分，两份未通过 Smoke Test 的模型候选也保留失败记录。详见 [GPU 验收报告](reports/gpu-acceptance-20261123.md)。
+
+```bash
+python -m unittest discover -s tests -q
+python -m unittest experiments.strategy_comparison.test_comparison experiments.strategy_comparison.test_runner experiments.strategy_comparison.test_tools -q
 python -m reclab_agent
-python -m reclab_agent --list-tools
 ```
 
-基准命令会执行 `tasks/dev.json` 中的 15 个参考调用，并输出逐任务结果与通过率。
+基础工具与核心流程使用标准库；Web、在线模型和 CPU 文本模型分别安装可选依赖。最后一条命令执行原有 15 项证据参考调用，不能把它记为端到端成功率。
 
-安装可选的 OpenAI SDK 后，可以执行自然语言任务：
+| 本轮工作 | 实际状态 |
+|---|---|
+| Web 页面、CLI 共用状态、报告和事件 | 已实现，HTTP 与浏览器交互验收通过 |
+| 多角色协作、共享预算与角色恢复 | 已实现并通过离线测试 |
+| CPU 文本模型适配、四种检索模式和评测 | 真实 CPU 模型已运行；本次小语料重排变差，默认保留 BM25 |
+| 30+30 场景、冻结校验、诊断评测与成本统计 | 已实现；匿名 v2 参考检查 60/60，正式模型成绩待另行评测 |
+| 真实 GPU 训练、验证集评分与 GRU 迁移 | 基线和 dropout 候选均有真实分数；候选未改善，保留基线 |
+| 远程作业恢复 | 训练进程保留、同一作业复用已实测；首次恢复需人工核验，相关路径已修复并保留失败记录 |
+| 完整回归 | 506 项主测试（498 通过、8 项环境跳过）及 37 项策略测试通过；106 个 Python 文件和 Web 资源已验证打包 |
 
-```bash
-pip install -e ".[openai]"
-set OPENAI_API_KEY=your_key
-python -m reclab_agent --model YOUR_MODEL_ID --ask "判断 Beam Search 是否为 G2 漏召的主要瓶颈，并引用证据"
-```
+仍待验收：匿名 v2 的正式模型对照、编码任务的同预算对照及演示录像；Tavily Key 已配置，真实搜索/提取留在第二批验收。当前专用实例使用原生 SSH/tmux，尚未验证云端 Docker/GPU 隔离，也未证明所有中断点都能自动恢复。单种子验证集结果不代表普遍质量提升。历史 GPU 实验见[结果报告](reports/strategy-comparison-20261120/report.md)。
 
-生产任务可以按最小权限只开放必要工具：
+## 代码与文档
 
-```bash
-python -m reclab_agent --model YOUR_MODEL_ID \
-  --ask "判断 Beam Search 是否为主要瓶颈，并引用证据路径" \
-  --allowed-tools diagnose_beam_gap
-```
+主调用关系：`cli → application → workflow → tools → experiments / execution / memory`。通用模型交互位于 `core/`，策略位于 `agents/`；数据、评分、报告和外部服务各自独立。所有 Agent 工具的参数定义与处理函数按能力放在 `tools/`。
 
-保存的轨迹无需再次请求模型即可复算质量指标，适合比较 Prompt、模型版本或工具实现：
-
-```bash
-python -m reclab_agent --replay traces/latest.jsonl \
-  --expected-tools diagnose_beam_gap
-```
-
-每次运行会把模型回合、工具参数、结构化结果、证据路径、耗时和错误写入 `traces/latest.jsonl`。工具调用采用严格 JSON Schema；Agent 最多运行八个模型回合，瞬时模型错误默认重试两次。
-
-默认 `--agent react` 保留原来的工具调用循环，也可以选择先规划再执行或显式反思：
-
-```bash
-python -m reclab_agent --model YOUR_MODEL_ID --agent plan_execute --max-steps 20 \
-  --trace traces/plan-run.jsonl --ask "比较证据中的模型差距，并说明仍需验证的假设"
-python -m reclab_agent --model YOUR_MODEL_ID --agent reflection --max-reflections 2 --max-steps 20 \
-  --trace traces/reflection-run.jsonl --ask "分析已有实验，并检查结论是否得到证据支持"
-```
-
-规划、执行、反思和综合共用 `--max-steps`；反思不会授予额外工具或实验权限。`simple` 只生成一轮回答，不执行工具，适合不涉及实测数值的任务。每次运行使用独立 Trace 文件；离线 Replay 仍要求一份文件只包含一次运行。
-
-完整架构、Python 接口和模型优化接入方式见[Agent 框架与扩展](docs/agent-framework.md)。
-
-模型优化任务的路径、数据身份、评分器、指标和预算集中在任务配置中。先检查输入：
-
-```bash
-python -B -m reclab_agent.cli.research check --config configs/beauty-sasrec-task.json
-```
-
-`inputs_valid` 表示文件与接入合同通过检查；`ready_to_run` 表示真实执行条件是否就绪。检查入口不启动训练。通用 `run_experiment` 工具提供训练→预测→独立评分的固定流程，通过 `create_task_agent()` 按任务配置绑定，模型无需实现自己的 runner。将 [autodl-ssh.example.json](configs/autodl-ssh.example.json) 复制为被 Git 忽略的 `configs/autodl-ssh.json` 并填写实际连接信息；七个远程工具和 tmux 恢复约定见[执行层说明](docs/execution.md)。独立 Agent 的大模型 Key 和模型名配置在本地控制端环境变量中。
-
-默认使用上方的 `start.cmd`。底层 `research_cli` 的计划查看、API 预检及显式参数用于开发集成，见[执行层说明](docs/execution.md)。每次实验使用独立的 `sessions/<时间>-<ID>/`，包含报告、计划、Agent 轨迹和实验产物；缺少实测候选时标记为 `incomplete`。
-
-已有实验 JSON 可以直接补生成用户报告：
-
-```bash
-python -B -m reclab_agent.cli.research report --input path/to/session/report.json
-```
-
-## 项目结构
-
-```text
-reclab_agent/   按职责分层的 Agent、工具、研究流程、实验与记忆实现
-evidence/       可复现的脱敏实验事实
-tasks/          Agent 任务与确定性断言
-tests/          工具边界和基准测试
-backends/       自包含的推荐模型源码入口与统一模型/训练配置
-configs/        优化任务的路径、数据/评分器选择、范围和预算
-```
-
-配套学习与面试说明见 [`docs/learning-roadmap.md`](docs/learning-roadmap.md)。
-
-## 安全边界
-
-默认诊断 CLI 仍只注册原有 6 个只读证据工具。可选 `OptimizationToolbox` 只允许修改登记的候选文件；补丁与实验检查匹配的研究计划审阅记录，只有宿主配置可信 runner 后才暴露实验工具。执行配置显式选择 Docker 或 SSH+tmux；原生模式适用于自有、已审阅的代码，不提供容器隔离。远端监督进程管理超时和进程组停止；AutoDL 费用及实例生命周期由用户管理。
-
-## 下一步
-
-当前先完成 AutoDL SSH+tmux 执行链路和训练验收；独立大模型 Agent 的完整优化仍需本地 API 配置与正式实验。训练结果、合成 Demo 和脚本回复分别记录，模型改进结论以独立验证集评估为准。Docker 后续单独处理。
-
-本次真实 GPU 的工具验收、三轮基线/候选对比及 checkpoint 位置见[AutoDL 实测报告](reports/autodl-ssh-tmux-20261119.json)。
-
-## 研究流程与内部结构
-
-研究流程、工具清单、证据要求及接入边界见[Agent 工具与研究流程](docs/agent-workflow.md)。诊断与优化设想可以交替进行；实验前审阅研究计划，范围内自主修复和实验，最后交付有证据的正向、负向或不确定结论。
-
-模型实验协议与默认诊断 CLI 的行为保持兼容，Agent 代码按以下模块组织：
-
-```text
-reclab_agent/
-  cli/              命令入口
-  application/      配置、环境检查与应用装配
-  workflow/         四阶段协调与共享预算
-  core/             通用 Agent 运行时和模型协议
-  agents/           Agent 策略与优化 Agent 组合
-  tools/            按能力组织的工具定义、处理函数、注册表
-  domain/           任务、计划、实验与结论契约
-  experiments/      工作区、基线、训练→预测→独立评分
-  execution/        Worker、SSH、Docker 和远端进程监督
-  memory/           实验账本、Wiki、Git 与经验检索
-  data/             数据准备与数据协议
-  evaluation/       验证集评分、Agent 轨迹和基准评测
-  reporting/        报告模型与 Markdown/HTML 渲染
-  integrations/     Tavily 等外部服务客户端
-  infrastructure/   共享路径与文件操作
-  examples/         合成演示
-  web/              可选 Web 服务草稿
-```
-
-完整文件职责、工具位置、依赖方向和导入迁移见[项目架构与代码导航](docs/architecture.md)。
-
-`reclab_agent.tools.tool_catalog()` 保留原默认工具目录。默认可调用列表由 `RecLabToolbox.specs` 决定；宿主显式组合 `OptimizationToolbox` 或注册自定义工具后，以组合工具箱的 `specs` 为准，目录条目本身不授予执行能力。
-
-Python 导入按职责使用各子包，原 `research/` 和 `_execution/` 已移除。包根只保留公开导出和三个薄命令入口；原启动命令继续可用。内部导入迁移见架构文档，训练/预测协议、Worker 作业身份和已有产物格式保持一致。
-
-`OptimizationAgent` 运行前会注入任务、研究计划及宿主登记的目标模型上下文，包括可编辑文件、候选和种子范围、基线、指标、评价协议与预算，避免让模型猜测工具参数。新增模型通过工作区、数据与可信实验 runner 接入；完成一次 Agent 会话仍不代表模型效果得到提升。
+- [项目架构与逐文件导航](docs/architecture.md)
+- [功能需求](docs/plan.md)与[实施方案](docs/implementation-plan.md)
+- [本地功能与验收](docs/non-gpu-work.md)
+- [持续优化记录](docs/optimization-log.md)
+- [最初八周计划](docs/eight-week-plan.md)

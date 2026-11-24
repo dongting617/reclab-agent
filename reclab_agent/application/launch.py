@@ -174,7 +174,7 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
     with job_lock(output, "research-session") as acquired:
         if not acquired:
             raise LaunchError("another controller owns this research session")
-        project = Project(config.project_directory or config.output_directory / "project")
+        project = Project(config.project_directory or config.output_directory / "project", retrieval=config.retrieval)
         resources.project = project
         counted.deadline = resources.state["deadline"]
         scope = knowledge_scope(config, inspection)
@@ -195,6 +195,10 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
             "primary_metric": plan.primary_metric, "comparison": [], "experiments": [], "context": report_context,
             "started_at_utc": datetime.now(timezone.utc).isoformat(), "test_evaluated": False,
             "cost_enforcement": "time/request/job limits only; billing not verified"}
+        if resume and "error" in report:
+            report.setdefault("previous_failures", []).append({
+                name: report.get(name) for name in ("status", "error", "finished_at_utc")})
+            report.pop("error")
         report.update(status="running", project_directory=str(project.root), knowledge_scope=scope,
                       registered_source=str(effective.source_directory))
         def write(name, value):
@@ -234,6 +238,15 @@ def run_optimization(configuration, *, approve_plan=False, env_file=None, window
                     report["archive_error"] = _public_error(error)
             report["elapsed_seconds"] = report.get("elapsed_seconds", 0) + time.monotonic() - started
             report["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
+            from reclab_agent.evaluation.costs import summarize_usage
+            usage_events = [{"event": "model_turn", "usage": report.get("api_check", {}).get("usage")}]
+            trace = output / "agent.jsonl"
+            if trace.exists():
+                try:
+                    usage_events.extend(json.loads(line) for line in read_regular_file(trace, max_bytes=64_000_000).decode("utf-8").splitlines() if line.strip())
+                except (OSError, ValueError):
+                    usage_events.append({"event": "model_error"})
+            report["resource_usage"] = summarize_usage(usage_events)
             report["requires_reconciliation"] = any(confined_path(output, name).exists()
                 for name in ("active-remote-job.json", "execution-blocked.json"))
             write("report.json", report)
