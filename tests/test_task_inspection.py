@@ -60,6 +60,20 @@ class TaskInspectionTests(unittest.TestCase):
         self.path.write_text(json.dumps(self.value if value is None else value), encoding="utf-8")
         return load_task_configuration(self.path)
 
+    def test_environment_ssh_readiness_reports_no_connection_values(self):
+        self.value["execution"] = {"backend": "ssh_tmux"}
+        config = self.configuration()
+        env = {"SSH_HOST": "private-host.example", "SSH_PORT": "22", "SSH_USER": "root",
+               "SSH_KEY_PATH": str(self.root / "private-identity"),
+               "SSH_REMOTE_ROOT": "/gpu/task", "SSH_PYTHON": "/python"}
+        with patch.dict(os.environ, env, clear=True):
+            result = inspect_task(config)
+            self.assertTrue(result["execution"]["connection_present"])
+            self.assertIsNone(result["execution"]["connection_path"])
+            self.assertNotIn("private-host.example", str(result))
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(inspect_task(config)["execution"]["connection_present"])
+
     def test_valid_assets_are_inspected_without_models_jobs_or_output_creation(self):
         config = self.configuration()
         with patch.dict(sys.modules, {"torch": None}):

@@ -7,8 +7,7 @@ from reclab_agent.execution.config import load_policy
 from reclab_agent.core import OpenAIResponsesBackend
 from reclab_agent.execution.worker import DockerWorker, WorkerPolicy
 from reclab_agent.infrastructure.files import read_regular_file
-from reclab_agent.tools.remote import RemoteToolbox
-from reclab_agent.execution.ssh import SSHConnection
+from reclab_agent.application.environment import build_remote_tools
 from reclab_agent.tools import EvidenceToolbox
 from reclab_agent.experiments.workspace import create_workspace
 from reclab_agent.domain.configuration import (
@@ -45,12 +44,7 @@ def bind_task_tools(configuration: TaskConfiguration | str | Path, *, plan: Rese
         if policy is not None:
             raise ValueError("the ssh_tmux profile does not use a Docker policy")
         if remote_tools is None:
-            if config.execution_connection_path is None:
-                raise ValueError("configure an SSH connection before binding the experiment tool")
-            connection = SSHConnection.from_json(config.execution_connection_path)
-            remote_tools = RemoteToolbox(connection, upload_roots={
-                "source": config.output_directory / "snapshots", "public": config.dataset_directory / "public",
-            }, download_root=config.output_directory)
+            remote_tools = build_remote_tools(config)
         runner = RemoteExperimentRunner(config, plan, remote_tools, registry=registry)
     else:
         if policy is None:

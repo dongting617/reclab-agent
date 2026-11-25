@@ -74,6 +74,14 @@ class TaskConfigurationTests(unittest.TestCase):
         self.assertEqual(loaded.source_directory, self.root / "absolute-model")
         self.assertEqual(loaded.execution_policy_path, self.config_dir / "policies/worker.json")
 
+    def test_ssh_can_use_environment_without_connection_file(self):
+        self.value["execution"] = {"backend": "ssh_tmux"}
+        loaded = load_task_configuration(self.write())
+        self.assertIsNone(loaded.execution_connection_path)
+        self.value["execution"]["connection"] = "legacy.json"
+        loaded = load_task_configuration(self.write())
+        self.assertEqual(loaded.execution_connection_path, self.config_dir / "legacy.json")
+
     def test_onboarding_may_leave_data_hash_and_execution_policy_unbound(self):
         value = copy.deepcopy(self.value)
         value["data"]["expected_hash"] = None

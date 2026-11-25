@@ -48,8 +48,7 @@
     "api_key_env": "OPENAI_API_KEY"
   },
   "execution": {
-    "backend": "ssh_tmux",
-    "connection": "autodl-ssh.json"
+    "backend": "ssh_tmux"
   },
   "output": {
     "directory": "../.reclab/runs/beauty-grurec-migration"

@@ -212,13 +212,12 @@ python -m reclab_agent.cli.evaluate diagnostics --manifest tasks/diagnostic-v2/d
 
 ## 运行真实研究
 
-默认任务由 [reclab.json](reclab.json) 指定。先配置并审阅任务，再启动：
+默认任务由 [reclab.json](reclab.json) 指定。先将 [.env.example](.env.example) 复制为 `.reclab/agent.env`，填写 API 与 `SSH_` 参数；私钥只填写文件的绝对路径，不粘贴私钥内容。SSH 配置与迁移规则见[执行层说明](docs/execution.md)。先配置并审阅任务，再启动：
 
 | 配置 | 用途 |
 |---|---|
 | [任务配置](configs/beauty-sasrec-task.json) | 模型、数据、指标、允许修改的文件、执行环境与预算 |
-| `.reclab/agent.env` | 本地模型 API 配置；不进入 Git |
-| `configs/autodl-ssh.json` | 本地 SSH 连接配置，参考 [example](configs/autodl-ssh.example.json)；不进入 Git |
+| `.reclab/agent.env` | 本地 API 与 SSH 连接配置，参考 [.env.example](.env.example)；不进入 Git |
 | `task.mode` | 默认 `single`；独立审计设为 `research_audit`；另有 `plan_execute` 和单 Agent 自评 `reviewer` |
 
 ```powershell

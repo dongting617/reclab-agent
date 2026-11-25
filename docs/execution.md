@@ -10,36 +10,48 @@
 
 控制器通过 SSH 上传源码和公开数据，在现有 Python/CUDA 环境启动作业，下载预测后交给固定评分器。远端不需要运行 Agent 模型或保存其 API Key。此模式直接执行模型代码，不启动 Docker，也不提供容器隔离；下文 Docker Worker 的隔离与镜像约定继续适用于 `docker` 配置。
 
-将[连接配置示例](../configs/autodl-ssh.example.json)复制为 `configs/autodl-ssh.json`，填写实际主机、端口、私钥和 `known_hosts` 路径。实际连接文件已被 Git 忽略，示例使用占位信息。配置只保存连接参数和路径，不保存密码或私钥内容；先完成公钥登录及 SSH 主机指纹登记。任务配置的执行段为：
+将根目录 [.env.example](../.env.example) 复制为 `.reclab/agent.env`，填写 API 与 SSH 参数：
+
+```dotenv
+SSH_HOST=connect.example.com
+SSH_PORT=22
+SSH_USER=root
+SSH_KEY_PATH=C:/Users/DT/.ssh/id_ed25519_gpu
+SSH_KNOWN_HOSTS_PATH=C:/Users/DT/.ssh/known_hosts
+SSH_REMOTE_ROOT=/root/autodl-tmp/reclab-agent-runs/ssh-tmux
+SSH_PYTHON=/root/miniconda3/bin/python
+```
+
+`SSH_KNOWN_HOSTS_PATH` 可省略，此时使用 OpenSSH 默认主机指纹文件；其余六项必填，不推断端口或远端 Python。私钥保存在独立文件中，这里只填路径。环境文件已被 Git 忽略，不保存密码或私钥正文。先完成公钥登录及主机指纹登记。
+
+任务配置只选择执行后端：
 
 ```json
 {
   "execution": {
-    "backend": "ssh_tmux",
-    "connection": "autodl-ssh.json"
+    "backend": "ssh_tmux"
   }
 }
 ```
 
-`connection` 相对任务配置文件所在目录解析；它与 Docker 的 `policy` 字段互斥。实验记录使用实际运行环境的 `runtime.details` 及其 SHA256 指纹，`image` 为 `null`。
+本地私钥和 `known_hosts` 必须使用绝对路径，不展开 `~`、变量或 shell 表达式。原生 Windows/Linux 使用各自可访问的路径；WSL 使用 Windows OpenSSH 时添加 `--windows-ssh`，可填写 `C:/...` 或 `/mnt/c/...` 路径。远端需要 Linux、指定的 Python、tmux、CUDA/PyTorch；本机需要 OpenSSH 的 `ssh` 和 `scp`。工具不会自动安装这些依赖。
 
-在项目根目录启动本地控制器，注册允许上传的模型目录和 `public` 数据目录：
+兼容旧配置：若任务显式保留 `execution.connection`，仍读取该 JSON，且优先于环境变量；不会混合两套连接参数。迁移时把旧 JSON 字段分别填入上面的 `SSH_` 变量，删除任务中的 `connection` 字段。旧 JSON 的相对密钥路径需要改为绝对路径。旧 [JSON 示例](../configs/autodl-ssh.example.json) 仅供兼容已有调用。当前工作树没有实际私有配置时，需要自行填写，不会从其他工作树复制凭据。
+
+实验记录仍使用实际运行环境的 `runtime.details` 及其 SHA256 指纹，`image` 为 `null`。连接参数由宿主读取，不加入 Agent 工具参数；远端无需保存 Agent API Key。
+
+宿主代码也可显式加载配置、构建工具箱（这两步不连接服务器、不读取私钥内容）：
 
 ```python
-from reclab_agent.execution.ssh import SSHConnection
-from reclab_agent.tools.remote import RemoteToolbox
+from reclab_agent.domain.configuration import load_task_configuration
+from reclab_agent.application.environment import load_agent_environment, build_remote_tools
 
-connection = SSHConnection.from_json("configs/autodl-ssh.json")
-remote = RemoteToolbox(
-    connection,
-    upload_roots={"model": "backends/sasrec", "public": ".reclab/datasets/beauty-d1/public"},
-    download_root=".reclab/native-artifacts",
-)
-remote.bootstrap()  # 部署小型远端监督脚本并校验 SHA256；此操作由控制器执行。
-remote.gpu_status()
+config = load_task_configuration("configs/beauty-sasrec-task.json")
+load_agent_environment(".reclab/agent.env", config)
+remote = build_remote_tools(config)  # WSL 使用 Windows SSH 时传 windows_ssh=True
+connection = remote.connection
+# 后续调用 remote.bootstrap() 才会连接远端。
 ```
-
-示例中的相对密钥和 `known_hosts` 路径以连接配置文件所在目录为基准；须换成本机实际路径，Windows、Linux/WSL 分别使用各自可访问的路径。远端需要 Linux、配置指定的 Python、tmux、可用的 CUDA/PyTorch 环境；本机需要 OpenSSH 的 `ssh` 和 `scp`。`bootstrap` 不安装这些依赖。
 
 远程执行工具箱包含以下七个工具；连接、密钥位置及本地可读写目录由控制器固定：
 

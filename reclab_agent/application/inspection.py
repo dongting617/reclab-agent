@@ -18,6 +18,7 @@ from reclab_agent.execution.worker import InputTree
 from reclab_agent.infrastructure.files import confined_path, read_regular_file
 from reclab_agent.domain.configuration import TaskConfiguration, read_json_strict
 from reclab_agent.experiments.adapters import TaskAdapterRegistry
+from reclab_agent.application.environment import ssh_environment_values
 
 
 def _source_model_config(config: TaskConfiguration) -> dict[str, Any]:
@@ -215,6 +216,12 @@ def inspect_task(config: TaskConfiguration, *, registry: TaskAdapterRegistry | N
     policy = (config.execution_connection_path if config.execution_backend == "ssh_tmux"
               else config.execution_policy_path)
     policy_present = policy is not None and policy.is_file()
+    if config.execution_backend == "ssh_tmux" and policy is None:
+        try:
+            value = ssh_environment_values()
+            policy_present = 1 <= value["port"] <= 65535
+        except ValueError:
+            policy_present = False
     report["execution"] = {"backend": config.execution_backend,
                            ("connection_path" if config.execution_backend == "ssh_tmux" else "policy_path"):
                                str(policy) if policy is not None else None,

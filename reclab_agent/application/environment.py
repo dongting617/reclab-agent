@@ -11,10 +11,33 @@ from reclab_agent.tools.remote import RemoteToolbox
 from reclab_agent.execution.ssh import SSHConnection
 from reclab_agent.domain.configuration import read_json_strict
 
+SSH_ENV_FIELDS = {
+    "SSH_HOST": "host", "SSH_PORT": "port", "SSH_USER": "user",
+    "SSH_KEY_PATH": "key_path", "SSH_KNOWN_HOSTS_PATH": "known_hosts_path",
+    "SSH_REMOTE_ROOT": "remote_root", "SSH_PYTHON": "python_executable",
+}
+
+
+def ssh_environment_values():
+    """Read a complete connection without exposing values in errors or traces."""
+    required = set(SSH_ENV_FIELDS) - {"SSH_KNOWN_HOSTS_PATH"}
+    if any(not os.environ.get(name) for name in required):
+        raise ValueError("configure SSH_HOST, SSH_PORT, SSH_USER, SSH_KEY_PATH, SSH_REMOTE_ROOT and SSH_PYTHON")
+    value = {field: os.environ[name] for name, field in SSH_ENV_FIELDS.items() if os.environ.get(name)}
+    if not re.fullmatch(r"[0-9]{1,5}", value["port"]):
+        raise ValueError("SSH_PORT must be an integer between 1 and 65535")
+    value["port"] = int(value["port"])
+    for name in ("key_path", "known_hosts_path"):
+        if name in value:
+            text = value[name]
+            if not (Path(text).is_absolute() or PureWindowsPath(text).is_absolute()):
+                raise ValueError("SSH identity and known-hosts paths must be absolute")
+    return value
+
 
 def load_agent_environment(path, configuration) -> dict[str, bool]:
     """Load literal assignments atomically; never execute or expand shell text."""
-    allowed = {configuration.model_env, configuration.api_key_env, "OPENAI_BASE_URL"}
+    allowed = {configuration.model_env, configuration.api_key_env, "OPENAI_BASE_URL", *SSH_ENV_FIELDS}
     if hasattr(configuration, "tavily_key_env"):
         allowed.add(configuration.tavily_key_env)
     values = {}
@@ -41,7 +64,8 @@ def load_agent_environment(path, configuration) -> dict[str, bool]:
             raise ValueError(f"invalid environment value on line {number}")
         values[name] = value
     os.environ.update(values)
-    return {name: bool(os.environ.get(name)) for name in sorted(allowed)}
+    return {name: bool(os.environ.get(name)) for name in sorted(allowed)
+            if name not in SSH_ENV_FIELDS or name in os.environ}
 
 
 def _is_wsl() -> bool:
@@ -95,7 +119,7 @@ def build_remote_tools(config, *, windows_ssh=False) -> RemoteToolbox | None:
     """Bind trusted transfer roots without connecting to SSH or reading keys."""
     if config.execution_backend == "docker":
         return None
-    if config.execution_backend != "ssh_tmux" or config.execution_connection_path is None:
+    if config.execution_backend != "ssh_tmux":
         raise ValueError("configure an explicit ssh_tmux connection")
     runner = subprocess.run
     if windows_ssh:
@@ -104,19 +128,28 @@ def build_remote_tools(config, *, windows_ssh=False) -> RemoteToolbox | None:
         for executable in ("ssh.exe", "scp.exe"):
             if not Path("/mnt/c/Windows/System32/OpenSSH", executable).is_file():
                 raise ValueError("Windows OpenSSH ssh.exe and scp.exe must be installed")
-        configuration_path = Path(config.execution_connection_path)
-        value = read_json_strict(configuration_path, max_bytes=65_536)
+        configuration_path = config.execution_connection_path
+        value = (read_json_strict(configuration_path, max_bytes=65_536)
+                 if configuration_path is not None else ssh_environment_values())
         required = {"host", "port", "user", "key_path", "remote_root", "python_executable"}
         if (not isinstance(value, dict) or not required <= value.keys()
                 or not value.keys() <= required | {"known_hosts_path"}):
             raise ValueError("SSH configuration must contain the documented fields only")
         for name in ("key_path", "known_hosts_path"):
             if name in value and value[name] is not None:
-                value[name] = _local_bridge_path(value[name], configuration_path.absolute().parent)
+                value[name] = _local_bridge_path(value[name],
+                    Path(configuration_path).absolute().parent if configuration_path is not None else Path.cwd())
         connection = SSHConnection(**value)
         runner = _windows_command_runner
     else:
-        connection = SSHConnection.from_json(config.execution_connection_path)
+        if config.execution_connection_path is not None:
+            connection = SSHConnection.from_json(config.execution_connection_path)
+        else:
+            value = ssh_environment_values()
+            for name in ("key_path", "known_hosts_path"):
+                if name in value and os.name != "nt" and (PureWindowsPath(value[name]).drive or "\\" in value[name]):
+                    raise ValueError("Windows SSH paths require --windows-ssh under WSL")
+            connection = SSHConnection(**value)
     return RemoteToolbox(connection, upload_roots={
         "source": config.output_directory / "snapshots",
         "public": config.dataset_directory / "public",

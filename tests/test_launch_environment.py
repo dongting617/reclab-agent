@@ -65,6 +65,13 @@ class LaunchEnvironmentTests(unittest.TestCase):
             self.assertTrue(state["TEST_API_VAR"])
             self.assertEqual(os.environ["TEST_API_VAR"], "existing")
 
+    def test_ssh_variables_are_literal_and_status_has_no_values(self):
+        with patch.dict(os.environ, {}, clear=True):
+            state = self.load("SSH_HOST=example.invalid\nSSH_PORT=22\nSSH_KEY_PATH='C:/SSH Files/key'\n")
+            self.assertEqual(os.environ["SSH_KEY_PATH"], "C:/SSH Files/key")
+            self.assertTrue(state["SSH_HOST"])
+            self.assertNotIn("example.invalid", repr(state))
+
 
 class LaunchRemoteToolsTests(unittest.TestCase):
     def setUp(self):
@@ -81,6 +88,46 @@ class LaunchRemoteToolsTests(unittest.TestCase):
 
     def write_connection(self, **overrides):
         self.path.write_text(json.dumps({**self.connection, **overrides}))
+
+    def environment(self):
+        return {name: str(self.connection[field]) if field not in {"key_path", "known_hosts_path"}
+                else str(self.root / self.connection[field])
+                for name, field in module.SSH_ENV_FIELDS.items()}
+
+    def test_environment_connection_without_files_or_network(self):
+        self.config.execution_connection_path = None
+        with patch.dict(os.environ, self.environment(), clear=True), \
+                patch.object(module, "RemoteToolbox") as factory, patch.object(module.subprocess, "run") as run:
+            module.build_remote_tools(self.config)
+            connection = factory.call_args.args[0]
+            self.assertEqual(connection.host, "example.invalid")
+            self.assertEqual(connection.port, 22)
+            self.assertEqual(connection.key_path, self.root / "identity")
+            run.assert_not_called()
+
+    def test_environment_missing_invalid_port_and_relative_key_fail_closed(self):
+        self.config.execution_connection_path = None
+        for override in ({"SSH_HOST": ""}, {"SSH_PORT": "bad-private-value"},
+                         {"SSH_PORT": "65536"}, {"SSH_KEY_PATH": "relative/key"}):
+            with self.subTest(override=override), patch.dict(os.environ, {**self.environment(), **override}, clear=True):
+                with self.assertRaises(ValueError) as raised:
+                    module.build_remote_tools(self.config)
+                self.assertNotIn("bad-private-value", str(raised.exception))
+
+    def test_explicit_legacy_json_takes_precedence_over_environment(self):
+        self.write_connection()
+        with patch.dict(os.environ, {"SSH_HOST": ""}, clear=True), patch.object(module, "RemoteToolbox") as factory:
+            module.build_remote_tools(self.config)
+            self.assertEqual(factory.call_args.args[0].host, "example.invalid")
+
+    def test_windows_environment_connection_maps_absolute_paths(self):
+        self.config.execution_connection_path = None
+        env = {**self.environment(), "SSH_KEY_PATH": "C:/SSH Files/key",
+               "SSH_KNOWN_HOSTS_PATH": "D:/SSH Files/known_hosts"}
+        with patch.dict(os.environ, env, clear=True), patch.object(module, "_is_wsl", return_value=True), \
+                patch.object(Path, "is_file", return_value=True), patch.object(module, "RemoteToolbox") as factory:
+            module.build_remote_tools(self.config, windows_ssh=True)
+            self.assertEqual(factory.call_args.args[0].key_path.as_posix(), "/mnt/c/SSH Files/key")
 
     def test_docker_has_no_remote_tools(self):
         self.config.execution_backend = "docker"

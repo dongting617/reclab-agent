@@ -356,6 +356,16 @@
 - 明确应用层权限隔离与操作系统隔离的区别，以及恢复、作业复用和 checkpoint 续训的边界；不将运行完成或模型声明当作质量提升。
 - 本次仅修改文档，未新增运行能力或实验成绩；检查新增源码引用和 Markdown 链接。
 
+### 2026-11-25：SSH 连接参数迁移到环境文件
+
+**状态：已完成。**
+
+- 将 SSH 运行环境参数统一为 `SSH_HOST`、`SSH_PORT`、`SSH_USER`、`SSH_KEY_PATH`、`SSH_KNOWN_HOSTS_PATH`、`SSH_REMOTE_ROOT`、`SSH_PYTHON`，与 API 配置共用 `.reclab/agent.env`；新增根目录 `.env.example`。
+- 四份示例任务仅保留 `execution.backend=ssh_tmux`。旧任务显式配置 `execution.connection` 时仍优先读取旧 JSON，不混合连接参数。
+- 复用同一工具箱构建入口，覆盖直接绑定与正式启动；环境读取保持字面解析和原子更新，连接路径使用绝对路径，支持 WSL 的 Windows OpenSSH 路径转换。
+- 更新 README 和执行说明；私钥仍为独立文件，仅在环境文件中保存路径。同步原目录时在本地迁移原有 SSH 参数，保留 API 配置；私有文件不提交。
+- WSL 隔离临时目录中完成环境加载、任务配置、输入检查、启动入口和远程工具的 101 项回归，全部通过。Windows 原生测试中的 WSL 路径模拟存在平台限制，实际 Linux/WSL 路径回归通过；未连接 GPU、调用模型或改写历史成绩。
+
 ## 后续记录模板
 
 ```markdown

@@ -189,8 +189,9 @@ def load_task_configuration(path: str | Path) -> TaskConfiguration:
         policy = (None if execution["policy"] is None else
                   _path(execution["policy"], parent, "execution.policy"))
     elif execution["backend"] == "ssh_tmux":
-        _object(execution, {"backend", "connection"}, "execution")
-        connection = _path(execution["connection"], parent, "execution.connection")
+        _object(execution, {"backend"}, "execution", {"connection"})
+        if "connection" in execution:
+            connection = _path(execution["connection"], parent, "execution.connection")
     else:
         raise ValueError("execution.backend must be docker or ssh_tmux")
     research = _object(value.get("research", {}), set(), "research",
